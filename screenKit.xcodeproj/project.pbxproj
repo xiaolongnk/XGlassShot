@@ -11,7 +11,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CD48686A2F13FBAB00718E9A /* screenKit.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = screenKit.xcodeproj; sourceTree = "<group>"; };
 		CDD1DE282F13F4C600508BDC /* screenKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = screenKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -35,11 +34,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		CD4868702F13FBAB00718E9A /* Products */ = {
-			isa = PBXGroup;
-			name = Products;
-			sourceTree = "<group>";
-		};
 		CDD1DE1F2F13F4C600508BDC = {
 			isa = PBXGroup;
 			children = (
@@ -112,12 +106,6 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CDD1DE292F13F4C600508BDC /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = CD4868702F13FBAB00718E9A /* Products */;
-					ProjectRef = CD48686A2F13FBAB00718E9A /* screenKit.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				CDD1DE272F13F4C600508BDC /* screenKit */,

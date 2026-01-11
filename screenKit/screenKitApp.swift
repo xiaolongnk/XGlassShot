@@ -8,10 +8,36 @@
 import SwiftUI
 
 @main
-struct screenKitApp: App {
+struct ScreenKitApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    init() {
+        // Initialize managers
+        _ = ShortcutsManager.shared
+        _ = PermissionManager.shared
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .frame(width: 800, height: 600)
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unified)
+    }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Request screen recording permission on launch
+        Task {
+            if !PermissionManager.shared.canRecordScreen() {
+                _ = await PermissionManager.shared.requestScreenRecordingPermission()
+            }
+        }
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return false // Keep app running in background
     }
 }

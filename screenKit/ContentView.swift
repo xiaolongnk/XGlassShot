@@ -8,17 +8,57 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var shortcutsManager = ShortcutsManager.shared
+    @StateObject private var overlayManager = OverlayManager.shared
+    @State private var showSettings = false
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        VStack(spacing: 0) {
+            // Command Bar
+            CommandBar()
+                .padding()
+            
+            Spacer()
+            
+            // Main Content Area
+            VStack(spacing: 20) {
+                Text("ScreenKit")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Text("Press ⌘⇧1 to start recording")
+                    .font(.system(size: 16))
+                    .foregroundColor(.white.opacity(0.7))
+                
+                Button("Open Settings") {
+                    showSettings = true
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.3))
+            
+            Spacer()
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: "1a1a1a"), Color(hex: "2a2a2a")],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .sheet(isPresented: $showSettings) {
+            DashboardSettingsView()
+                .frame(width: 600, height: 500)
+        }
+        .onAppear {
+            setupSelectionOverlay()
+        }
     }
-}
-
-#Preview {
-    ContentView()
+    
+    private func setupSelectionOverlay() {
+        let overlay = SelectionOverlay()
+        OverlayManager.shared.setSelectionOverlay(overlay)
+    }
 }

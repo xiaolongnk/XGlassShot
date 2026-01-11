@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CD4868822F13FC1B00718E9A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = CD4868812F13FC1B00718E9A /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		CD48686A2F13FBAB00718E9A /* screenKit.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = screenKit.xcodeproj; sourceTree = "<group>"; };
 		CDD1DE282F13F4C600508BDC /* screenKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = screenKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -23,12 +28,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD4868822F13FC1B00718E9A /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		CD4868702F13FBAB00718E9A /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 		CDD1DE1F2F13F4C600508BDC = {
 			isa = PBXGroup;
 			children = (
@@ -65,6 +76,7 @@
 			);
 			name = screenKit;
 			packageProductDependencies = (
+				CD4868812F13FC1B00718E9A /* KeyboardShortcuts */,
 			);
 			productName = screenKit;
 			productReference = CDD1DE282F13F4C600508BDC /* screenKit.app */;
@@ -94,9 +106,18 @@
 			);
 			mainGroup = CDD1DE1F2F13F4C600508BDC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CD4868802F13FC1B00718E9A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CDD1DE292F13F4C600508BDC /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = CD4868702F13FBAB00718E9A /* Products */;
+					ProjectRef = CD48686A2F13FBAB00718E9A /* screenKit.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				CDD1DE272F13F4C600508BDC /* screenKit */,
@@ -331,6 +352,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CD4868802F13FC1B00718E9A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CD4868812F13FC1B00718E9A /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CD4868802F13FC1B00718E9A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CDD1DE202F13F4C600508BDC /* Project object */;
 }

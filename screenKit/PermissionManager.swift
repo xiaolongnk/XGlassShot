@@ -1,6 +1,4 @@
-import Foundation
-import AppKit
-import CoreGraphics
+import Combine
 
 @available(macOS 10.15, *)
 final class PermissionManager: ObservableObject {
@@ -18,11 +16,8 @@ final class PermissionManager: ObservableObject {
     }
     
     func requestScreenRecordingPermission() async -> Bool {
-        let granted = await withCheckedContinuation { continuation in
-            CGRequestScreenCaptureAccess { granted in
-                continuation.resume(returning: granted)
-            }
-        }
+        // CGRequestScreenCaptureAccess returns immediately
+        let granted = CGRequestScreenCaptureAccess()
         
         await MainActor.run {
             hasPermission = granted

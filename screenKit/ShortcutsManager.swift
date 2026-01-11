@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import SwiftUI
 import KeyboardShortcuts
+import Combine
 
 enum AppShortcut: String, CaseIterable {
     case captureZone = "captureZone"

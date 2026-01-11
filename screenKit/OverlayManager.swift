@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import SwiftUI
+import Combine
 
 @available(macOS 12.3, *)
 final class OverlayManager: ObservableObject {

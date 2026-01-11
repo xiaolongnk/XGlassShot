@@ -140,7 +140,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
     
     // MARK: - SCStreamOutput
     
-    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, ofType type: SCStreamOutputType) {
+    func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .screen else { return }
         
         let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)

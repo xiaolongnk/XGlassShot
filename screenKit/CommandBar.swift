@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct CommandBar: View {
-    @StateObject private var shortcutsManager = ShortcutsManager.shared
-    @StateObject private var overlayManager = OverlayManager.shared
+    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
+    @ObservedObject private var overlayManager = OverlayManager.shared
     @State private var hoveredButton: ButtonType?
     @State private var showPrefixEditor = false
     
@@ -32,7 +32,7 @@ struct CommandBar: View {
                 
                 // Screenshot Button
                 Button(action: {
-                    // Screenshot action
+                    overlayManager.showScreenshotOverlay()
                 }) {
                     Image(systemName: "camera.fill")
                         .foregroundColor(.white)

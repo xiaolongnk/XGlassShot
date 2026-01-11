@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var shortcutsManager = ShortcutsManager.shared
-    @StateObject private var overlayManager = OverlayManager.shared
+    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
+    @ObservedObject private var overlayManager = OverlayManager.shared
     @State private var showSettings = false
     
     var body: some View {

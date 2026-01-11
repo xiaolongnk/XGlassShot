@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct DashboardSettingsView: View {
-    @State private var currentPrefix: String = "ui_v2_"
-    @State private var currentSavePath: String = "~/Desktop/ScreenRecordings"
+    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
     
     var body: some View {
         GlassView(material: .hudWindow, blendingMode: .withinWindow) {
@@ -19,9 +18,10 @@ struct DashboardSettingsView: View {
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white.opacity(0.7))
                         
-                        Text(currentPrefix)
+                        TextField("Prefix", text: $shortcutsManager.currentPrefix)
                             .font(.system(size: 24, weight: .bold, design: .monospaced))
                             .foregroundColor(.white)
+                            .textFieldStyle(.plain)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
                             .background(
@@ -32,6 +32,7 @@ struct DashboardSettingsView: View {
                                 Capsule()
                                     .stroke(Color.white.opacity(0.3), lineWidth: 1)
                             )
+                            .frame(width: 200)
                     }
                     
                     // Save Path Code Snippet
@@ -41,15 +42,17 @@ struct DashboardSettingsView: View {
                             .foregroundColor(.white.opacity(0.7))
                         
                         HStack {
-                            Text(currentSavePath)
+                            Text(shortcutsManager.currentPath)
                                 .font(.system(size: 14, design: .monospaced))
                                 .foregroundColor(.green)
                                 .textSelection(.enabled)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
                             
                             Spacer()
                             
                             Button(action: {
-                                // Change path action
+                                selectFolder()
                             }) {
                                 Image(systemName: "folder.fill")
                                     .foregroundColor(.white.opacity(0.8))
@@ -121,6 +124,21 @@ struct DashboardSettingsView: View {
         )
         .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
         .frame(width: 600)
+    }
+    
+    private func selectFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                DispatchQueue.main.async {
+                    shortcutsManager.currentPath = url.path
+                }
+            }
+        }
     }
 }
 

@@ -37,6 +37,39 @@ final class OverlayManager: ObservableObject {
         selectionOverlay?.show()
     }
     
+    func showScreenshotOverlay() {
+        guard !isShowingOverlay else { return }
+        
+        isShowingOverlay = true
+        
+        // Configure SelectionOverlay with callbacks
+        selectionOverlay?.onConfirm = { [weak self] rect in
+            await self?.handleScreenshotCaptured(rect: rect)
+        }
+        
+        selectionOverlay?.onCancel = { [weak self] in
+            await self?.handleSelectionCancelled()
+        }
+        
+        selectionOverlay?.show()
+    }
+    
+    private func handleScreenshotCaptured(rect: CGRect) async {
+        // Hide overlay immediately
+        selectionOverlay?.hide()
+        isShowingOverlay = false
+        
+        // Wait 0.5 seconds
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        
+        // Capture Screenshot
+        do {
+            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect)
+        } catch {
+            print("Failed to capture screenshot: \(error)")
+        }
+    }
+    
     private func handleSelectionConfirmed(rect: CGRect) async {
         // Hide overlay immediately
         selectionOverlay?.hide()

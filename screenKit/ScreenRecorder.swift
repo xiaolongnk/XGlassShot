@@ -138,6 +138,47 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         }
     }
     
+    func captureScreenshot(region: CGRect) async throws -> URL {
+        // Find main display
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        guard let mainDisplay = content.displays.first else {
+            throw ScreenRecorderError.noDisplayFound
+        }
+        
+        // Convert SwiftUI coordinates to macOS coordinates
+        let flippedRegion = flipRegion(region, for: mainDisplay)
+        
+        // Create configuration
+        let filter = SCContentFilter(display: mainDisplay, excludingWindows: [])
+        let config = SCStreamConfiguration()
+        config.sourceRect = flippedRegion
+        config.width = Int(flippedRegion.width)
+        config.height = Int(flippedRegion.height)
+        config.pixelFormat = kCVPixelFormatType_32BGRA
+        config.showsCursor = true
+        
+        let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        
+        // Save to Desktop
+        let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        let fileName = "Screenshot \(formatter.string(from: Date())).png"
+        let destinationURL = desktopURL.appendingPathComponent(fileName)
+        
+        let bitmapRep = NSBitmapImageRep(cgImage: image)
+        guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
+            throw ScreenRecorderError.writerSetupFailed
+        }
+        
+        try pngData.write(to: destinationURL)
+        
+        // Open in Finder
+        NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
+        
+        return destinationURL
+    }
+
     // MARK: - SCStreamOutput
     
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {

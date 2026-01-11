@@ -16,7 +16,7 @@ class SelectionOverlay: ObservableObject {
         isActive = true
         
         let screenFrame = NSScreen.main?.frame ?? .zero
-        let overlayWindow = NSWindow(
+        let overlayWindow = SelectionWindow(
             contentRect: screenFrame,
             styleMask: [.borderless],
             backing: .buffered,
@@ -243,5 +243,11 @@ struct DimensionBadge: View {
             Capsule()
                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
         )
+    }
+}
+
+class SelectionWindow: NSWindow {
+    override var canBecomeKey: Bool {
+        return true
     }
 }

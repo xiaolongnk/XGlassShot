@@ -4,6 +4,7 @@ import SwiftUI
 import Combine
 
 @available(macOS 12.3, *)
+@MainActor
 final class OverlayManager: ObservableObject {
     
     static let shared = OverlayManager()
@@ -21,6 +22,10 @@ final class OverlayManager: ObservableObject {
     }
     
     func showSelectionOverlay() {
+        guard PermissionManager.shared.canRecordScreen() else {
+            PermissionManager.shared.openSystemSettings()
+            return
+        }
         guard !isShowingOverlay else { return }
         
         isShowingOverlay = true
@@ -38,6 +43,10 @@ final class OverlayManager: ObservableObject {
     }
     
     func showScreenshotOverlay() {
+        guard PermissionManager.shared.canRecordScreen() else {
+            PermissionManager.shared.openSystemSettings()
+            return
+        }
         guard !isShowingOverlay else { return }
         
         isShowingOverlay = true

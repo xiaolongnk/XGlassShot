@@ -4,6 +4,7 @@ import CoreGraphics
 import Combine
 
 @available(macOS 10.15, *)
+@MainActor
 final class PermissionManager: ObservableObject {
     
     static let shared = PermissionManager()

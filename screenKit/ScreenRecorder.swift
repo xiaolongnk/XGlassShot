@@ -138,6 +138,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         }
     }
     
+    @MainActor
     func captureScreenshot(region: CGRect) async throws -> URL {
         // Find main display
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)

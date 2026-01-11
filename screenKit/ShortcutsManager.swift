@@ -15,6 +15,7 @@ enum AppShortcut: String, CaseIterable {
 }
 
 @available(macOS 12.3, *)
+@MainActor
 final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
     

@@ -1,3 +1,6 @@
+import Foundation
+import AppKit
+import CoreGraphics
 import Combine
 
 @available(macOS 10.15, *)

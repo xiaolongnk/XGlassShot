@@ -91,7 +91,10 @@ final class ShortcutsManager: ObservableObject {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         let hostingView = NSHostingView(
-            rootView: TerminalPathInput(currentPath: $currentPath) {
+            rootView: TerminalPathInput(currentPath: Binding(
+                get: { self.currentPath },
+                set: { self.currentPath = $0 }
+            )) {
                 self.closeActiveWindow()
             }
             .background(Color.clear)
@@ -129,7 +132,10 @@ final class ShortcutsManager: ObservableObject {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         let hostingView = NSHostingView(
-            rootView: PrefixInputView(prefix: $currentPrefix) {
+            rootView: PrefixInputView(prefix: Binding(
+                get: { self.currentPrefix },
+                set: { self.currentPrefix = $0 }
+            )) {
                 self.closeActiveWindow()
             }
             .background(Color.clear)

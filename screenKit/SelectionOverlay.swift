@@ -10,65 +10,71 @@ class SelectionOverlay: ObservableObject {
     @Published var selectionRect: CGRect = .zero
     @Published var isActive: Bool = false
 
-    private var window: NSWindow?
+    private var windows: [NSWindow] = []
     private(set) var currentScreen: NSScreen?
-    
+
     func show() {
         guard !isActive else { return }
         isActive = true
 
-        // Use the screen with the mouse cursor
-        let mouseLocation = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) } ?? NSScreen.main
-        currentScreen = screen
+        // Create overlay windows on ALL screens
+        for screen in NSScreen.screens {
+            let overlayWindow = SelectionWindow(
+                contentRect: screen.frame,
+                styleMask: [.borderless],
+                backing: .buffered,
+                defer: false
+            )
 
-        let screenFrame = screen?.frame ?? .zero
-        let overlayWindow = SelectionWindow(
-            contentRect: screenFrame,
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
+            overlayWindow.level = .screenSaver
+            overlayWindow.backgroundColor = .clear
+            overlayWindow.isOpaque = false
+            overlayWindow.ignoresMouseEvents = false
+            overlayWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        overlayWindow.level = .screenSaver
-        overlayWindow.backgroundColor = .clear
-        overlayWindow.isOpaque = false
-        overlayWindow.ignoresMouseEvents = false
-        overlayWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            let hostingView = NSHostingView(rootView: SelectionOverlayView(overlay: self, screen: screen))
+            hostingView.frame = NSRect(origin: .zero, size: screen.frame.size)
+            overlayWindow.contentView = hostingView
 
-        let hostingView = NSHostingView(rootView: SelectionOverlayView(overlay: self))
-        hostingView.frame = NSRect(origin: .zero, size: screenFrame.size)
-        overlayWindow.contentView = hostingView
-
-        overlayWindow.makeKeyAndOrderFront(nil)
-        window = overlayWindow
+            overlayWindow.makeKeyAndOrderFront(nil)
+            windows.append(overlayWindow)
+        }
     }
-    
+
     func hide() {
-        // Clear content view first to prevent SwiftUI from accessing overlay during deallocation
-        window?.contentView = nil
-        window?.orderOut(nil)
-        window = nil
+        // Clear content views first to prevent SwiftUI from accessing overlay during deallocation
+        for window in windows {
+            window.contentView = nil
+            window.orderOut(nil)
+        }
+        windows.removeAll()
         isActive = false
         selectionRect = .zero
         currentScreen = nil
+    }
+
+    func setCurrentScreen(_ screen: NSScreen) {
+        currentScreen = screen
     }
 }
 
 struct SelectionOverlayView: View {
     @ObservedObject var overlay: SelectionOverlay
+    let screen: NSScreen
+
     @State private var startPoint: CGPoint = .zero
     @State private var currentPoint: CGPoint = .zero
     @State private var isDragging: Bool = false
-    
+    @State private var isThisScreenActive: Bool = false
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 // Dimmed background
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
-                
-                if isDragging || overlay.selectionRect != .zero {
+
+                if isThisScreenActive && (isDragging || overlay.selectionRect != .zero) {
                     // Selection rectangle with viewfinder style
                     ViewfinderRect(rect: overlay.selectionRect)
                 }
@@ -79,16 +85,19 @@ struct SelectionOverlayView: View {
                         if !isDragging {
                             startPoint = value.startLocation
                             isDragging = true
+                            isThisScreenActive = true
+                            overlay.setCurrentScreen(screen)
                         }
                         currentPoint = value.location
                         updateSelectionRect()
                     }
                     .onEnded { _ in
                         isDragging = false
+                        guard isThisScreenActive else { return }
+
                         // Capture rect and screen before async call since hide() will reset them
                         let capturedRect = overlay.selectionRect
-                        let capturedScreen = overlay.currentScreen
-                        if capturedRect.width > 10 && capturedRect.height > 10, let screen = capturedScreen {
+                        if capturedRect.width > 10 && capturedRect.height > 10 {
                             Task { @MainActor in
                                 await overlay.onConfirm?(capturedRect, screen)
                             }
@@ -107,13 +116,13 @@ struct SelectionOverlayView: View {
             }
         }
     }
-    
+
     private func updateSelectionRect() {
         let minX = min(startPoint.x, currentPoint.x)
         let minY = min(startPoint.y, currentPoint.y)
         let maxX = max(startPoint.x, currentPoint.x)
         let maxY = max(startPoint.y, currentPoint.y)
-        
+
         overlay.selectionRect = CGRect(
             x: minX,
             y: minY,
@@ -128,7 +137,7 @@ struct ViewfinderRect: View {
     private let cornerLength: CGFloat = 20
     private let cornerThickness: CGFloat = 3
     private let borderThickness: CGFloat = 1
-    
+
     var body: some View {
         ZStack {
             // Main border
@@ -140,7 +149,7 @@ struct ViewfinderRect: View {
                     y: rect.midY
                 )
                 .shadow(color: .cyan, radius: 5)
-            
+
             // Corner brackets
             Group {
                 // Top-left
@@ -150,7 +159,7 @@ struct ViewfinderRect: View {
                     length: cornerLength,
                     thickness: cornerThickness
                 )
-                
+
                 // Top-right
                 CornerBracket(
                     position: CGPoint(x: rect.maxX, y: rect.minY),
@@ -158,7 +167,7 @@ struct ViewfinderRect: View {
                     length: cornerLength,
                     thickness: cornerThickness
                 )
-                
+
                 // Bottom-left
                 CornerBracket(
                     position: CGPoint(x: rect.minX, y: rect.maxY),
@@ -166,7 +175,7 @@ struct ViewfinderRect: View {
                     length: cornerLength,
                     thickness: cornerThickness
                 )
-                
+
                 // Bottom-right
                 CornerBracket(
                     position: CGPoint(x: rect.maxX, y: rect.maxY),
@@ -176,7 +185,7 @@ struct ViewfinderRect: View {
                 )
             }
             .shadow(color: .cyan, radius: 5)
-            
+
             // Dimension badge
             if rect.width > 0 && rect.height > 0 {
                 DimensionBadge(width: Int(rect.width), height: Int(rect.height))
@@ -194,11 +203,11 @@ struct CornerBracket: View {
     let corner: CornerType
     let length: CGFloat
     let thickness: CGFloat
-    
+
     enum CornerType {
         case topLeft, topRight, bottomLeft, bottomRight
     }
-    
+
     var body: some View {
         Path { path in
             switch corner {
@@ -209,7 +218,7 @@ struct CornerBracket: View {
                 // Vertical line (top to bottom)
                 path.move(to: CGPoint(x: position.x, y: position.y))
                 path.addLine(to: CGPoint(x: position.x, y: position.y + length))
-                
+
             case .topRight:
                 // Horizontal line (right to left)
                 path.move(to: CGPoint(x: position.x, y: position.y))
@@ -217,7 +226,7 @@ struct CornerBracket: View {
                 // Vertical line (top to bottom)
                 path.move(to: CGPoint(x: position.x, y: position.y))
                 path.addLine(to: CGPoint(x: position.x, y: position.y + length))
-                
+
             case .bottomLeft:
                 // Horizontal line (left to right)
                 path.move(to: CGPoint(x: position.x, y: position.y))
@@ -225,7 +234,7 @@ struct CornerBracket: View {
                 // Vertical line (bottom to top)
                 path.move(to: CGPoint(x: position.x, y: position.y))
                 path.addLine(to: CGPoint(x: position.x, y: position.y - length))
-                
+
             case .bottomRight:
                 // Horizontal line (right to left)
                 path.move(to: CGPoint(x: position.x, y: position.y))
@@ -242,7 +251,7 @@ struct CornerBracket: View {
 struct DimensionBadge: View {
     let width: Int
     let height: Int
-    
+
     var body: some View {
         GlassView(material: .hudWindow, blendingMode: .withinWindow) {
             Text("\(width) × \(height)")

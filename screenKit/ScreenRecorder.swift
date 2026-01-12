@@ -246,25 +246,19 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
 
     // MARK: - Coordinate Conversion
 
-    /// Convert selection rect from screen-relative SwiftUI coordinates to SCDisplay coordinates
+    /// Convert selection rect from screen-relative SwiftUI coordinates to SCDisplay sourceRect coordinates
     /// - Parameters:
-    ///   - region: The selection rect in SwiftUI coordinates (origin top-left, relative to screen)
+    ///   - region: The selection rect in SwiftUI coordinates (origin top-left, relative to window)
     ///   - screen: The NSScreen where selection was made
     ///   - display: The target SCDisplay for capture
-    /// - Returns: CGRect in SCDisplay coordinates (origin bottom-left)
+    /// - Returns: CGRect for SCStreamConfiguration.sourceRect (origin top-left)
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
-        // The selection rect is in SwiftUI coordinates (origin at top-left of the screen)
-        // SCDisplay uses macOS coordinates (origin at bottom-left)
-        // We need to flip Y coordinate
-
-        let screenHeight = screen.frame.height
-
-        // Flip Y: convert from top-left origin to bottom-left origin
-        let flippedY = screenHeight - region.origin.y - region.height
-
+        // SCStreamConfiguration.sourceRect uses top-left origin (same as SwiftUI)
+        // The selection rect is already in the correct coordinate system
+        // Just pass it through directly
         return CGRect(
             x: region.origin.x,
-            y: flippedY,
+            y: region.origin.y,
             width: region.width,
             height: region.height
         )

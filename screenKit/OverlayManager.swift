@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers
 
 @available(macOS 12.3, *)
 @MainActor
@@ -125,26 +126,43 @@ final class OverlayManager: ObservableObject {
     
     func stopRecording() async {
         guard isRecording else { return }
-        
+
         do {
             let tempURL = try await ScreenRecorder.shared.stopRecording()
-            
-            // Save to Desktop
-            let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
+
+            // Use NSSavePanel for sandbox-compatible file saving
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
             let fileName = "Screen Recording \(formatter.string(from: Date())).mov"
-            let destinationURL = desktopURL.appendingPathComponent(fileName)
-            
-            // Copy file
-            try? FileManager.default.removeItem(at: destinationURL)
-            try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-            
-            // Open in Finder
-            NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
+
+            let savePanel = NSSavePanel()
+            savePanel.nameFieldStringValue = fileName
+            savePanel.allowedContentTypes = [UTType.movie]
+            savePanel.canCreateDirectories = true
+            savePanel.isExtensionHidden = false
+            savePanel.title = "Save Recording"
+            savePanel.message = "Choose a location to save your recording"
+
+            let response = await savePanel.begin()
 
             isRecording = false
             hideStopButton()
+
+            guard response == .OK, let destinationURL = savePanel.url else {
+                // User cancelled - clean up temp file
+                try? FileManager.default.removeItem(at: tempURL)
+                return
+            }
+
+            // Copy file to user-selected location
+            try? FileManager.default.removeItem(at: destinationURL)
+            try FileManager.default.copyItem(at: tempURL, to: destinationURL)
+
+            // Clean up temp file
+            try? FileManager.default.removeItem(at: tempURL)
+
+            // Open in Finder
+            NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
         } catch {
             isRecording = false
             hideStopButton()

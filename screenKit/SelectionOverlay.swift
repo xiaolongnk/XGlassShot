@@ -4,8 +4,8 @@ import AppKit
 
 @MainActor
 class SelectionOverlay: ObservableObject {
-    var onConfirm: ((CGRect) async -> Void)?
-    var onCancel: (() async -> Void)?
+    var onConfirm: (@MainActor (CGRect) async -> Void)?
+    var onCancel: (@MainActor () async -> Void)?
     
     @Published var selectionRect: CGRect = .zero
     @Published var isActive: Bool = false
@@ -39,7 +39,9 @@ class SelectionOverlay: ObservableObject {
     }
     
     func hide() {
-        window?.close()
+        // Clear content view first to prevent SwiftUI from accessing overlay during deallocation
+        window?.contentView = nil
+        window?.orderOut(nil)
         window = nil
         isActive = false
         selectionRect = .zero
@@ -76,19 +78,21 @@ struct SelectionOverlayView: View {
                     }
                     .onEnded { _ in
                         isDragging = false
-                        if overlay.selectionRect.width > 10 && overlay.selectionRect.height > 10 {
-                            Task {
-                                await overlay.onConfirm?(overlay.selectionRect)
+                        // Capture rect before async call since hide() will reset it
+                        let capturedRect = overlay.selectionRect
+                        if capturedRect.width > 10 && capturedRect.height > 10 {
+                            Task { @MainActor in
+                                await overlay.onConfirm?(capturedRect)
                             }
                         } else {
-                            Task {
+                            Task { @MainActor in
                                 await overlay.onCancel?()
                             }
                         }
                     }
             )
             .onKeyPress(.escape) {
-                Task {
+                Task { @MainActor in
                     await overlay.onCancel?()
                 }
                 return .handled

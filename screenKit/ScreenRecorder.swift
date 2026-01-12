@@ -169,24 +169,35 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         config.showsCursor = true
 
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
-        
-        // Save to Desktop
-        let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
-        let fileName = "Screenshot \(formatter.string(from: Date())).png"
-        let destinationURL = desktopURL.appendingPathComponent(fileName)
-        
+
         let bitmapRep = NSBitmapImageRep(cgImage: image)
         guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
             throw ScreenRecorderError.writerSetupFailed
         }
-        
+
+        // Use NSSavePanel for sandbox-compatible file saving
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        let fileName = "Screenshot \(formatter.string(from: Date())).png"
+
+        let savePanel = NSSavePanel()
+        savePanel.nameFieldStringValue = fileName
+        savePanel.allowedContentTypes = [.png]
+        savePanel.canCreateDirectories = true
+        savePanel.isExtensionHidden = false
+        savePanel.title = "Save Screenshot"
+        savePanel.message = "Choose a location to save your screenshot"
+
+        let response = await savePanel.begin()
+        guard response == .OK, let destinationURL = savePanel.url else {
+            throw ScreenRecorderError.saveCancelled
+        }
+
         try pngData.write(to: destinationURL)
-        
+
         // Open in Finder
         NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
-        
+
         return destinationURL
     }
 
@@ -240,7 +251,8 @@ enum ScreenRecorderError: LocalizedError {
     case notRecording
     case writerNotAvailable
     case noRecordingURL
-    
+    case saveCancelled
+
     var errorDescription: String? {
         switch self {
         case .alreadyRecording:
@@ -255,6 +267,8 @@ enum ScreenRecorderError: LocalizedError {
             return "Video writer is not available"
         case .noRecordingURL:
             return "Recording URL is not available"
+        case .saveCancelled:
+            return "Save was cancelled"
         }
     }
 }

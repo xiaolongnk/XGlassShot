@@ -5,19 +5,19 @@ import CoreGraphics
 import AppKit
 
 @available(macOS 12.3, *)
-final class ScreenRecorder: NSObject, SCStreamOutput {
+final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
     static let shared = ScreenRecorder()
 
     private var stream: SCStream?
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
-    private var pixelBufferAdaptor: AVAssetWriterInputPixelBufferAdaptor?
     private var display: CGDirectDisplayID?
     private var recordingURL: URL?
     private let writerQueue = DispatchQueue(label: "com.screenkit.writer")
     private var isRecording = false
     private var sessionStartTime: CMTime?
+    private var writerConfigured = false
 
     func startRecording(region: CGRect, screen: NSScreen) async throws {
         guard !isRecording else {
@@ -40,108 +40,149 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
             throw ScreenRecorderError.writerSetupFailed
         }
 
+        // Use the exact dimensions from the region
+        let captureWidth = Int(ceil(displayRegion.width))
+        let captureHeight = Int(ceil(displayRegion.height))
+
         // Create stream configuration
         let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
         config.sourceRect = displayRegion
-        config.width = Int(displayRegion.width)
-        config.height = Int(displayRegion.height)
+        config.width = captureWidth
+        config.height = captureHeight
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
         config.capturesAudio = false
         config.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         config.queueDepth = 5
-        
-        // Setup AVAssetWriter
+
+        // Setup recording URL (writer will be configured when first frame arrives)
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("mov")
         recordingURL = tempURL
-        
+
         assetWriter = try AVAssetWriter(outputURL: tempURL, fileType: .mov)
-        
-        let videoSettings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.h264,
-            AVVideoWidthKey: config.width,
-            AVVideoHeightKey: config.height,
-            AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: config.width * config.height * 4
-            ]
-        ]
-        
-        videoInput = AVAssetWriterInput(
-            mediaType: .video,
-            outputSettings: videoSettings
-        )
-        videoInput?.expectsMediaDataInRealTime = true
-        
-        guard let videoInput = videoInput,
-              let assetWriter = assetWriter,
-              assetWriter.canAdd(videoInput) else {
-            throw ScreenRecorderError.writerSetupFailed
-        }
-        
-        assetWriter.add(videoInput)
-        
-        let sourcePixelBufferAttributes: [String: Any] = [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: config.width,
-            kCVPixelBufferHeightKey as String: config.height
-        ]
-        
-        pixelBufferAdaptor = AVAssetWriterInputPixelBufferAdaptor(
-            assetWriterInput: videoInput,
-            sourcePixelBufferAttributes: sourcePixelBufferAttributes
-        )
-        
-        // Create stream
-        stream = SCStream(filter: filter, configuration: config, delegate: nil)
-        
+        writerConfigured = false
+
+        // Create stream with delegate to catch errors
+        stream = SCStream(filter: filter, configuration: config, delegate: self)
+
         try stream?.addStreamOutput(self, type: .screen, sampleHandlerQueue: writerQueue)
-        
+
         // Start recording
         try await stream?.startCapture()
         isRecording = true
     }
+
+    /// Configure the AVAssetWriter based on actual frame dimensions from the first sample buffer
+    private func configureWriter(from sampleBuffer: CMSampleBuffer) -> Bool {
+        guard let assetWriter = assetWriter,
+              let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) else {
+            return false
+        }
+
+        let dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription)
+        // Ensure even dimensions for H.264
+        let width = (Int(dimensions.width) + 1) & ~1
+        let height = (Int(dimensions.height) + 1) & ~1
+
+        print("Configuring writer with actual frame dimensions: \(width)x\(height)")
+
+        let videoSettings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height
+        ]
+
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
+        input.expectsMediaDataInRealTime = true
+
+        // Set transform to handle coordinate system
+        input.transform = CGAffineTransform.identity
+
+        guard assetWriter.canAdd(input) else {
+            print("Cannot add video input to asset writer")
+            return false
+        }
+
+        assetWriter.add(input)
+        videoInput = input
+        writerConfigured = true
+
+        return true
+    }
     
     func stopRecording() async throws -> URL {
-        guard isRecording, let stream = stream else {
+        // Check if we have an active recording (either flag or writer exists)
+        guard isRecording || assetWriter != nil else {
             throw ScreenRecorderError.notRecording
         }
-        
+
         isRecording = false
-        
-        try await stream.stopCapture()
-        self.stream = nil
-        
+
+        // Stop the stream capture (ignore errors if already stopped)
+        if let stream = stream {
+            do {
+                try await stream.stopCapture()
+            } catch {
+                // Stream might have already stopped due to an error - that's OK
+                print("Stream stop warning (may be expected): \(error.localizedDescription)")
+            }
+            self.stream = nil
+        }
+
+        // Finish writing the video file
         return try await withCheckedThrowingContinuation { continuation in
             writerQueue.async { [weak self] in
-                guard let self = self,
-                      let assetWriter = self.assetWriter,
-                      let videoInput = self.videoInput else {
+                guard let self = self else {
                     continuation.resume(throwing: ScreenRecorderError.writerNotAvailable)
                     return
                 }
-                
-                videoInput.markAsFinished()
-                
-                assetWriter.finishWriting { [weak self] in
+
+                let url = self.recordingURL
+                guard let assetWriter = self.assetWriter else {
+                    // Clean up and return error
+                    self.cleanupRecordingState()
+                    continuation.resume(throwing: ScreenRecorderError.writerNotAvailable)
+                    return
+                }
+
+                // Check if writer actually started
+                if assetWriter.status != .writing {
+                    // Writer never started or failed
+                    if assetWriter.status != .cancelled {
+                        assetWriter.cancelWriting()
+                    }
+                    self.cleanupRecordingState()
+                    continuation.resume(throwing: ScreenRecorderError.noFramesCaptured)
+                    return
+                }
+
+                self.videoInput?.markAsFinished()
+
+                assetWriter.finishWriting {
                     if let error = assetWriter.error {
+                        self.cleanupRecordingState()
                         continuation.resume(throwing: error)
-                    } else if let url = self?.recordingURL {
+                    } else if let url = url {
+                        self.cleanupRecordingState()
                         continuation.resume(returning: url)
                     } else {
+                        self.cleanupRecordingState()
                         continuation.resume(throwing: ScreenRecorderError.noRecordingURL)
                     }
-                    
-                    self?.assetWriter = nil
-                    self?.videoInput = nil
-                    self?.pixelBufferAdaptor = nil
-                    self?.recordingURL = nil
-                    self?.sessionStartTime = nil
                 }
             }
         }
+    }
+
+    private func cleanupRecordingState() {
+        assetWriter = nil
+        videoInput = nil
+        recordingURL = nil
+        sessionStartTime = nil
+        writerConfigured = false
     }
     
     @MainActor
@@ -202,31 +243,57 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         return destinationURL
     }
 
+    // MARK: - SCStreamDelegate
+
+    func stream(_ stream: SCStream, didStopWithError error: Error) {
+        print("Stream stopped with error: \(error.localizedDescription)")
+        // Mark as not recording so stopRecording handles it gracefully
+        isRecording = false
+    }
+
     // MARK: - SCStreamOutput
-    
+
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen else { return }
-        
+        guard type == .screen, isRecording else { return }
+
+        // Check if this is a valid video frame
+        guard CMSampleBufferGetNumSamples(sampleBuffer) > 0,
+              CMSampleBufferIsValid(sampleBuffer),
+              CMSampleBufferGetImageBuffer(sampleBuffer) != nil else {
+            return
+        }
+
         let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-        
+
         writerQueue.async { [weak self] in
             guard let self = self,
-                  let assetWriter = self.assetWriter,
-                  let videoInput = self.videoInput else {
+                  self.isRecording,
+                  let assetWriter = self.assetWriter else {
                 return
             }
-            
+
+            // Configure writer on first frame if not yet configured
+            if !self.writerConfigured {
+                if !self.configureWriter(from: sampleBuffer) {
+                    print("Failed to configure writer")
+                    return
+                }
+            }
+
+            guard let videoInput = self.videoInput else { return }
+
             if assetWriter.status == .unknown {
                 assetWriter.startWriting()
                 assetWriter.startSession(atSourceTime: timestamp)
                 self.sessionStartTime = timestamp
+                print("Recording started - writing first frame")
             }
-            
+
             guard assetWriter.status == .writing,
                   videoInput.isReadyForMoreMediaData else {
                 return
             }
-            
+
             videoInput.append(sampleBuffer)
         }
     }
@@ -273,6 +340,7 @@ enum ScreenRecorderError: LocalizedError {
     case writerNotAvailable
     case noRecordingURL
     case saveCancelled
+    case noFramesCaptured
 
     var errorDescription: String? {
         switch self {
@@ -290,6 +358,8 @@ enum ScreenRecorderError: LocalizedError {
             return "Recording URL is not available"
         case .saveCancelled:
             return "Save was cancelled"
+        case .noFramesCaptured:
+            return "No frames were captured during recording"
         }
     }
 }

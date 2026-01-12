@@ -4,11 +4,50 @@ import SwiftUI
 import KeyboardShortcuts
 import Combine
 
+// MARK: - Capture Quality
+
+enum CaptureQuality: String, CaseIterable {
+    case quick = "quick"      // 1x scale, lower bitrate - fast sharing
+    case high = "high"        // 2x scale (Retina), higher bitrate - full quality
+
+    var displayName: String {
+        switch self {
+        case .quick: return "Quick"
+        case .high: return "HQ"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .quick: return "Quick Share (1x)"
+        case .high: return "High Quality (2x)"
+        }
+    }
+
+    var scaleFactor: CGFloat {
+        switch self {
+        case .quick: return 1.0
+        case .high: return 2.0
+        }
+    }
+
+    var videoBitrateFactor: Int {
+        switch self {
+        case .quick: return 4    // ~4 bits per pixel
+        case .high: return 12    // ~12 bits per pixel
+        }
+    }
+}
+
+// MARK: - App Shortcuts
+
 enum AppShortcut: String, CaseIterable {
     case captureZone = "captureZone"
+    case captureScreenshot = "captureScreenshot"
+    case toggleQuality = "toggleQuality"
     case changePath = "changePath"
     case changePrefix = "changePrefix"
-    
+
     var name: KeyboardShortcuts.Name {
         KeyboardShortcuts.Name(rawValue)
     }
@@ -18,21 +57,39 @@ enum AppShortcut: String, CaseIterable {
 @MainActor
 final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
-    
+
     @Published var currentPath: String = FileManager.default.homeDirectoryForCurrentUser.path
     @Published var currentPrefix: String = "bug_"
-    
+    @Published var captureQuality: CaptureQuality = .quick {
+        didSet {
+            UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")
+            showQualityFeedback()
+        }
+    }
+
     private var activeInputWindow: NSWindow?
-    
+    private var feedbackWindow: NSWindow?
+
     private init() {
+        // Load saved quality preference
+        if let savedQuality = UserDefaults.standard.string(forKey: "captureQuality"),
+           let quality = CaptureQuality(rawValue: savedQuality) {
+            captureQuality = quality
+        }
         setupDefaultShortcuts()
         setupShortcuts()
     }
-    
+
     private func setupDefaultShortcuts() {
         // Set default shortcuts if not already configured
         if KeyboardShortcuts.getShortcut(for: AppShortcut.captureZone.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.one, modifiers: [.command, .shift]), for: AppShortcut.captureZone.name)
+        }
+        if KeyboardShortcuts.getShortcut(for: AppShortcut.captureScreenshot.name) == nil {
+            KeyboardShortcuts.setShortcut(.init(.two, modifiers: [.command, .shift]), for: AppShortcut.captureScreenshot.name)
+        }
+        if KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name) == nil {
+            KeyboardShortcuts.setShortcut(.init(.q, modifiers: [.command, .shift]), for: AppShortcut.toggleQuality.name)
         }
         if KeyboardShortcuts.getShortcut(for: AppShortcut.changePath.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.p, modifiers: [.command, .shift]), for: AppShortcut.changePath.name)
@@ -41,27 +98,79 @@ final class ShortcutsManager: ObservableObject {
             KeyboardShortcuts.setShortcut(.init(.l, modifiers: [.command, .shift]), for: AppShortcut.changePrefix.name)
         }
     }
-    
+
     private func setupShortcuts() {
-        // Capture Zone: Cmd+Shift+1
+        // Capture Zone (Recording): Cmd+Shift+1
         KeyboardShortcuts.onKeyUp(for: AppShortcut.captureZone.name) { [weak self] in
             self?.handleCaptureZone()
         }
-        
+
+        // Capture Screenshot: Cmd+Shift+2
+        KeyboardShortcuts.onKeyUp(for: AppShortcut.captureScreenshot.name) { [weak self] in
+            self?.handleCaptureScreenshot()
+        }
+
+        // Toggle Quality: Cmd+Shift+Q
+        KeyboardShortcuts.onKeyUp(for: AppShortcut.toggleQuality.name) { [weak self] in
+            self?.toggleQuality()
+        }
+
         // Change Path: Cmd+Shift+P
         KeyboardShortcuts.onKeyUp(for: AppShortcut.changePath.name) { [weak self] in
             self?.handleChangePath()
         }
-        
+
         // Change Prefix: Cmd+Shift+L
         KeyboardShortcuts.onKeyUp(for: AppShortcut.changePrefix.name) { [weak self] in
             self?.handleChangePrefix()
         }
     }
-    
+
     private func handleCaptureZone() {
         guard activeInputWindow == nil else { return }
         OverlayManager.shared.showSelectionOverlay()
+    }
+
+    private func handleCaptureScreenshot() {
+        guard activeInputWindow == nil else { return }
+        OverlayManager.shared.showScreenshotOverlay()
+    }
+
+    func toggleQuality() {
+        captureQuality = (captureQuality == .quick) ? .high : .quick
+    }
+
+    private func showQualityFeedback() {
+        // Close existing feedback window
+        feedbackWindow?.close()
+
+        let screenFrame = NSScreen.main?.frame ?? .zero
+        let window = NSWindow(
+            contentRect: NSRect(x: screenFrame.midX - 100, y: screenFrame.midY - 30, width: 200, height: 60),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.level = .floating
+        window.backgroundColor = .clear
+        window.isOpaque = false
+        window.ignoresMouseEvents = true
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+
+        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: captureQuality))
+        hostingView.frame = window.contentView?.bounds ?? .zero
+        window.contentView = hostingView
+
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        feedbackWindow = window
+
+        // Auto-dismiss after 1.5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.feedbackWindow?.close()
+            self?.feedbackWindow = nil
+        }
     }
     
     private func handleChangePath() {
@@ -207,5 +316,39 @@ struct PrefixInputView: View {
     private func confirmPrefix() {
         prefix = inputText
         onDismiss()
+    }
+}
+
+// MARK: - Quality Feedback View
+
+struct QualityFeedbackView: View {
+    let quality: CaptureQuality
+
+    var body: some View {
+        GlassView(material: .hudWindow, blendingMode: .withinWindow) {
+            HStack(spacing: 12) {
+                Image(systemName: quality == .high ? "sparkles" : "hare")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(quality == .high ? .yellow : .cyan)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(quality.description)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+
+                    Text("⌘⇧Q to toggle")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(quality == .high ? Color.yellow.opacity(0.3) : Color.cyan.opacity(0.3), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }

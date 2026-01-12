@@ -19,10 +19,14 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var sessionStartTime: CMTime?
     private var writerConfigured = false
 
-    func startRecording(region: CGRect, screen: NSScreen) async throws {
+    private var currentQuality: CaptureQuality = .quick
+
+    func startRecording(region: CGRect, screen: NSScreen, quality: CaptureQuality) async throws {
         guard !isRecording else {
             throw ScreenRecorderError.alreadyRecording
         }
+
+        currentQuality = quality
 
         // Find the SCDisplay matching the NSScreen
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
@@ -40,9 +44,12 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             throw ScreenRecorderError.writerSetupFailed
         }
 
-        // Use the exact dimensions from the region
-        let captureWidth = Int(ceil(displayRegion.width))
-        let captureHeight = Int(ceil(displayRegion.height))
+        // Apply quality scale factor to capture dimensions
+        let scaleFactor = quality.scaleFactor
+        let captureWidth = Int(ceil(displayRegion.width * scaleFactor))
+        let captureHeight = Int(ceil(displayRegion.height * scaleFactor))
+
+        print("Recording at \(quality.description): \(captureWidth)x\(captureHeight)")
 
         // Create stream configuration
         let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
@@ -87,12 +94,19 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let width = (Int(dimensions.width) + 1) & ~1
         let height = (Int(dimensions.height) + 1) & ~1
 
-        print("Configuring writer with actual frame dimensions: \(width)x\(height)")
+        // Calculate bitrate based on quality setting
+        let bitrate = width * height * currentQuality.videoBitrateFactor
+
+        print("Configuring writer: \(width)x\(height) @ \(bitrate / 1_000_000)Mbps (\(currentQuality.description))")
 
         let videoSettings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: width,
-            AVVideoHeightKey: height
+            AVVideoHeightKey: height,
+            AVVideoCompressionPropertiesKey: [
+                AVVideoAverageBitRateKey: bitrate,
+                AVVideoProfileLevelKey: currentQuality == .high ? AVVideoProfileLevelH264HighAutoLevel : AVVideoProfileLevelH264MainAutoLevel
+            ]
         ]
 
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: videoSettings)
@@ -186,7 +200,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
     
     @MainActor
-    func captureScreenshot(region: CGRect, screen: NSScreen) async throws -> URL {
+    func captureScreenshot(region: CGRect, screen: NSScreen, quality: CaptureQuality) async throws -> URL {
         // Find the SCDisplay matching the NSScreen
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
@@ -201,12 +215,19 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             throw ScreenRecorderError.writerSetupFailed
         }
 
+        // Apply quality scale factor to capture dimensions
+        let scaleFactor = quality.scaleFactor
+        let captureWidth = Int(ceil(displayRegion.width * scaleFactor))
+        let captureHeight = Int(ceil(displayRegion.height * scaleFactor))
+
+        print("Screenshot at \(quality.description): \(captureWidth)x\(captureHeight)")
+
         // Create configuration
         let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
         config.sourceRect = displayRegion
-        config.width = Int(displayRegion.width)
-        config.height = Int(displayRegion.height)
+        config.width = captureWidth
+        config.height = captureHeight
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
 

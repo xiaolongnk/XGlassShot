@@ -252,18 +252,38 @@ struct DimensionBadge: View {
     let width: Int
     let height: Int
 
+    @available(macOS 12.3, *)
     var body: some View {
+        let quality = ShortcutsManager.shared.captureQuality
+
         GlassView(material: .hudWindow, blendingMode: .withinWindow) {
-            Text("\(width) × \(height)")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+            HStack(spacing: 8) {
+                Text("\(width) × \(height)")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white)
+
+                // Quality indicator
+                HStack(spacing: 3) {
+                    Image(systemName: quality == .high ? "sparkles" : "hare")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(quality.displayName)
+                        .font(.system(size: 9, weight: .semibold, design: .rounded))
+                }
+                .foregroundColor(quality == .high ? .yellow : .cyan)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(
+                    Capsule()
+                        .fill(quality == .high ? Color.yellow.opacity(0.2) : Color.cyan.opacity(0.2))
+                )
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
         }
         .clipShape(Capsule())
         .overlay(
             Capsule()
-                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                .stroke(quality == .high ? Color.yellow.opacity(0.3) : Color.cyan.opacity(0.3), lineWidth: 1)
         )
     }
 }

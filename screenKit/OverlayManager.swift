@@ -72,9 +72,10 @@ final class OverlayManager: ObservableObject {
         // Wait 0.5 seconds
         try? await Task.sleep(nanoseconds: 500_000_000)
 
-        // Capture Screenshot
+        // Capture Screenshot with current quality setting
+        let quality = ShortcutsManager.shared.captureQuality
         do {
-            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, screen: screen)
+            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, screen: screen, quality: quality)
         } catch {
             print("Failed to capture screenshot: \(error)")
         }
@@ -88,9 +89,10 @@ final class OverlayManager: ObservableObject {
         // Wait 0.5 seconds
         try? await Task.sleep(nanoseconds: 500_000_000)
 
-        // Start recording
+        // Start recording with current quality setting
+        let quality = ShortcutsManager.shared.captureQuality
         do {
-            try await ScreenRecorder.shared.startRecording(region: rect, screen: screen)
+            try await ScreenRecorder.shared.startRecording(region: rect, screen: screen, quality: quality)
             isRecording = true
             showStopButton()
         } catch {

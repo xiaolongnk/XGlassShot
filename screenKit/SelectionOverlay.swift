@@ -4,36 +4,42 @@ import AppKit
 
 @MainActor
 class SelectionOverlay: ObservableObject {
-    var onConfirm: (@MainActor (CGRect) async -> Void)?
+    var onConfirm: (@MainActor (CGRect, NSScreen) async -> Void)?
     var onCancel: (@MainActor () async -> Void)?
-    
+
     @Published var selectionRect: CGRect = .zero
     @Published var isActive: Bool = false
-    
+
     private var window: NSWindow?
+    private(set) var currentScreen: NSScreen?
     
     func show() {
         guard !isActive else { return }
         isActive = true
-        
-        let screenFrame = NSScreen.main?.frame ?? .zero
+
+        // Use the screen with the mouse cursor
+        let mouseLocation = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) } ?? NSScreen.main
+        currentScreen = screen
+
+        let screenFrame = screen?.frame ?? .zero
         let overlayWindow = SelectionWindow(
             contentRect: screenFrame,
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
-        
+
         overlayWindow.level = .screenSaver
         overlayWindow.backgroundColor = .clear
         overlayWindow.isOpaque = false
         overlayWindow.ignoresMouseEvents = false
         overlayWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
+
         let hostingView = NSHostingView(rootView: SelectionOverlayView(overlay: self))
-        hostingView.frame = screenFrame
+        hostingView.frame = NSRect(origin: .zero, size: screenFrame.size)
         overlayWindow.contentView = hostingView
-        
+
         overlayWindow.makeKeyAndOrderFront(nil)
         window = overlayWindow
     }
@@ -45,6 +51,7 @@ class SelectionOverlay: ObservableObject {
         window = nil
         isActive = false
         selectionRect = .zero
+        currentScreen = nil
     }
 }
 
@@ -78,11 +85,12 @@ struct SelectionOverlayView: View {
                     }
                     .onEnded { _ in
                         isDragging = false
-                        // Capture rect before async call since hide() will reset it
+                        // Capture rect and screen before async call since hide() will reset them
                         let capturedRect = overlay.selectionRect
-                        if capturedRect.width > 10 && capturedRect.height > 10 {
+                        let capturedScreen = overlay.currentScreen
+                        if capturedRect.width > 10 && capturedRect.height > 10, let screen = capturedScreen {
                             Task { @MainActor in
-                                await overlay.onConfirm?(capturedRect)
+                                await overlay.onConfirm?(capturedRect, screen)
                             }
                         } else {
                             Task { @MainActor in

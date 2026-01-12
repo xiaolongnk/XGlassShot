@@ -32,65 +32,65 @@ final class OverlayManager: ObservableObject {
         isShowingOverlay = true
         
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect in
-            await self?.handleSelectionConfirmed(rect: rect)
+        selectionOverlay?.onConfirm = { [weak self] rect, screen in
+            await self?.handleSelectionConfirmed(rect: rect, screen: screen)
         }
-        
+
         selectionOverlay?.onCancel = { [weak self] in
             await self?.handleSelectionCancelled()
         }
-        
+
         selectionOverlay?.show()
     }
-    
+
     func showScreenshotOverlay() {
         guard PermissionManager.shared.canRecordScreen() else {
             PermissionManager.shared.openSystemSettings()
             return
         }
         guard !isShowingOverlay else { return }
-        
+
         isShowingOverlay = true
-        
+
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect in
-            await self?.handleScreenshotCaptured(rect: rect)
+        selectionOverlay?.onConfirm = { [weak self] rect, screen in
+            await self?.handleScreenshotCaptured(rect: rect, screen: screen)
         }
-        
+
         selectionOverlay?.onCancel = { [weak self] in
             await self?.handleSelectionCancelled()
         }
-        
+
         selectionOverlay?.show()
     }
-    
-    private func handleScreenshotCaptured(rect: CGRect) async {
+
+    private func handleScreenshotCaptured(rect: CGRect, screen: NSScreen) async {
         // Hide overlay immediately
         selectionOverlay?.hide()
         isShowingOverlay = false
-        
+
         // Wait 0.5 seconds
         try? await Task.sleep(nanoseconds: 500_000_000)
-        
+
         // Capture Screenshot
         do {
-            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect)
+            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, screen: screen)
         } catch {
             print("Failed to capture screenshot: \(error)")
         }
     }
-    
-    private func handleSelectionConfirmed(rect: CGRect) async {
+
+    private func handleSelectionConfirmed(rect: CGRect, screen: NSScreen) async {
         // Hide overlay immediately
         selectionOverlay?.hide()
         isShowingOverlay = false
-        
+
         // Wait 0.5 seconds
         try? await Task.sleep(nanoseconds: 500_000_000)
-        
+
         // Start recording
         do {
-            try await ScreenRecorder.shared.startRecording(region: rect)
+            try await ScreenRecorder.shared.startRecording(region: rect, screen: screen)
             isRecording = true
             showStopButton()
         } catch {

@@ -2,12 +2,13 @@ import Foundation
 import ScreenCaptureKit
 import AVFoundation
 import CoreGraphics
+import AppKit
 
 @available(macOS 12.3, *)
 final class ScreenRecorder: NSObject, SCStreamOutput {
-    
+
     static let shared = ScreenRecorder()
-    
+
     private var stream: SCStream?
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
@@ -17,34 +18,34 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
     private let writerQueue = DispatchQueue(label: "com.screenkit.writer")
     private var isRecording = false
     private var sessionStartTime: CMTime?
-    
-    func startRecording(region: CGRect) async throws {
+
+    func startRecording(region: CGRect, screen: NSScreen) async throws {
         guard !isRecording else {
             throw ScreenRecorderError.alreadyRecording
         }
-        
-        // Find main display
+
+        // Find the SCDisplay matching the NSScreen
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        guard let mainDisplay = content.displays.first else {
+        guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
             throw ScreenRecorderError.noDisplayFound
         }
-        
-        display = mainDisplay.displayID
-        
-        // Convert SwiftUI coordinates to macOS coordinates
-        let flippedRegion = flipRegion(region, for: mainDisplay)
+
+        display = targetDisplay.displayID
+
+        // Convert selection rect (relative to screen) to display coordinates
+        let displayRegion = convertToDisplayCoordinates(region, screen: screen, display: targetDisplay)
 
         // Validate region dimensions
-        guard flippedRegion.width >= 1 && flippedRegion.height >= 1 else {
+        guard displayRegion.width >= 1 && displayRegion.height >= 1 else {
             throw ScreenRecorderError.writerSetupFailed
         }
 
         // Create stream configuration
-        let filter = SCContentFilter(display: mainDisplay, excludingWindows: [])
+        let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
-        config.sourceRect = flippedRegion
-        config.width = Int(flippedRegion.width)
-        config.height = Int(flippedRegion.height)
+        config.sourceRect = displayRegion
+        config.width = Int(displayRegion.width)
+        config.height = Int(displayRegion.height)
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
         config.capturesAudio = false
@@ -144,27 +145,27 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
     }
     
     @MainActor
-    func captureScreenshot(region: CGRect) async throws -> URL {
-        // Find main display
+    func captureScreenshot(region: CGRect, screen: NSScreen) async throws -> URL {
+        // Find the SCDisplay matching the NSScreen
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        guard let mainDisplay = content.displays.first else {
+        guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
             throw ScreenRecorderError.noDisplayFound
         }
-        
-        // Convert SwiftUI coordinates to macOS coordinates
-        let flippedRegion = flipRegion(region, for: mainDisplay)
+
+        // Convert selection rect (relative to screen) to display coordinates
+        let displayRegion = convertToDisplayCoordinates(region, screen: screen, display: targetDisplay)
 
         // Validate region dimensions
-        guard flippedRegion.width >= 1 && flippedRegion.height >= 1 else {
+        guard displayRegion.width >= 1 && displayRegion.height >= 1 else {
             throw ScreenRecorderError.writerSetupFailed
         }
 
         // Create configuration
-        let filter = SCContentFilter(display: mainDisplay, excludingWindows: [])
+        let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
-        config.sourceRect = flippedRegion
-        config.width = Int(flippedRegion.width)
-        config.height = Int(flippedRegion.height)
+        config.sourceRect = displayRegion
+        config.width = Int(displayRegion.width)
+        config.height = Int(displayRegion.height)
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
 
@@ -230,11 +231,37 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         }
     }
     
+    // MARK: - Display Matching
+
+    /// Find the SCDisplay that matches the given NSScreen
+    private func findDisplay(for screen: NSScreen, in displays: [SCDisplay]) -> SCDisplay? {
+        // Get the CGDirectDisplayID from NSScreen
+        guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else {
+            return displays.first
+        }
+
+        // Find matching SCDisplay by displayID
+        return displays.first { $0.displayID == screenNumber } ?? displays.first
+    }
+
     // MARK: - Coordinate Conversion
-    
-    private func flipRegion(_ region: CGRect, for display: SCDisplay) -> CGRect {
-        let displayFrame = display.frame
-        let flippedY = displayFrame.height - region.origin.y - region.height
+
+    /// Convert selection rect from screen-relative SwiftUI coordinates to SCDisplay coordinates
+    /// - Parameters:
+    ///   - region: The selection rect in SwiftUI coordinates (origin top-left, relative to screen)
+    ///   - screen: The NSScreen where selection was made
+    ///   - display: The target SCDisplay for capture
+    /// - Returns: CGRect in SCDisplay coordinates (origin bottom-left)
+    private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
+        // The selection rect is in SwiftUI coordinates (origin at top-left of the screen)
+        // SCDisplay uses macOS coordinates (origin at bottom-left)
+        // We need to flip Y coordinate
+
+        let screenHeight = screen.frame.height
+
+        // Flip Y: convert from top-left origin to bottom-left origin
+        let flippedY = screenHeight - region.origin.y - region.height
+
         return CGRect(
             x: region.origin.x,
             y: flippedY,

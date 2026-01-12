@@ -2,6 +2,7 @@ import SwiftUI
 import Combine
 import AppKit
 
+@MainActor
 class SelectionOverlay: ObservableObject {
     var onConfirm: ((CGRect) async -> Void)?
     var onCancel: (() async -> Void)?

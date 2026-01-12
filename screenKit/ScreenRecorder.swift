@@ -33,7 +33,12 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         
         // Convert SwiftUI coordinates to macOS coordinates
         let flippedRegion = flipRegion(region, for: mainDisplay)
-        
+
+        // Validate region dimensions
+        guard flippedRegion.width >= 1 && flippedRegion.height >= 1 else {
+            throw ScreenRecorderError.writerSetupFailed
+        }
+
         // Create stream configuration
         let filter = SCContentFilter(display: mainDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
@@ -148,7 +153,12 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         
         // Convert SwiftUI coordinates to macOS coordinates
         let flippedRegion = flipRegion(region, for: mainDisplay)
-        
+
+        // Validate region dimensions
+        guard flippedRegion.width >= 1 && flippedRegion.height >= 1 else {
+            throw ScreenRecorderError.writerSetupFailed
+        }
+
         // Create configuration
         let filter = SCContentFilter(display: mainDisplay, excludingWindows: [])
         let config = SCStreamConfiguration()
@@ -157,7 +167,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput {
         config.height = Int(flippedRegion.height)
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
-        
+
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
         
         // Save to Desktop

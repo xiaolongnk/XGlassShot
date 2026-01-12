@@ -90,14 +90,10 @@ final class OverlayManager: ObservableObject {
         // Start recording
         do {
             try await ScreenRecorder.shared.startRecording(region: rect)
-            await MainActor.run {
-                isRecording = true
-            }
+            isRecording = true
             showStopButton()
         } catch {
-            await MainActor.run {
-                isRecording = false
-            }
+            isRecording = false
             print("Failed to start recording: \(error)")
         }
     }
@@ -146,16 +142,12 @@ final class OverlayManager: ObservableObject {
             
             // Open in Finder
             NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
-            
-            await MainActor.run {
-                isRecording = false
-                hideStopButton()
-            }
+
+            isRecording = false
+            hideStopButton()
         } catch {
-            await MainActor.run {
-                isRecording = false
-                hideStopButton()
-            }
+            isRecording = false
+            hideStopButton()
             print("Failed to stop recording: \(error)")
         }
     }

@@ -10,6 +10,7 @@ import SwiftUI
 import AppKit
 import AudioToolbox
 import UniformTypeIdentifiers
+import Combine
 
 @available(macOS 12.3, *)
 @MainActor

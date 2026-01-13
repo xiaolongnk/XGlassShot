@@ -141,8 +141,17 @@ final class ShortcutsManager: ObservableObject {
     }
 
     private func showQualityFeedback() {
+        // Ensure we're on the main thread
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.showQualityFeedback()
+            }
+            return
+        }
+
         // Close existing feedback window
         feedbackWindow?.close()
+        feedbackWindow = nil
 
         let screenFrame = NSScreen.main?.frame ?? .zero
         let window = NSWindow(
@@ -158,12 +167,15 @@ final class ShortcutsManager: ObservableObject {
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: captureQuality))
+        // Capture quality value before creating the view
+        let quality = self.captureQuality
+        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: quality))
         hostingView.frame = window.contentView?.bounds ?? .zero
         window.contentView = hostingView
 
         window.center()
-        window.makeKeyAndOrderFront(nil)
+        // Use orderFront instead of makeKeyAndOrderFront since window ignores mouse events
+        window.orderFront(nil)
         feedbackWindow = window
 
         // Auto-dismiss after 1.5 seconds

@@ -337,8 +337,8 @@ final class StorageManager: ObservableObject {
         }
     }
 
-    private func generateVideoThumbnail(for url: URL) -> NSImage? {
-        let asset = AVAsset(url: url)
+    nonisolated private func generateVideoThumbnail(for url: URL) -> NSImage? {
+        let asset = AVURLAsset(url: url)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
         generator.maximumSize = CGSize(width: 240, height: 160)

@@ -233,33 +233,23 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
 
+        // Copy to clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+        pasteboard.writeObjects([nsImage])
+
         let bitmapRep = NSBitmapImageRep(cgImage: image)
         guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
             throw ScreenRecorderError.writerSetupFailed
         }
 
-        // Use NSSavePanel for sandbox-compatible file saving
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
-        let fileName = "Screenshot \(formatter.string(from: Date())).png"
+        // Use StorageManager for silent auto-save
+        let prefix = ShortcutsManager.shared.currentPrefix
+        let destinationURL = try await StorageManager.shared.saveScreenshot(data: pngData, prefix: prefix)
 
-        let savePanel = NSSavePanel()
-        savePanel.nameFieldStringValue = fileName
-        savePanel.allowedContentTypes = [.png]
-        savePanel.canCreateDirectories = true
-        savePanel.isExtensionHidden = false
-        savePanel.title = "Save Screenshot"
-        savePanel.message = "Choose a location to save your screenshot"
-
-        let response = await savePanel.begin()
-        guard response == .OK, let destinationURL = savePanel.url else {
-            throw ScreenRecorderError.saveCancelled
-        }
-
-        try pngData.write(to: destinationURL)
-
-        // Open in Finder
-        NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
+        // Show visual flash feedback
+        StorageManager.shared.showVisualFlash()
 
         return destinationURL
     }

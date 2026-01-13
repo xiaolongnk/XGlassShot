@@ -10,11 +10,15 @@ import SwiftUI
 @main
 struct ScreenKitApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
+
     init() {
         // Initialize managers
         _ = ShortcutsManager.shared
         _ = PermissionManager.shared
+        _ = StorageManager.shared
+
+        // Resolve bookmarked save directory for sandbox access
+        _ = StorageManager.shared.resolveBookmarkedDirectory()
     }
     
     var body: some Scene {

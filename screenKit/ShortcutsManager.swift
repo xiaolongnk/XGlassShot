@@ -59,7 +59,7 @@ final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
 
     @Published var currentPath: String = FileManager.default.homeDirectoryForCurrentUser.path
-    @Published var currentPrefix: String = "bug_"
+    @Published var currentPrefix: String = "bug"
     @Published var captureQuality: CaptureQuality = .quick {
         didSet {
             UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")

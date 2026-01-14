@@ -140,43 +140,83 @@ final class StorageManager: ObservableObject {
 
     func generateScreenshotFilename(prefix: String = "") -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH.mm.ss"
+        formatter.dateFormat = "MMdd-HHmmss"
         let timestamp = formatter.string(from: Date())
-        let prefixPart = prefix.isEmpty ? "" : "\(prefix)_"
-        return "ScreenKit_\(prefixPart)\(timestamp).png"
+        
+        var prefixPart = prefix
+        if !prefixPart.isEmpty && !prefixPart.hasSuffix("_") {
+            prefixPart += "_"
+        }
+        
+        return "\(prefixPart)\(timestamp).png"
     }
 
     func generateRecordingFilename(prefix: String = "") -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH.mm.ss"
+        formatter.dateFormat = "MMdd-HHmmss"
         let timestamp = formatter.string(from: Date())
-        let prefixPart = prefix.isEmpty ? "" : "\(prefix)_"
-        return "ScreenKit_\(prefixPart)\(timestamp).mov"
+        
+        var prefixPart = prefix
+        if !prefixPart.isEmpty && !prefixPart.hasSuffix("_") {
+            prefixPart += "_"
+        }
+        
+        return "\(prefixPart)\(timestamp).mov"
     }
 
     // MARK: - Save Operations
+    
+    private func getTargetDirectory() -> (url: URL, releaseAccess: Bool)? {
+        if alwaysAskWhereToSave { return nil }
+        
+        // If no custom directory set, use default Pictures
+        if savedDirectory.isEmpty {
+            return (defaultPicturesDirectory, false)
+        }
+        
+        // Try to resolve bookmark for custom directory
+        if let url = resolveBookmarkedDirectory() {
+            return (url, true)
+        }
+        
+        // Fallback: This is likely to fail in sandbox if bookmark is missing/invalid
+        // But we return it anyway to attempt write or let it fail
+        return (URL(fileURLWithPath: savedDirectory), false) 
+    }
 
     /// Save screenshot data to default directory or prompt user
     /// Returns the URL where the file was saved
     func saveScreenshot(data: Data, prefix: String = "") async throws -> URL {
         let filename = generateScreenshotFilename(prefix: prefix)
 
-        // Check if we should ask user
-        if alwaysAskWhereToSave || !isDirectoryWritable(defaultSaveDirectory) {
-            return try await saveWithPanel(data: data, filename: filename, fileType: .png)
+        // Try silent save first if configured
+        if let (directory, releaseAccess) = getTargetDirectory() {
+            defer {
+                if releaseAccess {
+                    directory.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            let destinationURL = directory.appendingPathComponent(filename)
+            
+            do {
+                try data.write(to: destinationURL)
+                
+                // Update last capture
+                updateLastCapture(url: destinationURL)
+                
+                // Play capture sound
+                playCaptureConfirmation()
+                
+                return destinationURL
+            } catch {
+                print("Silent save failed: \(error)")
+                // Fallback to panel if silent save fails
+            }
         }
 
-        // Silent save
-        let destinationURL = defaultSaveDirectory.appendingPathComponent(filename)
-        try data.write(to: destinationURL)
-
-        // Update last capture
-        updateLastCapture(url: destinationURL)
-
-        // Play capture sound
-        playCaptureConfirmation()
-
-        return destinationURL
+        // Fallback or explicit "always ask": Show Panel
+        return try await saveWithPanel(data: data, filename: filename, fileType: .png)
     }
 
     /// Save video file to default directory or prompt user
@@ -184,30 +224,41 @@ final class StorageManager: ObservableObject {
     func saveRecording(from tempURL: URL, prefix: String = "") async throws -> URL {
         let filename = generateRecordingFilename(prefix: prefix)
 
-        // Check if we should ask user
-        if alwaysAskWhereToSave || !isDirectoryWritable(defaultSaveDirectory) {
-            return try await saveRecordingWithPanel(from: tempURL, filename: filename)
+        // Try silent save first if configured
+        if let (directory, releaseAccess) = getTargetDirectory() {
+            defer {
+                if releaseAccess {
+                    directory.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            let destinationURL = directory.appendingPathComponent(filename)
+            
+            do {
+                 // Remove existing file if present
+                try? FileManager.default.removeItem(at: destinationURL)
+
+                // Copy from temp location
+                try FileManager.default.copyItem(at: tempURL, to: destinationURL)
+
+                // Clean up temp file
+                try? FileManager.default.removeItem(at: tempURL)
+
+                // Update last capture
+                updateLastCapture(url: destinationURL)
+
+                // Play capture sound
+                playCaptureConfirmation()
+
+                return destinationURL
+            } catch {
+                print("Silent save recording failed: \(error)")
+                // Fallback to panel
+            }
         }
-
-        // Silent save
-        let destinationURL = defaultSaveDirectory.appendingPathComponent(filename)
-
-        // Remove existing file if present
-        try? FileManager.default.removeItem(at: destinationURL)
-
-        // Copy from temp location
-        try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-
-        // Clean up temp file
-        try? FileManager.default.removeItem(at: tempURL)
-
-        // Update last capture
-        updateLastCapture(url: destinationURL)
-
-        // Play capture sound
-        playCaptureConfirmation()
-
-        return destinationURL
+        
+        // Fallback or explicit "always ask": Show Panel
+        return try await saveRecordingWithPanel(from: tempURL, filename: filename)
     }
 
     private func saveWithPanel(data: Data, filename: String, fileType: UTType) async throws -> URL {

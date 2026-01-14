@@ -11,7 +11,6 @@ struct ContentView: View {
     @ObservedObject private var shortcutsManager = ShortcutsManager.shared
     @ObservedObject private var overlayManager = OverlayManager.shared
     @ObservedObject private var storageManager = StorageManager.shared
-    @State private var showSettings = false
 
     var body: some View {
         ZStack {
@@ -36,41 +35,147 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Recent Capture Preview
-                if storageManager.lastCaptureURL != nil {
-                    RecentCaptureView(storageManager: storageManager)
-                        .padding(.bottom, 30)
-                }
+                // Integrated Settings & Recent Capture Panel
+                VStack(spacing: 16) {
+                    // Quick Settings
+                    HStack(spacing: 12) {
+                        // Save Path Selection
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("SAVE TO")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white.opacity(0.4))
+                                .tracking(1)
 
-                // Settings Button
-                Button(action: { showSettings = true }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 14, weight: .medium))
-                        Text("Settings")
-                            .font(.system(size: 13, weight: .medium))
+                            HStack(spacing: 8) {
+                                Image(systemName: "folder.fill")
+                                    .foregroundColor(.cyan.opacity(0.8))
+                                
+                                Text(storageManager.defaultSaveDirectory.lastPathComponent)
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .lineLimit(1)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    Task { await storageManager.selectSaveDirectory() }
+                                }) {
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.white.opacity(0.5))
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(.white.opacity(0.08))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(.white.opacity(0.1), lineWidth: 1)
+                            )
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Prefix Input
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("PREFIX")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white.opacity(0.4))
+                                .tracking(1)
+
+                            HStack(spacing: 8) {
+                                Image(systemName: "tag.fill")
+                                    .foregroundColor(.purple.opacity(0.8))
+                                
+                                TextField("", text: $shortcutsManager.currentPrefix)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(.white.opacity(0.08))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(.white.opacity(0.1), lineWidth: 1)
+                            )
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .foregroundColor(.white.opacity(0.7))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(.white.opacity(0.1))
-                    )
-                    .overlay(
-                        Capsule()
-                            .stroke(.white.opacity(0.15), lineWidth: 1)
-                    )
+
+                    // Recent Capture (Horizontal Layout)
+                    if let url = storageManager.lastCaptureURL {
+                        HStack(spacing: 16) {
+                            // Thumbnail
+                            Button(action: { storageManager.revealLastCapture() }) {
+                                ZStack {
+                                    if let thumbnail = storageManager.lastCaptureThumbnail {
+                                        Image(nsImage: thumbnail)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 80, height: 50)
+                                            .clipped()
+                                    } else {
+                                        Rectangle()
+                                            .fill(.white.opacity(0.05))
+                                            .frame(width: 80, height: 50)
+                                            .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
+                                    }
+                                }
+                                .cornerRadius(6)
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(.white.opacity(0.2), lineWidth: 1))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("LATEST CAPTURE")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(.green.opacity(0.8))
+                                    .tracking(0.5)
+                                
+                                Text(url.lastPathComponent)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: { storageManager.revealLastCapture() }) {
+                                Image(systemName: "arrow.right.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.white.opacity(0.05))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                        )
+                    }
                 }
-                .buttonStyle(PlainButtonStyle())
-                .padding(.bottom, 20)
+                .padding(24)
+                .background(
+                    VisualEffectBackground()
+                        .opacity(0.5)
+                )
+                .cornerRadius(20)
+                .padding(20)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-                .frame(width: 600, height: 550)
-        }
         .onAppear {
             setupSelectionOverlay()
         }
@@ -143,18 +248,18 @@ struct StatusView: View {
             // Title
             VStack(spacing: 8) {
                 Text("ScreenKit")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.8)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.white, .white.opacity(0.8)],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
+                )
 
                 Text("Ready to capture")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.5))
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundColor(.white.opacity(0.5))
             }
 
             // Shortcuts hints

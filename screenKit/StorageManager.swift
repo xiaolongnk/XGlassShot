@@ -344,12 +344,41 @@ final class StorageManager: ObservableObject {
         generator.maximumSize = CGSize(width: 240, height: 160)
 
         do {
-            let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
-            return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            if #available(macOS 13.0, *) {
+                return try? runSynchronously {
+                    let (cgImage, _) = try await generator.image(at: .zero)
+                    return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+                }
+            } else {
+                let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
+                return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+            }
         } catch {
-            print("Failed to generate video thumbnail: \(error)")
-            return nil
+             // Fallback for async failure or legacy error
+             try? {
+                 let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
+                 return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+             }()
         }
+        return nil
+    }
+
+    private func runSynchronously<T>(_ operation: @escaping () async throws -> T) throws -> T {
+        var result: Result<T, Error>?
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        Task {
+            do {
+                let value = try await operation()
+                result = .success(value)
+            } catch {
+                result = .failure(error)
+            }
+            semaphore.signal()
+        }
+        
+        semaphore.wait()
+        return try result!.get()
     }
 
     func revealLastCapture() {

@@ -4,119 +4,118 @@ struct DashboardSettingsView: View {
     @ObservedObject private var shortcutsManager = ShortcutsManager.shared
     
     var body: some View {
-        GlassView(material: .hudWindow, blendingMode: .withinWindow) {
-            VStack(alignment: .leading, spacing: 24) {
-                // Top Section - Status
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Status")
-                        .font(.system(size: 18, weight: .bold))
+        VStack(alignment: .leading, spacing: 24) {
+            // Top Section - Status
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Status")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                
+                // Prefix Badge
+                HStack(spacing: 12) {
+                    Text("Prefix")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    TextField("Prefix", text: $shortcutsManager.currentPrefix)
+                        .font(.system(size: 24, weight: .bold, design: .monospaced))
                         .foregroundColor(.white)
-                    
-                    // Prefix Badge
-                    HStack(spacing: 12) {
-                        Text("Prefix")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                        
-                        TextField("Prefix", text: $shortcutsManager.currentPrefix)
-                            .font(.system(size: 24, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                            .textFieldStyle(.plain)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(
-                                Capsule()
-                                    .fill(Color.white.opacity(0.15))
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                            )
-                            .frame(width: 200)
-                    }
-                    
-                    // Save Path Code Snippet
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Save Path")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                        
-                        HStack {
-                            Text(shortcutsManager.currentPath)
-                                .font(.system(size: 14, design: .monospaced))
-                                .foregroundColor(.green)
-                                .textSelection(.enabled)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                selectFolder()
-                            }) {
-                                Image(systemName: "folder.fill")
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .font(.system(size: 14))
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        .padding(.horizontal, 12)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.black.opacity(0.4))
+                            Capsule()
+                                .fill(Color.white.opacity(0.15))
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                            Capsule()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
                         )
-                    }
+                        .frame(width: 200)
                 }
                 
-                Divider()
-                    .background(Color.white.opacity(0.2))
-                
-                // Bottom Section - Shortcuts Map
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Global Shortcuts")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                // Save Path Code Snippet
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Save Path")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
                     
-                    // Shortcuts Grid
-                    VStack(spacing: 0) {
-                        // Header Row
-                        HStack(spacing: 0) {
-                            Text("Action")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.8))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            Text("Shortcut")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.8))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(Color.black.opacity(0.2))
+                    HStack {
+                        Text(shortcutsManager.currentPath)
+                            .font(.system(size: 14, design: .monospaced))
+                            .foregroundColor(.green)
+                            .textSelection(.enabled)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                         
-                        // Shortcut Rows
-                        ShortcutRow(action: "Capture Zone", shortcut: "⌘⇧1")
-                        ShortcutRow(action: "Quick Change Path", shortcut: "⌘⇧P")
-                        ShortcutRow(action: "Quick Change Prefix", shortcut: "⌘⇧L")
+                        Spacer()
+                        
+                        Button(action: {
+                            selectFolder()
+                        }) {
+                            Image(systemName: "folder.fill")
+                                .foregroundColor(.white.opacity(0.8))
+                                .font(.system(size: 14))
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
                     .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.black.opacity(0.2))
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.black.opacity(0.4))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.green.opacity(0.3), lineWidth: 1)
                     )
                 }
             }
-            .padding(24)
+            
+            Divider()
+                .background(Color.white.opacity(0.2))
+            
+            // Bottom Section - Shortcuts Map
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Global Shortcuts")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                
+                // Shortcuts Grid
+                VStack(spacing: 0) {
+                    // Header Row
+                    HStack(spacing: 0) {
+                        Text("Action")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.8))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Text("Shortcut")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.8))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(Color.black.opacity(0.2))
+                    
+                    // Shortcut Rows
+                    ShortcutRow(action: "Capture Zone", shortcut: "⌘⇧1")
+                    ShortcutRow(action: "Quick Change Path", shortcut: "⌘⇧P")
+                    ShortcutRow(action: "Quick Change Prefix", shortcut: "⌘⇧L")
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.black.opacity(0.2))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+            }
         }
+        .padding(24)
+        .background(GlassView(material: .hudWindow, blendingMode: .withinWindow))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)

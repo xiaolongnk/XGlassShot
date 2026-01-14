@@ -28,11 +28,20 @@ struct ScreenKitApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
+        .defaultSize(width: 800, height: 600)
+        .commands {
+            CommandGroup(replacing: .newItem) {}
+        }
     }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Show and activate window after app is fully initialized
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+        
         // Request screen recording permission on launch
         Task {
             if !PermissionManager.shared.canRecordScreen() {

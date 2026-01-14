@@ -291,28 +291,27 @@ struct PrefixInputView: View {
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        GlassView(material: .hudWindow, blendingMode: .withinWindow) {
-            HStack(spacing: 12) {
-                Text("Prefix:")
-                    .font(.system(size: 14, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.8))
-                
-                TextField("", text: $inputText)
-                    .font(.system(size: 16, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white)
-                    .textFieldStyle(.plain)
-                    .focused($isFocused)
-                    .onSubmit {
-                        confirmPrefix()
-                    }
-                    .onKeyPress(.escape) {
-                        onDismiss()
-                        return .handled
-                    }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+        HStack(spacing: 12) {
+            Text("Prefix:")
+                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .foregroundColor(.white.opacity(0.8))
+            
+            TextField("", text: $inputText)
+                .font(.system(size: 16, weight: .medium, design: .monospaced))
+                .foregroundColor(.white)
+                .textFieldStyle(.plain)
+                .focused($isFocused)
+                .onSubmit {
+                    confirmPrefix()
+                }
+                .onKeyPress(.escape) {
+                    onDismiss()
+                    return .handled
+                }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(GlassView(material: .hudWindow, blendingMode: .withinWindow))
         .clipShape(Capsule())
         .overlay(
             Capsule()
@@ -337,25 +336,24 @@ struct QualityFeedbackView: View {
     let quality: CaptureQuality
 
     var body: some View {
-        GlassView(material: .hudWindow, blendingMode: .withinWindow) {
-            HStack(spacing: 12) {
-                Image(systemName: quality == .high ? "sparkles" : "hare")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(quality == .high ? .yellow : .cyan)
+        HStack(spacing: 12) {
+            Image(systemName: quality == .high ? "sparkles" : "hare")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(quality == .high ? .yellow : .cyan)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(quality.description)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(quality.description)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white)
 
-                    Text("⌘⇧Q to toggle")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
-                }
+                Text("⌘⇧Q to toggle")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.5))
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .background(GlassView(material: .hudWindow, blendingMode: .withinWindow))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)

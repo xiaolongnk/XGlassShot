@@ -13,72 +13,71 @@ struct CommandBar: View {
     }
     
     var body: some View {
-        GlassView(material: .hudWindow, blendingMode: .withinWindow) {
-            HStack(spacing: 12) {
-                // Record Button
-                Button(action: {
-                    overlayManager.showSelectionOverlay()
-                }) {
-                    Image(systemName: "record.circle.fill")
-                        .foregroundColor(.red)
-                        .font(.system(size: 16))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .scaleEffect(hoveredButton == .record ? 1.1 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .record)
-                .onHover { isHovering in
-                    hoveredButton = isHovering ? .record : nil
-                }
-                
-                // Screenshot Button
-                Button(action: {
-                    overlayManager.showScreenshotOverlay()
-                }) {
-                    Image(systemName: "camera.fill")
-                        .foregroundColor(.white)
-                        .font(.system(size: 16))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .scaleEffect(hoveredButton == .screenshot ? 1.1 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .screenshot)
-                .onHover { isHovering in
-                    hoveredButton = isHovering ? .screenshot : nil
-                }
-                
-                // Settings Button
-                Button(action: {
-                    // Settings action
-                }) {
-                    Image(systemName: "gearshape.fill")
-                        .foregroundColor(.white)
-                        .font(.system(size: 16))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .scaleEffect(hoveredButton == .settings ? 1.1 : 1.0)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .settings)
-                .onHover { isHovering in
-                    hoveredButton = isHovering ? .settings : nil
-                }
-                
-                // Divider
-                Divider()
-                    .frame(height: 20)
-                    .foregroundColor(.white.opacity(0.3))
-                
-                // Prefix Label
-                Button(action: {
-                    showPrefixEditor = true
-                }) {
-                    Text(shortcutsManager.currentPrefix)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
-                        .padding(.horizontal, 8)
-                }
-                .buttonStyle(PlainButtonStyle())
+        HStack(spacing: 12) {
+            // Record Button
+            Button(action: {
+                overlayManager.showSelectionOverlay()
+            }) {
+                Image(systemName: "record.circle.fill")
+                    .foregroundColor(.red)
+                    .font(.system(size: 16))
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .buttonStyle(PlainButtonStyle())
+            .scaleEffect(hoveredButton == .record ? 1.1 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .record)
+            .onHover { isHovering in
+                hoveredButton = isHovering ? .record : nil
+            }
+            
+            // Screenshot Button
+            Button(action: {
+                overlayManager.showScreenshotOverlay()
+            }) {
+                Image(systemName: "camera.fill")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16))
+            }
+            .buttonStyle(PlainButtonStyle())
+            .scaleEffect(hoveredButton == .screenshot ? 1.1 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .screenshot)
+            .onHover { isHovering in
+                hoveredButton = isHovering ? .screenshot : nil
+            }
+            
+            // Settings Button
+            Button(action: {
+                // Settings action
+            }) {
+                Image(systemName: "gearshape.fill")
+                    .foregroundColor(.white)
+                    .font(.system(size: 16))
+            }
+            .buttonStyle(PlainButtonStyle())
+            .scaleEffect(hoveredButton == .settings ? 1.1 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton == .settings)
+            .onHover { isHovering in
+                hoveredButton = isHovering ? .settings : nil
+            }
+            
+            // Divider
+            Divider()
+                .frame(height: 20)
+                .foregroundColor(.white.opacity(0.3))
+            
+            // Prefix Label
+            Button(action: {
+                showPrefixEditor = true
+            }) {
+                Text(shortcutsManager.currentPrefix)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.horizontal, 8)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(GlassView(material: .hudWindow, blendingMode: .withinWindow))
         .clipShape(Capsule())
         .overlay(
             Capsule()

@@ -15,8 +15,13 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Frosted glass background
+            // Dark base background (ensures visibility)
+            Color(nsColor: NSColor(white: 0.12, alpha: 1.0))
+                .ignoresSafeArea()
+
+            // Frosted glass overlay
             VisualEffectBackground()
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Top Command Bar
@@ -82,9 +87,11 @@ struct ContentView: View {
 struct VisualEffectBackground: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
+        view.material = .sidebar
+        view.blendingMode = .withinWindow
         view.state = .active
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor(white: 0.1, alpha: 0.95).cgColor
         return view
     }
 
@@ -287,7 +294,12 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
+            // Dark base background
+            Color(nsColor: NSColor(white: 0.12, alpha: 1.0))
+                .ignoresSafeArea()
+
             VisualEffectBackground()
+                .ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {

@@ -24,9 +24,7 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top Command Bar
-                CommandBar()
-                    .padding(.top, 20)
-                    .padding(.horizontal, 20)
+                Spacer()
 
                 Spacer()
 
@@ -35,144 +33,101 @@ struct ContentView: View {
 
                 Spacer()
 
-                // Integrated Settings & Recent Capture Panel
-                VStack(spacing: 16) {
-                    // Quick Settings
-                    HStack(spacing: 12) {
-                        // Save Path Selection
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("SAVE TO")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.white.opacity(0.4))
-                                .tracking(1)
-
+                // Integrated Settings Dock
+                HStack(spacing: 16) {
+                    // Path & Prefix Group
+                    HStack(spacing: 0) {
+                        // Save Path
+                        Button(action: {
+                             Task { await storageManager.selectSaveDirectory() }
+                        }) {
                             HStack(spacing: 8) {
                                 Image(systemName: "folder.fill")
                                     .foregroundColor(.cyan.opacity(0.8))
-                                
                                 Text(storageManager.defaultSaveDirectory.lastPathComponent)
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.white.opacity(0.9))
                                     .lineLimit(1)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    Task { await storageManager.selectSaveDirectory() }
-                                }) {
-                                    Image(systemName: "pencil")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.white.opacity(0.5))
-                                }
-                                .buttonStyle(PlainButtonStyle())
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.white.opacity(0.08))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(.white.opacity(0.1), lineWidth: 1)
-                            )
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
                         }
-                        .frame(maxWidth: .infinity)
-
-                        // Prefix Input
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("PREFIX")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.white.opacity(0.4))
-                                .tracking(1)
-
-                            HStack(spacing: 8) {
-                                Image(systemName: "tag.fill")
-                                    .foregroundColor(.purple.opacity(0.8))
-                                
-                                TextField("", text: $shortcutsManager.currentPrefix)
-                                    .textFieldStyle(.plain)
-                                    .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.9))
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.white.opacity(0.08))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(.white.opacity(0.1), lineWidth: 1)
-                            )
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Divider()
+                            .frame(height: 20)
+                            .background(Color.white.opacity(0.1))
+                        
+                        // Prefix
+                        HStack(spacing: 8) {
+                            Image(systemName: "tag.fill")
+                                .foregroundColor(.purple.opacity(0.8))
+                                .font(.system(size: 12))
+                            
+                            TextField("Prefix", text: $shortcutsManager.currentPrefix)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                .frame(width: 80)
                         }
-                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 16)
                     }
-
-                    // Recent Capture (Horizontal Layout)
-                    if let url = storageManager.lastCaptureURL {
-                        HStack(spacing: 16) {
-                            // Thumbnail
-                            Button(action: { storageManager.revealLastCapture() }) {
-                                ZStack {
-                                    if let thumbnail = storageManager.lastCaptureThumbnail {
-                                        Image(nsImage: thumbnail)
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 80, height: 50)
-                                            .clipped()
-                                    } else {
-                                        Rectangle()
-                                            .fill(.white.opacity(0.05))
-                                            .frame(width: 80, height: 50)
-                                            .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
-                                    }
-                                }
-                                .cornerRadius(6)
-                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(.white.opacity(0.2), lineWidth: 1))
-                            }
-                            .buttonStyle(PlainButtonStyle())
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("LATEST CAPTURE")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.green.opacity(0.8))
-                                    .tracking(0.5)
-                                
-                                Text(url.lastPathComponent)
-                                    .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.7))
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            }
-                            
-                            Spacer()
-                            
-                            Button(action: { storageManager.revealLastCapture() }) {
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.white.opacity(0.3))
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(.white.opacity(0.06))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.white.opacity(0.08), lineWidth: 1)
+                    )
+                    
+                    // Quality Toggle
+                    Button(action: { shortcutsManager.toggleQuality() }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: shortcutsManager.captureQuality == .quick ? "bolt.fill" : "sparkles")
+                                .foregroundColor(shortcutsManager.captureQuality == .quick ? .yellow : .cyan)
+                            Text(shortcutsManager.captureQuality == .quick ? "Quick" : "High")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white.opacity(0.9))
                         }
-                        .padding(12)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(.white.opacity(0.05))
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(.white.opacity(0.06))
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(.white.opacity(0.1), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.white.opacity(0.08), lineWidth: 1)
                         )
                     }
+                    .buttonStyle(PlainButtonStyle())
+
+                    // Toggles Group
+                    HStack(spacing: 4) {
+                        DockToggle(
+                            isOn: $storageManager.playCaptureSound,
+                            icon: "speaker.wave.2.fill",
+                            activeColor: .pink
+                        )
+                        
+                        DockToggle(
+                            isOn: $storageManager.alwaysAskWhereToSave,
+                            icon: "questionmark.folder.fill",
+                            activeColor: .orange
+                        )
+                    }
+                    .padding(4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.white.opacity(0.06))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(.white.opacity(0.08), lineWidth: 1)
+                    )
                 }
-                .padding(24)
-                .background(
-                    VisualEffectBackground()
-                        .opacity(0.5)
-                )
-                .cornerRadius(20)
-                .padding(20)
+                .padding(.bottom, 40)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -248,28 +203,95 @@ struct StatusView: View {
             // Title
             VStack(spacing: 8) {
                 Text("ScreenKit")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.white, .white.opacity(0.8)],
-                        startPoint: .top,
-                        endPoint: .bottom
+                    .font(.system(size: 44, weight: .heavy, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.white, .white.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
                     )
-                )
+                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
 
                 Text("Ready to capture")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundColor(.white.opacity(0.5))
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                    .tracking(0.5)
             }
 
-            // Shortcuts hints
-            VStack(spacing: 12) {
-                ShortcutHint(icon: "video.fill", shortcut: "⌘⇧1", label: "Record Screen")
-                ShortcutHint(icon: "camera.fill", shortcut: "⌘⇧2", label: "Screenshot")
-                ShortcutHint(icon: "sparkles", shortcut: "⌘⇧Q", label: "Toggle Quality")
+            // Hero Actions
+            HStack(spacing: 24) {
+                // Record Button
+                HeroActionButton(
+                    icon: "record.circle.fill",
+                    label: "Record",
+                    shortcut: "⌘⇧1",
+                    color: .red,
+                    action: { OverlayManager.shared.showSelectionOverlay() }
+                )
+                
+                // Screenshot Button
+                HeroActionButton(
+                    icon: "camera.fill",
+                    label: "Capture",
+                    shortcut: "⌘⇧2",
+                    color: .cyan,
+                    action: { OverlayManager.shared.showScreenshotOverlay() }
+                )
             }
-            .padding(.top, 8)
+            .padding(.top, 20)
         }
+    }
+}
+
+struct HeroActionButton: View {
+    let icon: String
+    let label: String
+    let shortcut: String
+    let color: Color
+    let action: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(isHovered ? 0.2 : 0.1))
+                        .frame(width: 80, height: 80)
+                        
+                    Image(systemName: icon)
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundColor(color)
+                        .scaleEffect(isHovered ? 1.1 : 1.0)
+                }
+                .shadow(color: color.opacity(isHovered ? 0.3 : 0.0), radius: 15, x: 0, y: 0)
+                
+                VStack(spacing: 4) {
+                    Text(label)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text(shortcut)
+                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4))
+                }
+            }
+            .frame(width: 140, height: 160)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(.white.opacity(isHovered ? 0.08 : 0.03))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(.white.opacity(isHovered ? 0.15 : 0.05), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+        .onHover { isHovered = $0 }
     }
 }
 
@@ -277,42 +299,53 @@ struct ShortcutHint: View {
     let icon: String
     let shortcut: String
     let label: String
+    let action: () -> Void
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.cyan.opacity(0.8))
-                .frame(width: 20)
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.cyan.opacity(0.8))
+                    .frame(width: 20)
 
-            Text(shortcut)
-                .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.9))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(.white.opacity(0.15))
-                )
+                Text(shortcut)
+                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(.white.opacity(0.15))
+                    )
 
-            Text(label)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundColor(.white.opacity(0.6))
+                Text(label)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
 
-            Spacer()
+                Spacer()
+                
+                // Angle bracket to imply action
+                if isHovered {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.white.opacity(0.3))
+                }
+            }
+            .frame(width: 240) // Slightly wider
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12) // Taller touch area
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.white.opacity(isHovered ? 0.08 : 0.04))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.white.opacity(isHovered ? 0.2 : 0.1), lineWidth: 1)
+            )
         }
-        .frame(width: 220)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.white.opacity(isHovered ? 0.08 : 0.04))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(.white.opacity(0.1), lineWidth: 1)
-        )
+        .buttonStyle(PlainButtonStyle())
         .scaleEffect(isHovered ? 1.02 : 1.0)
         .animation(.spring(response: 0.3), value: isHovered)
         .onHover { isHovered = $0 }
@@ -390,274 +423,28 @@ struct RecentCaptureView: View {
     }
 }
 
-// MARK: - Settings View
-
-struct SettingsView: View {
-    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
-    @ObservedObject private var storageManager = StorageManager.shared
-    @Environment(\.dismiss) var dismiss
-
-    var body: some View {
-        ZStack {
-            // Dark base background
-            Color(nsColor: NSColor(white: 0.12, alpha: 1.0))
-                .ignoresSafeArea()
-
-            VisualEffectBackground()
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 32) {
-                    // Header
-                    HStack {
-                        Text("Settings")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white.opacity(0.5))
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-
-                    // Storage Section
-                    SettingsSection(title: "Storage", icon: "folder.fill") {
-                        VStack(alignment: .leading, spacing: 16) {
-                            // Save Directory
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Save Location")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.5))
-
-                                HStack {
-                                    Text(storageManager.defaultSaveDirectory.path)
-                                        .font(.system(size: 13, design: .monospaced))
-                                        .foregroundColor(.cyan)
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
-
-                                    Spacer()
-
-                                    Button("Change") {
-                                        Task {
-                                            await storageManager.selectSaveDirectory()
-                                        }
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                }
-                                .padding(12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(.black.opacity(0.3))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(.cyan.opacity(0.3), lineWidth: 1)
-                                )
-                            }
-
-                            // Always Ask Toggle
-                            Toggle(isOn: $storageManager.alwaysAskWhereToSave) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Always ask where to save")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.white)
-                                    Text("Show save dialog for each capture")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.white.opacity(0.5))
-                                }
-                            }
-                            .toggleStyle(SwitchToggleStyle(tint: .cyan))
-
-                            // Sound Toggle
-                            Toggle(isOn: $storageManager.playCaptureSound) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Play capture sound")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.white)
-                                    Text("Shutter sound on screenshot")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.white.opacity(0.5))
-                                }
-                            }
-                            .toggleStyle(SwitchToggleStyle(tint: .cyan))
-                        }
-                    }
-
-                    // Capture Section
-                    SettingsSection(title: "Capture", icon: "camera.fill") {
-                        VStack(alignment: .leading, spacing: 16) {
-                            // Prefix
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Filename Prefix")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.5))
-
-                                TextField("Prefix", text: $shortcutsManager.currentPrefix)
-                                    .textFieldStyle(.plain)
-                                    .font(.system(size: 14, design: .monospaced))
-                                    .foregroundColor(.white)
-                                    .padding(12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(.black.opacity(0.3))
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(.white.opacity(0.2), lineWidth: 1)
-                                    )
-                            }
-
-                            // Quality
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Capture Quality")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.5))
-
-                                HStack(spacing: 12) {
-                                    QualityButton(
-                                        quality: .quick,
-                                        isSelected: shortcutsManager.captureQuality == .quick,
-                                        action: { shortcutsManager.captureQuality = .quick }
-                                    )
-                                    QualityButton(
-                                        quality: .high,
-                                        isSelected: shortcutsManager.captureQuality == .high,
-                                        action: { shortcutsManager.captureQuality = .high }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Shortcuts Section
-                    SettingsSection(title: "Shortcuts", icon: "keyboard") {
-                        VStack(spacing: 0) {
-                            ShortcutSettingRow(action: "Record Screen", shortcut: "⌘⇧1")
-                            ShortcutSettingRow(action: "Screenshot", shortcut: "⌘⇧2")
-                            ShortcutSettingRow(action: "Toggle Quality", shortcut: "⌘⇧Q")
-                            ShortcutSettingRow(action: "Change Path", shortcut: "⌘⇧P")
-                            ShortcutSettingRow(action: "Change Prefix", shortcut: "⌘⇧L")
-                        }
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.black.opacity(0.2))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(.white.opacity(0.1), lineWidth: 1)
-                        )
-                    }
-                }
-                .padding(32)
-            }
-        }
-    }
-}
-
-struct SettingsSection<Content: View>: View {
-    let title: String
+struct DockToggle: View {
+    @Binding var isOn: Bool
     let icon: String
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.cyan)
-
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-            }
-
-            content
-        }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.white.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(.white.opacity(0.1), lineWidth: 1)
-        )
-    }
-}
-
-struct QualityButton: View {
-    let quality: CaptureQuality
-    let isSelected: Bool
-    let action: () -> Void
+    let activeColor: Color
     @State private var isHovered = false
 
     var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: quality == .quick ? "hare" : "sparkles")
-                    .font(.system(size: 20, weight: .medium))
-
-                Text(quality.displayName)
-                    .font(.system(size: 12, weight: .semibold))
-
-                Text(quality == .quick ? "1x Scale" : "2x Scale")
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.5))
-            }
-            .foregroundColor(isSelected ? .cyan : .white.opacity(0.7))
-            .frame(width: 100, height: 80)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? .cyan.opacity(0.2) : .white.opacity(isHovered ? 0.1 : 0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? .cyan.opacity(0.5) : .white.opacity(0.1), lineWidth: 1)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isHovered ? 1.05 : 1.0)
-        .animation(.spring(response: 0.3), value: isHovered)
-        .onHover { isHovered = $0 }
-    }
-}
-
-struct ShortcutSettingRow: View {
-    let action: String
-    let shortcut: String
-
-    var body: some View {
-        HStack {
-            Text(action)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.white)
-
-            Spacer()
-
-            Text(shortcut)
-                .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+        Button(action: { isOn.toggle() }) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(isOn ? activeColor : .white.opacity(0.3))
+                .frame(width: 36, height: 36)
                 .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(.white.opacity(0.1))
+                    Circle()
+                        .fill(isOn ? activeColor.opacity(0.1) : .clear)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(isHovered ? 0.2 : 0.0), lineWidth: 1)
                 )
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .overlay(
-            Rectangle()
-                .frame(height: 1)
-                .foregroundColor(.white.opacity(0.05)),
-            alignment: .bottom
-        )
+        .buttonStyle(PlainButtonStyle())
+        .onHover { isHovered = $0 }
     }
 }

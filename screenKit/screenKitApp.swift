@@ -24,11 +24,11 @@ struct ScreenKitApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(width: 800, height: 600)
+                .frame(minWidth: 550, minHeight: 600)
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 800, height: 600)
+        .defaultSize(width: 550, height: 620)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }

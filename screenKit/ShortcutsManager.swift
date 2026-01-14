@@ -69,6 +69,7 @@ final class ShortcutsManager: ObservableObject {
 
     private var activeInputWindow: NSWindow?
     private var feedbackWindow: NSWindow?
+    private var feedbackTask: Task<Void, Never>?
 
     private init() {
         // Load saved quality preference
@@ -140,7 +141,7 @@ final class ShortcutsManager: ObservableObject {
         captureQuality = (captureQuality == .quick) ? .high : .quick
     }
 
-    private var feedbackTask: DispatchWorkItem?
+
 
     private func showQualityFeedback() {
         // Ensure we're on the main thread
@@ -172,16 +173,22 @@ final class ShortcutsManager: ObservableObject {
         window.orderFront(nil)
 
         // Schedule auto-hide
-        let task = DispatchWorkItem { [weak self] in
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.2
-                self?.feedbackWindow?.animator().alphaValue = 0
-            } completionHandler: {
-                self?.feedbackWindow?.orderOut(nil)
+        feedbackTask = Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            
+            guard !Task.isCancelled else { return }
+            
+            await MainActor.run {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.2
+                    self.feedbackWindow?.animator().alphaValue = 0
+                } completionHandler: {
+                    Task { @MainActor in
+                        self.feedbackWindow?.orderOut(nil)
+                    }
+                }
             }
         }
-        feedbackTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: task)
     }
 
     private func createFeedbackWindow() {

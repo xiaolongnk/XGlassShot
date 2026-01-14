@@ -280,30 +280,50 @@ final class StorageManager: ObservableObject {
         AudioServicesPlaySystemSound(1108)
     }
 
+    private var flashWindow: NSWindow?
+    
     func showVisualFlash() {
-        // Create a brief white flash overlay
+        // Ensure we're on the main thread
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.showVisualFlash()
+            }
+            return
+        }
+
         guard let screen = NSScreen.main else { return }
 
-        let flashWindow = NSWindow(
-            contentRect: screen.frame,
-            styleMask: .borderless,
-            backing: .buffered,
-            defer: false
-        )
-        flashWindow.level = .screenSaver
-        flashWindow.backgroundColor = NSColor.white.withAlphaComponent(0.3)
-        flashWindow.isOpaque = false
-        flashWindow.ignoresMouseEvents = true
-        flashWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        // Create window if needed
+        if flashWindow == nil {
+            let window = NSWindow(
+                contentRect: screen.frame,
+                styleMask: .borderless,
+                backing: .buffered,
+                defer: false
+            )
+            window.level = .screenSaver
+            window.backgroundColor = NSColor.white
+            window.isOpaque = false // Allow alpha changes
+            window.ignoresMouseEvents = true
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            flashWindow = window
+        }
 
-        flashWindow.orderFront(nil)
+        guard let window = flashWindow else { return }
+        
+        // Update frame in case screen changed
+        window.setFrame(screen.frame, display: true)
+        
+        // Reset state
+        window.alphaValue = 0.3
+        window.orderFront(nil)
 
         // Fade out
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.2
-            flashWindow.animator().alphaValue = 0
+            window.animator().alphaValue = 0
         } completionHandler: {
-            flashWindow.close()
+            window.orderOut(nil)
         }
     }
 

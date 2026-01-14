@@ -140,6 +140,8 @@ final class ShortcutsManager: ObservableObject {
         captureQuality = (captureQuality == .quick) ? .high : .quick
     }
 
+    private var feedbackTask: DispatchWorkItem?
+
     private func showQualityFeedback() {
         // Ensure we're on the main thread
         guard Thread.isMainThread else {
@@ -149,10 +151,40 @@ final class ShortcutsManager: ObservableObject {
             return
         }
 
-        // Close existing feedback window
-        feedbackWindow?.close()
-        feedbackWindow = nil
+        // Cancel pending hide task
+        feedbackTask?.cancel()
 
+        // Create window if needed
+        if feedbackWindow == nil {
+            createFeedbackWindow()
+        }
+
+        guard let window = feedbackWindow,
+              let hostingView = window.contentView as? NSHostingView<QualityFeedbackView> else {
+            return
+        }
+
+        // Update content
+        hostingView.rootView = QualityFeedbackView(quality: captureQuality)
+        
+        // Ensure window is visible
+        window.alphaValue = 1.0
+        window.orderFront(nil)
+
+        // Schedule auto-hide
+        let task = DispatchWorkItem { [weak self] in
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.2
+                self?.feedbackWindow?.animator().alphaValue = 0
+            } completionHandler: {
+                self?.feedbackWindow?.orderOut(nil)
+            }
+        }
+        feedbackTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: task)
+    }
+
+    private func createFeedbackWindow() {
         let screenFrame = NSScreen.main?.frame ?? .zero
         let window = NSWindow(
             contentRect: NSRect(x: screenFrame.midX - 100, y: screenFrame.midY - 30, width: 200, height: 60),
@@ -167,22 +199,12 @@ final class ShortcutsManager: ObservableObject {
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        // Capture quality value before creating the view
-        let quality = self.captureQuality
-        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: quality))
+        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: captureQuality))
         hostingView.frame = window.contentView?.bounds ?? .zero
         window.contentView = hostingView
-
         window.center()
-        // Use orderFront instead of makeKeyAndOrderFront since window ignores mouse events
-        window.orderFront(nil)
+        
         feedbackWindow = window
-
-        // Auto-dismiss after 1.5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.feedbackWindow?.close()
-            self?.feedbackWindow = nil
-        }
     }
     
     private func handleChangePath() {

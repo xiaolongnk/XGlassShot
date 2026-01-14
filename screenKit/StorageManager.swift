@@ -354,16 +354,12 @@ final class StorageManager: ObservableObject {
                 return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
             }
         } catch {
-             // Fallback for async failure or legacy error
-             try? {
-                 let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
-                 return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-             }()
+            print("Failed to generate video thumbnail: \(error)")
         }
         return nil
     }
 
-    private func runSynchronously<T>(_ operation: @escaping () async throws -> T) throws -> T {
+    nonisolated private func runSynchronously<T>(_ operation: @escaping () async throws -> T) throws -> T {
         var result: Result<T, Error>?
         let semaphore = DispatchSemaphore(value: 0)
         

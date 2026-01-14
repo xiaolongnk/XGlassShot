@@ -233,15 +233,17 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
 
-        // Copy to clipboard
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        pasteboard.writeObjects([nsImage])
-
+        // Convert to PNG data first (deep copy/serialization)
         let bitmapRep = NSBitmapImageRep(cgImage: image)
         guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
             throw ScreenRecorderError.writerSetupFailed
+        }
+
+        // Copy to clipboard using the clean data-backed NSImage
+        if let clipboardImage = NSImage(data: pngData) {
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.writeObjects([clipboardImage])
         }
 
         // Use StorageManager for silent auto-save

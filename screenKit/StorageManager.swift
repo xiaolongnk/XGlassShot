@@ -24,6 +24,7 @@ final class StorageManager: ObservableObject {
     @AppStorage("alwaysAskWhereToSave") var alwaysAskWhereToSave: Bool = false
     @AppStorage("lastCaptureURL") private var lastCaptureURLString: String = ""
     @AppStorage("playCaptureSound") var playCaptureSound: Bool = true
+    @AppStorage("addScreenshotOutline") var addScreenshotOutline: Bool = false
 
     // MARK: - Published Properties
 

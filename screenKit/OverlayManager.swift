@@ -31,8 +31,8 @@ final class OverlayManager: ObservableObject {
         isShowingOverlay = true
         
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect, screen in
-            await self?.handleSelectionConfirmed(rect: rect, screen: screen)
+        selectionOverlay?.onConfirm = { [weak self] rect, annotations, screen in
+            await self?.handleSelectionConfirmed(rect: rect, annotations: annotations, screen: screen)
         }
 
         selectionOverlay?.onCancel = { [weak self] in
@@ -52,8 +52,8 @@ final class OverlayManager: ObservableObject {
         isShowingOverlay = true
 
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect, screen in
-            await self?.handleScreenshotCaptured(rect: rect, screen: screen)
+        selectionOverlay?.onConfirm = { [weak self] rect, annotations, screen in
+            await self?.handleScreenshotCaptured(rect: rect, annotations: annotations, screen: screen)
         }
 
         selectionOverlay?.onCancel = { [weak self] in
@@ -63,7 +63,7 @@ final class OverlayManager: ObservableObject {
         selectionOverlay?.show()
     }
 
-    private func handleScreenshotCaptured(rect: CGRect, screen: NSScreen) async {
+    private func handleScreenshotCaptured(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {
         // Hide overlay immediately
         selectionOverlay?.hide()
         isShowingOverlay = false
@@ -74,13 +74,13 @@ final class OverlayManager: ObservableObject {
         // Capture Screenshot with current quality setting
         let quality = ShortcutsManager.shared.captureQuality
         do {
-            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, screen: screen, quality: quality)
+            _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, annotations: annotations, screen: screen, quality: quality)
         } catch {
             print("Failed to capture screenshot: \(error)")
         }
     }
 
-    private func handleSelectionConfirmed(rect: CGRect, screen: NSScreen) async {
+    private func handleSelectionConfirmed(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {
         // Hide overlay immediately
         selectionOverlay?.hide()
         isShowingOverlay = false
@@ -91,6 +91,7 @@ final class OverlayManager: ObservableObject {
         // Start recording with current quality setting
         let quality = ShortcutsManager.shared.captureQuality
         do {
+            // Note: Recording currently ignores annotations as it's a video stream
             try await ScreenRecorder.shared.startRecording(region: rect, screen: screen, quality: quality)
             isRecording = true
             showStopButton()

@@ -4,7 +4,7 @@ import AppKit
 
 @MainActor
 class SelectionOverlay: ObservableObject {
-    var onConfirm: (@MainActor (CGRect, NSScreen) async -> Void)?
+    var onConfirm: (@MainActor (CGRect, [CGRect], NSScreen) async -> Void)?
     var onCancel: (@MainActor () async -> Void)?
 
     @Published var selectionRect: CGRect = .zero
@@ -12,10 +12,16 @@ class SelectionOverlay: ObservableObject {
 
     private var windows: [NSWindow] = []
     private(set) var currentScreen: NSScreen?
+    
+    // Annotations (relative to selectionRect)
+    @Published var annotations: [CGRect] = []
+
+    private var eventMonitor: Any?
 
     func show() {
         guard !isActive else { return }
         isActive = true
+        setupInputMonitoring()
 
         // Create overlay windows on ALL screens
         for screen in NSScreen.screens {
@@ -51,6 +57,44 @@ class SelectionOverlay: ObservableObject {
         isActive = false
         selectionRect = .zero
         currentScreen = nil
+        
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
+    }
+    
+    private func setupInputMonitoring() {
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            return self?.handleKeyDown(event: event)
+        }
+    }
+    
+    private func handleKeyDown(event: NSEvent) -> NSEvent? {
+        guard isActive else { return event }
+        
+        if event.keyCode == 36 { // Enter
+            confirmSelection()
+            return nil // Consume event
+        } else if event.keyCode == 53 { // Escape
+            Task { @MainActor in
+                await onCancel?()
+            }
+            return nil // Consume event
+        }
+        
+        return event
+    }
+    
+    func confirmSelection() {
+        guard let screen = currentScreen else { return }
+        
+        // Check if there is a valid selection
+        if selectionRect.width > 10 && selectionRect.height > 10 {
+            Task { @MainActor in
+                await onConfirm?(selectionRect, annotations, screen)
+            }
+        }
     }
 
     func setCurrentScreen(_ screen: NSScreen) {
@@ -65,6 +109,7 @@ struct SelectionOverlayView: View {
     @State private var startPoint: CGPoint = .zero
     @State private var currentPoint: CGPoint = .zero
     @State private var isDragging: Bool = false
+    @State private var isDrawingAnnotation: Bool = false
     @State private var isThisScreenActive: Bool = false
 
     var body: some View {
@@ -77,45 +122,78 @@ struct SelectionOverlayView: View {
                 if isThisScreenActive && (isDragging || overlay.selectionRect != .zero) {
                     // Selection rectangle with viewfinder style
                     ViewfinderRect(rect: overlay.selectionRect)
+                    
+                    // Annotations
+                    ForEach(0..<overlay.annotations.count, id: \.self) { index in
+                        AnnotationRect(rect: overlay.annotations[index], selectionRect: overlay.selectionRect)
+                    }
+                    
+                    // Current drawing annotation
+                    if isDrawingAnnotation {
+                        AnnotationRect(
+                            rect: calculateAnnotationRect(start: startPoint, end: currentPoint),
+                            selectionRect: overlay.selectionRect
+                        )
+                    }
                 }
             }
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        if !isDragging {
-                            startPoint = value.startLocation
-                            isDragging = true
-                            isThisScreenActive = true
-                            overlay.setCurrentScreen(screen)
+                        if !isDragging && !isDrawingAnnotation {
+                            let location = value.startLocation
+                            
+                            // Check if start location is substantially inside existing selection to start annotation
+                            // We use a small inset to allow resizing/moving selection in future if needed (though not implemented yet)
+                            if isThisScreenActive && overlay.selectionRect.insetBy(dx: 5, dy: 5).contains(location) {
+                                isDrawingAnnotation = true
+                                startPoint = CGPoint(
+                                    x: location.x - overlay.selectionRect.minX,
+                                    y: location.y - overlay.selectionRect.minY
+                                )
+                                currentPoint = startPoint
+                            } else {
+                                // Start new selection
+                                isDragging = true
+                                isThisScreenActive = true
+                                overlay.setCurrentScreen(screen)
+                                overlay.selectionRect = .zero // Reset selection
+                                overlay.annotations = []      // Reset annotations
+                                startPoint = location
+                                currentPoint = location
+                                updateSelectionRect()
+                            }
+                        } else if isDrawingAnnotation {
+                             // Update current annotation point (relative to selection)
+                             currentPoint = CGPoint(
+                                 x: value.location.x - overlay.selectionRect.minX,
+                                 y: value.location.y - overlay.selectionRect.minY
+                             )
+                        } else {
+                            // Update selection
+                            currentPoint = value.location
+                            updateSelectionRect()
                         }
-                        currentPoint = value.location
-                        updateSelectionRect()
                     }
                     .onEnded { _ in
-                        isDragging = false
-                        guard isThisScreenActive else { return }
-
-                        // Capture rect and screen before async call since hide() will reset them
-                        let capturedRect = overlay.selectionRect
-                        if capturedRect.width > 10 && capturedRect.height > 10 {
-                            Task { @MainActor in
-                                await overlay.onConfirm?(capturedRect, screen)
+                        if isDrawingAnnotation {
+                            // Finalize annotation
+                            let rect = calculateAnnotationRect(start: startPoint, end: currentPoint)
+                            if rect.width > 5 && rect.height > 5 {
+                                overlay.annotations.append(rect)
                             }
+                            isDrawingAnnotation = false
                         } else {
-                            Task { @MainActor in
-                                await overlay.onCancel?()
-                            }
+                            // Finalize selection
+                            isDragging = false
                         }
+                        
+                        guard isThisScreenActive else { return }
                     }
             )
-            .onKeyPress(.escape) {
-                Task { @MainActor in
-                    await overlay.onCancel?()
-                }
-                return .handled
-            }
         }
     }
+
 
     private func updateSelectionRect() {
         let minX = min(startPoint.x, currentPoint.x)
@@ -129,6 +207,49 @@ struct SelectionOverlayView: View {
             width: maxX - minX,
             height: maxY - minY
         )
+    }
+
+
+
+    
+    private func calculateAnnotationRect(start: CGPoint, end: CGPoint) -> CGRect {
+        let minX = min(start.x, end.x)
+        let minY = min(start.y, end.y)
+        let maxX = max(start.x, end.x)
+        let maxY = max(start.y, end.y)
+        
+        // Clamp to selection bounds (which is 0,0 to width,height in local annotation coords)
+        let width = overlay.selectionRect.width
+        let height = overlay.selectionRect.height
+        
+        let clampedMinX = max(0, minX)
+        let clampedMinY = max(0, minY)
+        let clampedMaxX = min(width, maxX)
+        let clampedMaxY = min(height, maxY)
+        
+        return CGRect(
+            x: clampedMinX,
+            y: clampedMinY,
+            width: max(0, clampedMaxX - clampedMinX),
+            height: max(0, clampedMaxY - clampedMinY)
+        )
+    }
+}
+
+struct AnnotationRect: View {
+    let rect: CGRect
+    let selectionRect: CGRect
+    
+    var body: some View {
+        Rectangle()
+            .stroke(Color.red, lineWidth: 2)
+            .frame(width: rect.width, height: rect.height)
+            // Position is relative to the selectionRect top-left
+            .position(
+                x: selectionRect.minX + rect.midX,
+                y: selectionRect.minY + rect.midY
+            )
+            .shadow(color: .black.opacity(0.3), radius: 1)
     }
 }
 
@@ -275,6 +396,13 @@ struct DimensionBadge: View {
                 Capsule()
                     .fill(quality == .high ? Color.yellow.opacity(0.2) : Color.cyan.opacity(0.2))
             )
+
+            
+            // Hint
+            Text("↵ to Capture")
+                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.leading, 4)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)

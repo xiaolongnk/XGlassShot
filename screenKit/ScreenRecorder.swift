@@ -200,7 +200,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     }
     
     @MainActor
-    func captureScreenshot(region: CGRect, screen: NSScreen, quality: CaptureQuality) async throws -> URL {
+    func captureScreenshot(region: CGRect, annotations: [CGRect], screen: NSScreen, quality: CaptureQuality) async throws -> URL {
         // Find the SCDisplay matching the NSScreen
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
@@ -233,8 +233,24 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
 
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
 
+        
+        // Apply outline if configured
+        var finalImage = image
+        if StorageManager.shared.addScreenshotOutline {
+            if let outlinedImage = applyOutline(to: image) {
+                finalImage = outlinedImage
+            }
+        }
+        
+        // Draw annotations
+        if !annotations.isEmpty {
+            if let annotatedImage = drawAnnotations(on: finalImage, annotations: annotations, sourceRect: displayRegion, scaleFactor: scaleFactor) {
+                finalImage = annotatedImage
+            }
+        }
+
         // Convert to PNG data first (deep copy/serialization)
-        let bitmapRep = NSBitmapImageRep(cgImage: image)
+        let bitmapRep = NSBitmapImageRep(cgImage: finalImage)
         guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
             throw ScreenRecorderError.writerSetupFailed
         }
@@ -342,6 +358,110 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
             width: region.width,
             height: region.height
         )
+    }
+
+    /// Applies a 1px inner border to the image
+    private func applyOutline(to cgImage: CGImage) -> CGImage? {
+        let width = cgImage.width
+        let height = cgImage.height
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+
+        // Create context
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            return nil
+        }
+
+        // Draw original image
+        context.draw(cgImage, in: rect)
+
+        // Draw basic 1px border
+        // We stroke the rect. Since stroke is centered on the line, we inset by 0.5 to keep it inside.
+        let borderPath = CGPath(rect: rect.insetBy(dx: 0.5, dy: 0.5), transform: nil)
+        
+        // Inner shadow/border (white) for visibility on dark backgrounds
+        context.setStrokeColor(red: 1, green: 1, blue: 1, alpha: 0.2)
+        context.setLineWidth(1)
+        context.addPath(borderPath)
+        context.strokePath()
+
+        // Main border (black)
+        context.setStrokeColor(red: 0, green: 0, blue: 0, alpha: 0.15)
+        context.setLineWidth(1)
+        context.addPath(borderPath)
+        context.strokePath()
+
+        return context.makeImage()
+    }
+    
+    /// Draws red rectangle annotations on the image
+    private func drawAnnotations(on cgImage: CGImage, annotations: [CGRect], sourceRect: CGRect, scaleFactor: CGFloat) -> CGImage? {
+        let width = cgImage.width
+        let height = cgImage.height
+        let rect = CGRect(x: 0, y: 0, width: width, height: height)
+
+        // Create context
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            return nil
+        }
+
+        // Draw original image
+        context.draw(cgImage, in: rect)
+        
+        // Setup for drawing annotations
+        context.setStrokeColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0) // Red
+        context.setLineWidth(2.0 * scaleFactor) // Scale line width with quality
+        
+        // Annotations are relative to the selection rect (sourceRect).
+        // Since the image IS the selection rect content, we just need to scale them.
+        // However, the coordinate system of Core Graphics has Y-axis flipping potentially relative to SwiftUI.
+        // SwiftUI: (0,0) is Top-Left. Core Graphics (context): (0,0) is usually Bottom-Left, BUT
+        // for bitmap contexts created like this, it often matches if we don't apply transforms.
+        // Actually, CGImage coordinates: (0,0) is top-left when processing data usually, 
+        // but `context.draw` might flip if we are not careful or depending on how the image was created.
+        // Let's assume standard mapping first: scale annotation logic.
+        
+        for annotation in annotations {
+             // Annotation rects are relative to the capture region (0,0 at top-left of selection)
+             // We just need to scale them to the capture resolution
+             let scaledRect = CGRect(
+                x: annotation.origin.x * scaleFactor,
+                // In this specific context setup (unflipped), Image Top is at Context Bottom (Y=0).
+                // Context +Y is Up. Image content "Down" maps to Context +Y.
+                // So SwiftUI Y (Down) maps directly to Context Y (Up from Bottom).
+                y: annotation.origin.y * scaleFactor,
+                width: annotation.width * scaleFactor,
+                height: annotation.height * scaleFactor
+             )
+             
+             let path = CGPath(rect: scaledRect, transform: nil)
+             context.addPath(path)
+        }
+        
+        context.strokePath()
+
+        return context.makeImage()
     }
 }
 

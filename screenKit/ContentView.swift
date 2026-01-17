@@ -375,6 +375,16 @@ struct SettingsDock: View {
             // Icon Toggles
             HStack(spacing: 8) {
                 DockToggle(
+                    isOn: Binding(
+                        get: { launchManager.isAutoStartEnabled },
+                        set: { if $0 { launchManager.register() } else { launchManager.unregister() } }
+                    ),
+                    icon: "power.circle.fill",
+                    activeColor: .blue,
+                    tooltip: "Launch ScreenKit automatically when you log in"
+                )
+
+                DockToggle(
                     isOn: $storageManager.playCaptureSound,
                     icon: "speaker.wave.2.fill",
                     activeColor: .pink,

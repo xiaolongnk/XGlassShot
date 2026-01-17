@@ -37,7 +37,12 @@ struct ScreenKitApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    var statusBarManager: StatusBarManager?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Initialize Status Bar Manager
+        statusBarManager = StatusBarManager.shared
+        
         // Show and activate window after app is fully initialized
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             NSApplication.shared.activate(ignoringOtherApps: true)

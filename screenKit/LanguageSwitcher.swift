@@ -74,7 +74,7 @@ struct LanguageSwitcher: View {
             }
         }
         .zIndex(100)
-        .onChange(of: isExpanded) { newValue in
+        .onChange(of: isExpanded) { _, newValue in
             if !newValue {
                 hoveredLanguage = nil
             }

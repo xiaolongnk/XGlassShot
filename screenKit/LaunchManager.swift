@@ -8,6 +8,7 @@
 import Foundation
 import ServiceManagement
 import SwiftUI
+import Combine
 
 class LaunchManager: ObservableObject {
     static let shared = LaunchManager()
@@ -28,18 +29,22 @@ class LaunchManager: ObservableObject {
         }
     }
     
-    func toggleAutoStart() {
+    func register() {
         do {
-            if isAutoStartEnabled {
-                try mainAppService.unregister()
-            } else {
-                try mainAppService.register()
-            }
+            try mainAppService.register()
             checkStatus()
         } catch {
-            print("Failed to toggle auto start: \(error.localizedDescription)")
-            // interaction with SMAppService might fail, we should revert the UI state or show error
-            // re-check status to be sure
+            print("Failed to register auto start: \(error)")
+            checkStatus()
+        }
+    }
+    
+    func unregister() {
+        do {
+            try mainAppService.unregister()
+            checkStatus()
+        } catch {
+            print("Failed to unregister auto start: \(error)")
             checkStatus()
         }
     }

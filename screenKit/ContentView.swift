@@ -357,13 +357,13 @@ struct SettingsDock: View {
             // Icon Toggles
             HStack(spacing: 8) {
                 DockToggle(
-                    isOn: $launchManager.isAutoStartEnabled,
+                    isOn: Binding(
+                        get: { launchManager.isAutoStartEnabled },
+                        set: { if $0 { launchManager.register() } else { launchManager.unregister() } }
+                    ),
                     icon: "power.circle.fill", // Or "desktopcomputer"
                     activeColor: .blue
                 )
-                .onChange(of: launchManager.isAutoStartEnabled) { _ in
-                    launchManager.toggleAutoStart()
-                }
                 
                 DockToggle(
                     isOn: $storageManager.playCaptureSound,

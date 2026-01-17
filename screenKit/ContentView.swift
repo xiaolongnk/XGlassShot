@@ -15,23 +15,42 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             // Dark base background (ensures visibility)
-            Color(nsColor: NSColor(white: 0.12, alpha: 1.0))
+            // Dynamic Background
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                // Ambient Gradients
+                RadialGradient(
+                    colors: [Color.blue.opacity(0.12), Color.clear],
+                    center: .topLeading,
+                    startRadius: 0,
+                    endRadius: 1000
+                )
                 .ignoresSafeArea()
+                
+                RadialGradient(
+                    colors: [Color.purple.opacity(0.1), Color.clear],
+                    center: .bottomTrailing,
+                    startRadius: 0,
+                    endRadius: 800
+                )
+                .ignoresSafeArea()
+            }
 
             // Frosted glass overlay
             VisualEffectBackground()
                 .ignoresSafeArea()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 32) {
                 // Top Spacer to push content down
                 Spacer()
 
                 // Main Feature: Capture Preview
                 CapturePreviewView(storageManager: storageManager)
-                    .padding(.horizontal, 40) // Add horizontal constraint
+                    .padding(.horizontal, 40)
 
                 // Primary Actions
-                HStack(spacing: 20) {
+                HStack(spacing: 24) {
                     // Record Button
                     HeroActionButton(
                         icon: "record.circle.fill",
@@ -50,12 +69,13 @@ struct ContentView: View {
                         action: { OverlayManager.shared.showScreenshotOverlay() }
                     )
                 }
+                .padding(.horizontal, 40)
 
                 Spacer()
 
                 // Integrated Settings Dock
                 SettingsDock(storageManager: storageManager, shortcutsManager: shortcutsManager)
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 40)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -80,86 +100,90 @@ struct CapturePreviewView: View {
         Button(action: { storageManager.revealLastCapture() }) {
             ZStack {
                 // Background Frame
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(Color.black.opacity(0.4))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .stroke(
                                 LinearGradient(
-                                    colors: [.white.opacity(0.15), .white.opacity(0.05)],
+                                    colors: [.white.opacity(0.1), .white.opacity(0.02)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
                                 lineWidth: 1
                             )
                     )
+                    .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 15)
                 
                 if let thumbnail = storageManager.lastCaptureThumbnail {
                     // Content: Thumbnail
                     Image(nsImage: thumbnail)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .padding(8)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     // Content: Placeholder (Ready State)
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         ZStack {
                             Circle()
                                 .fill(
                                     RadialGradient(
-                                        colors: [Color.cyan.opacity(0.15), Color.clear],
+                                        colors: [Color.cyan.opacity(0.1), Color.clear],
                                         center: .center,
                                         startRadius: 0,
-                                        endRadius: 60
+                                        endRadius: 80
                                     )
                                 )
-                                .frame(width: 120, height: 120)
+                                .frame(width: 140, height: 140)
                             
-                            Image(systemName: "camera.aperture")
-                                .font(.system(size: 56, weight: .thin))
+                            Image(systemName: "camera.macro")
+                                .font(.system(size: 48, weight: .light))
                                 .foregroundStyle(
                                     LinearGradient(
-                                        colors: [.cyan, .purple],
+                                        colors: [.cyan.opacity(0.8), .purple.opacity(0.8)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
+                                .shadow(color: .cyan.opacity(0.3), radius: 10, x: 0, y: 0)
                         }
                         
                         Text("Ready to Capture")
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(0.5)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.4))
+                            .tracking(1)
                     }
                 }
                 
                 // Interaction Hint Overlay
                 if isHovered && storageManager.lastCaptureThumbnail != nil {
                     ZStack {
-                        Color.black.opacity(0.2)
+                        Color.black.opacity(0.3)
+                            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         
-                        HStack(spacing: 6) {
+                        HStack(spacing: 8) {
                             Image(systemName: "folder.fill")
                             Text("Reveal File")
                         }
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(.ultraThinMaterial))
-                        .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 0.5))
-                        .shadow(radius: 4)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(.ultraThinMaterial)
+                                .shadow(color: .black.opacity(0.2), radius: 5, y: 2)
+                        )
+                        .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.5))
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
             }
-            .frame(height: 240) // Fixed height for consistent layout
+            .frame(height: 260) // Slightly taller
             .frame(maxWidth: .infinity)
-            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
             .scaleEffect(isHovered ? 1.01 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovered)
         }
         .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
@@ -179,56 +203,85 @@ struct HeroActionButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 14) {
+            HStack(spacing: 16) {
                 // Icon Container
                 ZStack {
                     Circle()
-                        .fill(color.opacity(isHovered ? 0.25 : 0.15))
-                        .frame(width: 40, height: 40)
+                        .fill(
+                            LinearGradient(
+                                colors: [color.opacity(0.3), color.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [color.opacity(0.6), color.opacity(0.2)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: color.opacity(0.3), radius: 8, x: 0, y: 0)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(color)
-                        .scaleEffect(isHovered ? 1.1 : 1.0)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                        .shadow(color: color.opacity(0.6), radius: 4)
                 }
-                .overlay(
-                    Circle()
-                        .stroke(color.opacity(isHovered ? 0.6 : 0.0), lineWidth: 1)
-                )
                 
                 // Text Info
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(label)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundColor(.white)
                     
                     Text(shortcut)
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.4))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
                 }
                 
                 Spacer()
                 
                 // Chevron hint
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white.opacity(isHovered ? 0.4 : 0.1))
-                    .offset(x: isHovered ? 3 : 0)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white.opacity(isHovered ? 0.8 : 0.3))
+                    .offset(x: isHovered ? 4 : 0)
             }
-            .padding(10)
-            .padding(.trailing, 10)
-            .frame(height: 64)
+            .padding(.leading, 12)
+            .padding(.trailing, 20)
+            .frame(height: 80)
             .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(.white.opacity(isHovered ? 0.1 : 0.05))
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.4))
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(.white.opacity(isHovered ? 0.08 : 0.03))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(.white.opacity(isHovered ? 0.2 : 0.08), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(isHovered ? 0.4 : 0.15),
+                                .white.opacity(isHovered ? 0.15 : 0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
             )
+            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
             .scaleEffect(isHovered ? 1.02 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
-            .frame(maxWidth: 180) // Limit width for compact look
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
@@ -240,55 +293,49 @@ struct HeroActionButton: View {
 struct SettingsDock: View {
     @ObservedObject var storageManager: StorageManager
     @ObservedObject var shortcutsManager: ShortcutsManager
+    @ObservedObject private var launchManager = LaunchManager.shared
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Path & Prefix Group
-            HStack(spacing: 0) {
-                // Save Path
-                Button(action: {
-                     Task { await storageManager.selectSaveDirectory() }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "folder.fill")
-                            .foregroundColor(.cyan.opacity(0.8))
-                        Text(storageManager.defaultSaveDirectory.lastPathComponent)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
-                            .lineLimit(1)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Divider()
-                    .frame(height: 20)
-                    .background(Color.white.opacity(0.1))
-                
-                // Prefix
+        HStack(spacing: 0) {
+            // Path Selector
+            Button(action: {
+                 Task { await storageManager.selectSaveDirectory() }
+            }) {
                 HStack(spacing: 8) {
-                    Image(systemName: "tag.fill")
-                        .foregroundColor(.purple.opacity(0.8))
-                        .font(.system(size: 12))
-                    
-                    TextField("Prefix", text: $shortcutsManager.currentPrefix)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .frame(width: 80)
+                    Image(systemName: "folder.fill")
+                        .foregroundColor(.cyan)
+                    Text(storageManager.defaultSaveDirectory.lastPathComponent)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.9))
+                        .lineLimit(1)
                 }
                 .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.white.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(.white.opacity(0.08), lineWidth: 1)
-            )
+            .buttonStyle(PlainButtonStyle())
             
+            Divider()
+                .frame(height: 16)
+                .background(Color.white.opacity(0.15))
+            
+            // Prefix Input
+            HStack(spacing: 6) {
+                Image(systemName: "tag.fill")
+                    .foregroundColor(.purple)
+                    .font(.system(size: 12))
+                
+                TextField("Prefix", text: $shortcutsManager.currentPrefix)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .frame(width: 80)
+            }
+            .padding(.horizontal, 16)
+            
+            Divider()
+                .frame(height: 16)
+                .background(Color.white.opacity(0.15))
+
             // Quality Toggle
             Button(action: { shortcutsManager.toggleQuality() }) {
                 HStack(spacing: 6) {
@@ -299,20 +346,25 @@ struct SettingsDock: View {
                         .foregroundColor(.white.opacity(0.9))
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(.white.opacity(0.06))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(.white.opacity(0.08), lineWidth: 1)
-                )
+                .padding(.vertical, 14)
             }
             .buttonStyle(PlainButtonStyle())
 
-            // Toggles Group
-            HStack(spacing: 4) {
+            Divider()
+                .frame(height: 16)
+                .background(Color.white.opacity(0.15))
+
+            // Icon Toggles
+            HStack(spacing: 8) {
+                DockToggle(
+                    isOn: $launchManager.isAutoStartEnabled,
+                    icon: "power.circle.fill", // Or "desktopcomputer"
+                    activeColor: .blue
+                )
+                .onChange(of: launchManager.isAutoStartEnabled) { _ in
+                    launchManager.toggleAutoStart()
+                }
+                
                 DockToggle(
                     isOn: $storageManager.playCaptureSound,
                     icon: "speaker.wave.2.fill",
@@ -331,16 +383,22 @@ struct SettingsDock: View {
                     activeColor: .green
                 )
             }
-            .padding(4)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.white.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(.white.opacity(0.08), lineWidth: 1)
-            )
+            .padding(.horizontal, 12)
         }
+        .background(
+            Capsule()
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.8))
+        )
+        .background(
+            Capsule()
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
     }
 }
 

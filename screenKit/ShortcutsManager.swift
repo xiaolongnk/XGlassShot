@@ -316,6 +316,7 @@ struct PrefixInputView: View {
     @Binding var prefix: String
     let onDismiss: () -> Void
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var inputText: String = ""
     @FocusState private var isFocused: Bool
     
@@ -363,6 +364,7 @@ struct PrefixInputView: View {
 
 struct QualityFeedbackView: View {
     let quality: CaptureQuality
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 12) {

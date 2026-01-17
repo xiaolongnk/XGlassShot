@@ -372,6 +372,7 @@ struct CornerBracket: View {
 struct DimensionBadge: View {
     let width: Int
     let height: Int
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     @available(macOS 12.3, *)
     var body: some View {

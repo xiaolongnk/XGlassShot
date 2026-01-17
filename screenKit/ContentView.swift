@@ -11,6 +11,7 @@ struct ContentView: View {
     @ObservedObject private var shortcutsManager = ShortcutsManager.shared
     @ObservedObject private var overlayManager = OverlayManager.shared
     @ObservedObject private var storageManager = StorageManager.shared
+    @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         ZStack {
@@ -96,6 +97,7 @@ struct ContentView: View {
 
 struct CapturePreviewView: View {
     @ObservedObject var storageManager: StorageManager
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var isHovered = false
     
     var body: some View {
@@ -203,6 +205,7 @@ struct HeroActionButton: View {
     let description: String
     let action: () -> Void
     
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var isHovered = false
     
     var body: some View {
@@ -299,6 +302,7 @@ struct SettingsDock: View {
     @ObservedObject var storageManager: StorageManager
     @ObservedObject var shortcutsManager: ShortcutsManager
     @ObservedObject private var launchManager = LaunchManager.shared
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack(spacing: 0) {

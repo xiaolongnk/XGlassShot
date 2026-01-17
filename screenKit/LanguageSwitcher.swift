@@ -13,48 +13,47 @@ struct LanguageSwitcher: View {
     @State private var hoveredLanguage: AppLanguage?
     
     var body: some View {
-        ZStack(alignment: .top) {
-            Button(action: {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    isExpanded.toggle()
-                }
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "globe")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.cyan)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isExpanded)
-                    
-                    Text(localizationManager.currentLanguage.flag)
-                        .font(.system(size: 14))
-                }
-                .frame(width: 36, height: 36)
-                .background(
-                    Circle()
-                        .fill(Color(nsColor: .windowBackgroundColor).opacity(0.6))
-                )
-                .background(
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                )
-                .overlay(
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    .white.opacity(isExpanded ? 0.3 : 0.15),
-                                    .white.opacity(isExpanded ? 0.15 : 0.05)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
+        Button(action: {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                isExpanded.toggle()
             }
-            .buttonStyle(PlainButtonStyle())
-            
+        }) {
+            HStack(spacing: 6) {
+                Image(systemName: "globe")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.cyan)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isExpanded)
+                
+                Text(localizationManager.currentLanguage.flag)
+                    .font(.system(size: 14))
+            }
+            .frame(width: 36, height: 36)
+            .background(
+                Circle()
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.6))
+            )
+            .background(
+                Circle()
+                    .fill(.ultraThinMaterial)
+            )
+            .overlay(
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(isExpanded ? 0.3 : 0.15),
+                                .white.opacity(isExpanded ? 0.15 : 0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .overlay(alignment: .bottom) {
             if isExpanded {
                 LanguageMenu(
                     currentLanguage: localizationManager.currentLanguage,
@@ -67,14 +66,14 @@ struct LanguageSwitcher: View {
                     }
                 )
                 .transition(.asymmetric(
-                    insertion: .scale(scale: 0.95).combined(with: .opacity),
-                    removal: .scale(scale: 0.95).combined(with: .opacity)
+                    insertion: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity),
+                    removal: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity)
                 ))
-                .offset(y: 42)
-                .zIndex(1000)
+                .offset(y: -42) // Move UP instead of down
                 .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
             }
         }
+        .zIndex(100)
         .onChange(of: isExpanded) { newValue in
             if !newValue {
                 hoveredLanguage = nil

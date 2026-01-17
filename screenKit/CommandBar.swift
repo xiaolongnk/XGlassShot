@@ -62,6 +62,7 @@ struct CommandBar: View {
 struct PrefixEditorView: View {
     @Binding var prefix: String
     @Environment(\.dismiss) var dismiss
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var newPrefix: String
     
     init(prefix: Binding<String>) {

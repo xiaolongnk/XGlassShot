@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 enum AppLanguage: String, CaseIterable, Identifiable {
     case english = "en"
@@ -64,8 +65,12 @@ final class LocalizationManager: ObservableObject {
         didSet {
             UserDefaults.standard.set(currentLanguage.rawValue, forKey: "appLanguage")
             loadLocalizedStrings()
+            languageVersion += 1
         }
     }
+    
+    // Published property to trigger view updates when language changes
+    @Published var languageVersion: Int = 0
     
     private var localizedStrings: [String: String] = [:]
     private let bundle: Bundle
@@ -136,6 +141,8 @@ final class LocalizationManager: ObservableObject {
 
 extension String {
     var localized: String {
-        LocalizationManager.shared.localized(self, fallback: self)
+        // Access languageVersion to trigger observation updates
+        _ = LocalizationManager.shared.languageVersion
+        return LocalizationManager.shared.localized(self, fallback: self)
     }
 }

@@ -54,18 +54,20 @@ struct ContentView: View {
                     // Record Button
                     HeroActionButton(
                         icon: "record.circle.fill",
-                        label: "Record",
+                        label: "record".localized,
                         shortcut: "⌘⇧1",
                         color: .red,
+                        description: "Select an area to record screen",
                         action: { OverlayManager.shared.showSelectionOverlay() }
                     )
                     
                     // Screenshot Button
                     HeroActionButton(
                         icon: "camera.fill",
-                        label: "Capture",
+                        label: "capture".localized,
                         shortcut: "⌘⇧2",
                         color: .cyan,
+                        description: "Select an area to take a screenshot",
                         action: { OverlayManager.shared.showScreenshotOverlay() }
                     )
                 }
@@ -150,7 +152,7 @@ struct CapturePreviewView: View {
                                 .shadow(color: .cyan.opacity(0.3), radius: 10, x: 0, y: 0)
                         }
                         
-                        Text("Ready to Capture")
+                        Text("ready_to_capture".localized)
                             .font(.system(size: 15, weight: .medium, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
                             .tracking(1)
@@ -165,7 +167,7 @@ struct CapturePreviewView: View {
                         
                         HStack(spacing: 8) {
                             Image(systemName: "folder.fill")
-                            Text("Reveal File")
+                            Text("reveal_file".localized)
                         }
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
@@ -187,6 +189,7 @@ struct CapturePreviewView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
+        .help("Click to reveal file in Finder")
     }
 }
 
@@ -197,6 +200,7 @@ struct HeroActionButton: View {
     let label: String
     let shortcut: String
     let color: Color
+    let description: String
     let action: () -> Void
     
     @State private var isHovered = false
@@ -285,6 +289,7 @@ struct HeroActionButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
+        .help(description)
     }
 }
 
@@ -314,18 +319,19 @@ struct SettingsDock: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
+            .help("Change save location")
             
             Divider()
-                .frame(height: 16)
-                .background(Color.white.opacity(0.15))
+                .frame(height: 20)
+                .background(Color.white.opacity(0.1))
             
-            // Prefix Input
-            HStack(spacing: 6) {
+            // Prefix
+            HStack(spacing: 8) {
                 Image(systemName: "tag.fill")
-                    .foregroundColor(.purple)
+                    .foregroundColor(.purple.opacity(0.8))
                     .font(.system(size: 12))
                 
-                TextField("Prefix", text: $shortcutsManager.currentPrefix)
+                TextField("prefix".localized, text: $shortcutsManager.currentPrefix)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .frame(width: 80)
@@ -333,15 +339,15 @@ struct SettingsDock: View {
             .padding(.horizontal, 16)
             
             Divider()
-                .frame(height: 16)
-                .background(Color.white.opacity(0.15))
-
+                .frame(height: 20)
+                .background(Color.white.opacity(0.1))
+            
             // Quality Toggle
             Button(action: { shortcutsManager.toggleQuality() }) {
                 HStack(spacing: 6) {
                     Image(systemName: shortcutsManager.captureQuality == .quick ? "bolt.fill" : "sparkles")
                         .foregroundColor(shortcutsManager.captureQuality == .quick ? .yellow : .cyan)
-                    Text(shortcutsManager.captureQuality == .quick ? "Quick" : "High")
+                    Text(shortcutsManager.captureQuality == .quick ? "quick".localized : "high".localized)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -349,38 +355,40 @@ struct SettingsDock: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(PlainButtonStyle())
-
+            
             Divider()
-                .frame(height: 16)
-                .background(Color.white.opacity(0.15))
-
+                .frame(height: 20)
+                .background(Color.white.opacity(0.1))
+            
+            // Language Switcher
+            LanguageSwitcher()
+                .padding(.horizontal, 8)
+            
+            Divider()
+                .frame(height: 20)
+                .background(Color.white.opacity(0.1))
+            
             // Icon Toggles
             HStack(spacing: 8) {
                 DockToggle(
-                    isOn: Binding(
-                        get: { launchManager.isAutoStartEnabled },
-                        set: { if $0 { launchManager.register() } else { launchManager.unregister() } }
-                    ),
-                    icon: "power.circle.fill", // Or "desktopcomputer"
-                    activeColor: .blue
-                )
-                
-                DockToggle(
                     isOn: $storageManager.playCaptureSound,
                     icon: "speaker.wave.2.fill",
-                    activeColor: .pink
+                    activeColor: .pink,
+                    tooltip: "Play a sound effect when capturing"
                 )
                 
                 DockToggle(
                     isOn: $storageManager.alwaysAskWhereToSave,
                     icon: "questionmark.folder.fill",
-                    activeColor: .orange
+                    activeColor: .orange,
+                    tooltip: "Always ask where to save before saving"
                 )
                 
                 DockToggle(
                     isOn: $storageManager.addScreenshotOutline,
                     icon: "square.dashed",
-                    activeColor: .green
+                    activeColor: .green,
+                    tooltip: "Add a 1px border to screenshots"
                 )
             }
             .padding(.horizontal, 12)
@@ -422,6 +430,7 @@ struct DockToggle: View {
     @Binding var isOn: Bool
     let icon: String
     let activeColor: Color
+    let tooltip: String
     @State private var isHovered = false
 
     var body: some View {
@@ -441,5 +450,6 @@ struct DockToggle: View {
         }
         .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
+        .help(tooltip)
     }
 }

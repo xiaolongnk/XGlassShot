@@ -399,7 +399,7 @@ struct DimensionBadge: View {
 
             
             // Hint
-            Text("↵ to Capture")
+            Text("enter_to_capture".localized)
                 .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundColor(.white.opacity(0.6))
                 .padding(.leading, 4)

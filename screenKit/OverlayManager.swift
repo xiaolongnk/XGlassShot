@@ -115,7 +115,7 @@ final class OverlayManager: ObservableObject {
         
         guard let button = statusItem?.button else { return }
         
-        button.title = "Stop Recording"
+        button.title = "stop_recording".localized
         button.target = self
         button.action = #selector(stopButtonClicked)
     }

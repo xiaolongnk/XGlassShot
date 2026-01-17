@@ -13,6 +13,7 @@ struct ScreenKitApp: App {
 
     init() {
         // Initialize managers
+        _ = LocalizationManager.shared
         _ = ShortcutsManager.shared
         _ = PermissionManager.shared
         _ = StorageManager.shared

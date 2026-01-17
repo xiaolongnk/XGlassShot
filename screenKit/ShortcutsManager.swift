@@ -12,15 +12,15 @@ enum CaptureQuality: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .quick: return "Quick"
-        case .high: return "HQ"
+        case .quick: return "quick".localized
+        case .high: return "hq".localized
         }
     }
 
     var description: String {
         switch self {
-        case .quick: return "Quick Share (1x)"
-        case .high: return "High Quality (2x)"
+        case .quick: return "quick_share".localized
+        case .high: return "high_quality".localized
         }
     }
 
@@ -321,7 +321,7 @@ struct PrefixInputView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            Text("Prefix:")
+            Text("prefix_label".localized)
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.white.opacity(0.8))
             
@@ -375,7 +375,7 @@ struct QualityFeedbackView: View {
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(.white)
 
-                Text("⌘⇧Q to toggle")
+                Text("toggle_shortcut".localized)
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundColor(.white.opacity(0.5))
             }

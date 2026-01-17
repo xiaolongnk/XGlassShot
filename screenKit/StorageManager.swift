@@ -81,8 +81,8 @@ final class StorageManager: ObservableObject {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
-        panel.message = "Choose default save location for captures"
-        panel.prompt = "Select"
+        panel.message = "choose_save_location".localized
+        panel.prompt = "select".localized
 
         let response = await panel.begin()
 
@@ -294,8 +294,8 @@ final class StorageManager: ObservableObject {
         savePanel.canCreateDirectories = true
         savePanel.isExtensionHidden = false
         savePanel.directoryURL = defaultSaveDirectory
-        savePanel.title = "Save Recording"
-        savePanel.message = "Choose a location to save your recording"
+        savePanel.title = "save_recording".localized
+        savePanel.message = "choose_location".localized
 
         let response = await savePanel.begin()
 
@@ -465,11 +465,11 @@ enum StorageError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .saveCancelled:
-            return "Save was cancelled"
+            return "save_cancelled".localized
         case .directoryNotWritable:
-            return "Cannot write to the selected directory"
+            return "directory_not_writable".localized
         case .invalidData:
-            return "Invalid data to save"
+            return "invalid_data".localized
         }
     }
 }

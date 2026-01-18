@@ -59,7 +59,11 @@ final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
 
     @Published var currentPath: String = FileManager.default.homeDirectoryForCurrentUser.path
-    @Published var currentPrefix: String = "bug"
+    @Published var currentPrefix: String = "bug" {
+        didSet {
+            UserDefaults.standard.set(currentPrefix, forKey: "currentPrefix")
+        }
+    }
     @Published var captureQuality: CaptureQuality = .low {
         didSet {
             UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")
@@ -72,10 +76,14 @@ final class ShortcutsManager: ObservableObject {
     private var feedbackTask: Task<Void, Never>?
 
     private init() {
-        // Load saved quality preference
         if let savedMode = UserDefaults.standard.string(forKey: "captureQuality"),
            let mode = CaptureQuality(rawValue: savedMode) {
             captureQuality = mode
+        }
+        
+        // Load saved prefix
+        if let savedPrefix = UserDefaults.standard.string(forKey: "currentPrefix") {
+            currentPrefix = savedPrefix
         }
         setupDefaultShortcuts()
         setupShortcuts()

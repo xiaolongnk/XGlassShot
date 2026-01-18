@@ -95,7 +95,9 @@ final class LocalizationManager: ObservableObject {
         } else {
             // Try to match system language
             let systemLang = Locale.preferredLanguages.first ?? "en"
-            if systemLang.hasPrefix("zh") {
+            if systemLang.hasPrefix("zh-Hant") || systemLang.contains("zh-Hant") || systemLang == "zh-TW" || systemLang == "zh-HK" {
+                currentLanguage = .traditionalChinese
+            } else if systemLang.hasPrefix("zh-Hans") || systemLang.hasPrefix("zh") {
                 currentLanguage = .chinese
             } else if systemLang.hasPrefix("ja") {
                 currentLanguage = .japanese
@@ -107,8 +109,6 @@ final class LocalizationManager: ObservableObject {
                 currentLanguage = .german
             } else if systemLang.hasPrefix("ko") {
                 currentLanguage = .korean
-            } else if systemLang.hasPrefix("zh-Hant") || systemLang == "zh-TW" || systemLang == "zh-HK" {
-                currentLanguage = .traditionalChinese
             } else if systemLang.hasPrefix("it") {
                 currentLanguage = .italian
             } else if systemLang.hasPrefix("nl") {

@@ -14,7 +14,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var videoInput: AVAssetWriterInput?
     private var display: CGDirectDisplayID?
     private var recordingURL: URL?
-    private let writerQueue = DispatchQueue(label: "com.screenkit.writer")
+    private let writerQueue = DispatchQueue(label: "com.glasscap.writer")
     private var isRecording = false
     private var sessionStartTime: CMTime?
     private var writerConfigured = false

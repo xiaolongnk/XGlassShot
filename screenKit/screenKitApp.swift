@@ -1,6 +1,6 @@
 //
-//  screenKitApp.swift
-//  screenKit
+//  GlassCapApp.swift
+//  GlassCap
 //
 //  Created by rex on 2026/1/11.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct ScreenKitApp: App {
+struct GlassCapApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {

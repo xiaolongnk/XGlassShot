@@ -1,6 +1,6 @@
 //
 //  StatusBarManager.swift
-//  screenKit
+//  GlassCap
 //
 //  Created by rex on 2026/1/17.
 //
@@ -21,7 +21,7 @@ class StatusBarManager: NSObject {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "ScreenKit")
+            button.image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "GlassCap")
         }
         setupMenu()
     }

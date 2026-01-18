@@ -107,7 +107,7 @@ struct SettingsDock: View {
                     ),
                     icon: "power.circle.fill",
                     activeColor: .blue,
-                    tooltip: "Launch ScreenKit automatically when you log in"
+                    tooltip: "Launch GlassCap automatically when you log in"
                 )
 
                 DockToggle(

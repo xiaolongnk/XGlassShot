@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>ScreenKit</string>
+	<string>GlassCap</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -31,8 +31,8 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ScreenKit needs camera access for screenshot functionality.</string>
+	<string>GlassCap needs camera access for screenshot functionality.</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>ScreenKit needs screen recording permission to capture your screen.</string>
+	<string>GlassCap needs screen recording permission to capture your screen.</string>
 </dict>
 </plist>

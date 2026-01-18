@@ -1,6 +1,6 @@
 //
 //  LaunchManager.swift
-//  screenKit
+//  GlassCap
 //
 //  Created by rex on 2026/1/17.
 //

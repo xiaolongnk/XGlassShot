@@ -1,6 +1,6 @@
 //
 //  LocalizationManager.swift
-//  screenKit
+//  GlassCap
 //
 //  Handles internationalization and language switching
 //

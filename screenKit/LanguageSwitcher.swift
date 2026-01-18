@@ -1,6 +1,6 @@
 //
 //  LanguageSwitcher.swift
-//  screenKit
+//  GlassCap
 //
 //  Fancy language switcher component with glassmorphic design
 //

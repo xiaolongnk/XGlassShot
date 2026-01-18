@@ -1,6 +1,6 @@
 //
 //  StorageManager.swift
-//  screenKit
+//  GlassCap
 //
 //  Handles file storage settings and auto-save logic
 //

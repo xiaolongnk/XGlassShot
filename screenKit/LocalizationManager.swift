@@ -17,6 +17,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case french = "fr"
     case german = "de"
     case korean = "ko"
+    case traditionalChinese = "zh-Hant"
+    case italian = "it"
+    case dutch = "nl"
     
     var id: String { rawValue }
     
@@ -29,6 +32,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .french: return "Français"
         case .german: return "Deutsch"
         case .korean: return "한국어"
+        case .traditionalChinese: return "繁體中文"
+        case .italian: return "Italiano"
+        case .dutch: return "Nederlands"
         }
     }
     
@@ -41,6 +47,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .french: return "Français"
         case .german: return "Deutsch"
         case .korean: return "한국어"
+        case .traditionalChinese: return "繁體中文"
+        case .italian: return "Italiano"
+        case .dutch: return "Nederlands"
         }
     }
     
@@ -53,6 +62,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .french: return "🇫🇷"
         case .german: return "🇩🇪"
         case .korean: return "🇰🇷"
+        case .traditionalChinese: return "🇹🇼"
+        case .italian: return "🇮🇹"
+        case .dutch: return "🇳🇱"
         }
     }
 }
@@ -95,6 +107,12 @@ final class LocalizationManager: ObservableObject {
                 currentLanguage = .german
             } else if systemLang.hasPrefix("ko") {
                 currentLanguage = .korean
+            } else if systemLang.hasPrefix("zh-Hant") || systemLang == "zh-TW" || systemLang == "zh-HK" {
+                currentLanguage = .traditionalChinese
+            } else if systemLang.hasPrefix("it") {
+                currentLanguage = .italian
+            } else if systemLang.hasPrefix("nl") {
+                currentLanguage = .dutch
             } else {
                 currentLanguage = .english
             }

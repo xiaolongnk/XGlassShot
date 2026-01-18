@@ -111,6 +111,13 @@ struct SelectionOverlayView: View {
     @State private var resizeEdge: ResizeEdge = .none
     @State private var initialRect: CGRect = .zero
 
+    // Missing properties restored
+    @State private var startPoint: CGPoint = .zero
+    @State private var currentPoint: CGPoint = .zero
+    @State private var isDragging: Bool = false
+    @State private var isDrawingAnnotation: Bool = false
+    @State private var isThisScreenActive: Bool = false
+
     enum ResizeEdge {
         case none, top, bottom, left, right
     }
@@ -140,22 +147,25 @@ struct SelectionOverlayView: View {
                     }
                 }
             }
-            .onHover { location in
-                guard isThisScreenActive && overlay.selectionRect != .zero else { return }
-                
-                // Check if hovering over edges
-                hoveredEdge = detectEdge(at: location, rect: overlay.selectionRect)
-                
-                // Update cursor
-                switch hoveredEdge {
-                case .top, .bottom:
-                    NSCursor.resizeUpDown.set()
-                case .left, .right:
-                    NSCursor.resizeLeftRight.set()
-                case .none:
-                    NSCursor.crosshair.set()
+
+            .background(
+                MouseTrackingViewWrapper { location in
+                    guard isThisScreenActive && overlay.selectionRect != .zero else { return }
+                    
+                    // Check if hovering over edges
+                    hoveredEdge = detectEdge(at: location, rect: overlay.selectionRect)
+                    
+                    // Update cursor
+                    switch hoveredEdge {
+                    case .top, .bottom:
+                        NSCursor.resizeUpDown.set()
+                    case .left, .right:
+                        NSCursor.resizeLeftRight.set()
+                    case .none:
+                        NSCursor.crosshair.set()
+                    }
                 }
-            }
+            )
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
@@ -501,5 +511,39 @@ struct DimensionBadge: View {
 class SelectionWindow: NSWindow {
     override var canBecomeKey: Bool {
         return true
+    }
+}
+
+struct MouseTrackingViewWrapper: NSViewRepresentable {
+    var onMoved: (CGPoint) -> Void
+
+    func makeNSView(context: Context) -> MouseTrackingNSView {
+        let view = MouseTrackingNSView()
+        view.onMoved = onMoved
+        return view
+    }
+
+    func updateNSView(_ nsView: MouseTrackingNSView, context: Context) {
+        nsView.onMoved = onMoved
+    }
+}
+
+class MouseTrackingNSView: NSView {
+    var onMoved: ((CGPoint) -> Void)?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for trackingArea in trackingAreas {
+            removeTrackingArea(trackingArea)
+        }
+        
+        // Track mouse moves even when not active application if possible, or at least when key
+        let options: NSTrackingArea.Options = [.mouseMoved, .activeAlways, .inVisibleRect]
+        addTrackingArea(NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil))
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        onMoved?(point)
     }
 }

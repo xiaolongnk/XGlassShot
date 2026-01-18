@@ -55,22 +55,37 @@ struct LanguageSwitcher: View {
         .buttonStyle(PlainButtonStyle())
         .overlay(alignment: .bottom) {
             if isExpanded {
-                LanguageMenu(
-                    currentLanguage: localizationManager.currentLanguage,
-                    hoveredLanguage: $hoveredLanguage,
-                    onSelect: { language in
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            localizationManager.currentLanguage = language
-                            isExpanded = false
+                ZStack {
+                    // Backdrop to catch clicks
+                    Color.black.opacity(0.001)
+                        .frame(width: 3000, height: 3000) // Large enough to cover screen
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                isExpanded = false
+                            }
                         }
-                    }
-                )
-                .transition(.asymmetric(
-                    insertion: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity),
-                    removal: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity)
-                ))
-                .offset(y: -42) // Move UP instead of down
-                .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
+                        
+                    LanguageMenu(
+                        currentLanguage: localizationManager.currentLanguage,
+                        hoveredLanguage: $hoveredLanguage,
+                        onSelect: { language in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                localizationManager.currentLanguage = language
+                                isExpanded = false
+                            }
+                        }
+                    )
+
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity),
+                        removal: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity)
+                    ))
+                    .offset(y: -48) // Increased offset to sit better above dock
+                    .shadow(color: .black.opacity(0.2), radius: 15, y: 5) // Softer shadow
+                }
+                .frame(width: 3000, height: 3000)
+                .position(x: 18, y: 0)
             }
         }
         .zIndex(100)
@@ -88,7 +103,7 @@ struct LanguageMenu: View {
     let onSelect: (AppLanguage) -> Void
     
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             ForEach(AppLanguage.allCases) { language in
                 LanguageMenuItem(
                     language: language,
@@ -99,7 +114,7 @@ struct LanguageMenu: View {
                 )
             }
         }
-        .padding(6)
+        .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(nsColor: .windowBackgroundColor).opacity(0.9))
@@ -131,6 +146,8 @@ struct LanguageMenuItem: View {
     let onHover: (AppLanguage?) -> Void
     let onSelect: () -> Void
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
@@ -140,11 +157,11 @@ struct LanguageMenuItem: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(language.displayName)
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary(for: colorScheme))
                     
                     Text(language.nativeName)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Theme.textSecondary(for: colorScheme))
                 }
                 
                 Spacer()
@@ -156,11 +173,11 @@ struct LanguageMenuItem: View {
                         .transition(.scale.combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? Color.cyan.opacity(0.15) : (isHovered ? Color.white.opacity(0.08) : Color.clear))
+                    .fill(isSelected ? Color.cyan.opacity(0.15) : (isHovered ? Color.primary.opacity(0.08) : Color.clear))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)

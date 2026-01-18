@@ -150,9 +150,7 @@ final class ShortcutsManager: ObservableObject {
     }
 
     func toggleQuality() {
-    func toggleQuality() {
         captureQuality = (captureQuality == .low) ? .high : .low
-    }
     }
 
 

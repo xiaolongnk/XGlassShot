@@ -44,7 +44,7 @@ struct SettingsDock: View {
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundColor(Theme.textPrimary(for: colorScheme))
                         .frame(width: 100)
-                        .onChange(of: shortcutsManager.currentPrefix) { newValue in
+                        .onValueChanged(of: shortcutsManager.currentPrefix) { newValue in
                             let filtered = newValue.filter { !":/".contains($0) }
                             if filtered != newValue {
                                 shortcutsManager.currentPrefix = filtered
@@ -72,9 +72,9 @@ struct SettingsDock: View {
             // Quality Toggle
             Button(action: { shortcutsManager.toggleQuality() }) {
                 HStack(spacing: 6) {
-                    Image(systemName: shortcutsManager.recordingMode == .efficiency ? "hare.fill" : "sparkles")
-                        .foregroundColor(shortcutsManager.recordingMode == .efficiency ? .cyan : .yellow)
-                    Text(shortcutsManager.recordingMode.displayName)
+                    Image(systemName: shortcutsManager.captureQuality == .low ? "hare.fill" : "sparkles")
+                        .foregroundColor(shortcutsManager.captureQuality == .low ? .cyan : .yellow)
+                    Text(shortcutsManager.captureQuality.displayName)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(Theme.textPrimary(for: colorScheme).opacity(0.9))
                 }
@@ -82,7 +82,7 @@ struct SettingsDock: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(PlainButtonStyle())
-            .help(shortcutsManager.recordingMode.description)
+            .help(shortcutsManager.captureQuality.description)
             
             Divider()
                 .frame(height: 20)
@@ -144,5 +144,20 @@ struct SettingsDock: View {
             radius: Theme.cardShadowRadius(for: colorScheme) + 5, 
             y: 10
         )
+    }
+}
+
+// MARK: - View Extensions
+
+extension View {
+    @ViewBuilder
+    func onValueChanged<V: Equatable>(of value: V, perform action: @escaping (V) -> Void) -> some View {
+        if #available(macOS 14.0, *) {
+            self.onChange(of: value) { _, newValue in
+                action(newValue)
+            }
+        } else {
+            self.onChange(of: value, perform: action)
+        }
     }
 }

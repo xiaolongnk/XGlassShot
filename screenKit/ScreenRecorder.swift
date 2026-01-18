@@ -19,7 +19,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     private var sessionStartTime: CMTime?
     private var writerConfigured = false
 
-    private var currentQuality: CaptureQuality = .quick
+    private var currentQuality: CaptureQuality = .low
 
     func startRecording(region: CGRect, screen: NSScreen, quality: CaptureQuality) async throws {
         guard !isRecording else {

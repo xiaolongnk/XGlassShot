@@ -351,17 +351,15 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     ///   - display: The target SCDisplay for capture
     /// - Returns: CGRect for SCStreamConfiguration.sourceRect (origin top-left)
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
-        // SCStreamConfiguration.sourceRect uses top-left origin (same as SwiftUI)
-        // However, SCStreamConfiguration expects PIXELS, while SwiftUI/NSScreen uses POINTS.
-        // We must scale the region by the screen's backing scale factor.
-        
-        let scale = screen.backingScaleFactor
+        // SCStreamConfiguration.sourceRect must be in global display coordinates (points)
+        // SelectionOverlay 'region' is relative to the screen/display top-left (points)
+        // display.frame gives the global origin of the display
         
         return CGRect(
-            x: region.origin.x * scale,
-            y: region.origin.y * scale,
-            width: region.width * scale,
-            height: region.height * scale
+            x: display.frame.origin.x + region.origin.x,
+            y: display.frame.origin.y + region.origin.y,
+            width: region.width,
+            height: region.height
         )
     }
 

@@ -445,14 +445,15 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         for annotation in annotations {
              // Annotation rects are relative to the capture region (0,0 at top-left of selection)
              // We just need to scale them to the capture resolution
+             // Flip Y coordinates because Core Graphics origin is bottom-left, SwiftUI is top-left
+             let scaledHeight = annotation.height * scaleFactor
+             let scaledY = CGFloat(height) - (annotation.origin.y * scaleFactor) - scaledHeight
+             
              let scaledRect = CGRect(
                 x: annotation.origin.x * scaleFactor,
-                // In this specific context setup (unflipped), Image Top is at Context Bottom (Y=0).
-                // Context +Y is Up. Image content "Down" maps to Context +Y.
-                // So SwiftUI Y (Down) maps directly to Context Y (Up from Bottom).
-                y: annotation.origin.y * scaleFactor,
+                y: scaledY,
                 width: annotation.width * scaleFactor,
-                height: annotation.height * scaleFactor
+                height: scaledHeight
              )
              
              let path = CGPath(rect: scaledRect, transform: nil)

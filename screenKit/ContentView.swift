@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var shortcutsManager = ShortcutsManager.shared
     @ObservedObject private var overlayManager = OverlayManager.shared
     @ObservedObject private var storageManager = StorageManager.shared
@@ -15,31 +16,17 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // Dark base background (ensures visibility)
             // Dynamic Background
             ZStack {
-                Color.black.ignoresSafeArea()
+                Theme.background(for: colorScheme).ignoresSafeArea()
                 
                 // Ambient Gradients
-                RadialGradient(
-                    colors: [Color.blue.opacity(0.12), Color.clear],
-                    center: .topLeading,
-                    startRadius: 0,
-                    endRadius: 1000
-                )
-                .ignoresSafeArea()
-                
-                RadialGradient(
-                    colors: [Color.purple.opacity(0.1), Color.clear],
-                    center: .bottomTrailing,
-                    startRadius: 0,
-                    endRadius: 800
-                )
-                .ignoresSafeArea()
+                Theme.ambientGradientTop(for: colorScheme).ignoresSafeArea()
+                Theme.ambientGradientBottom(for: colorScheme).ignoresSafeArea()
             }
 
             // Frosted glass overlay
-            VisualEffectBackground()
+            VisualEffectBackground(colorScheme: colorScheme)
                 .ignoresSafeArea()
 
             VStack(spacing: 32) {
@@ -97,7 +84,7 @@ struct ContentView: View {
 
 struct CapturePreviewView: View {
     @ObservedObject var storageManager: StorageManager
-    @ObservedObject private var localizationManager = LocalizationManager.shared
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
     
     var body: some View {
@@ -105,19 +92,17 @@ struct CapturePreviewView: View {
             ZStack {
                 // Background Frame
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color.black.opacity(0.4))
+                    .fill(Theme.cardFill(for: colorScheme))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.1), .white.opacity(0.02)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
+                            .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 15)
+                    .shadow(
+                        color: Theme.cardShadow(for: colorScheme),
+                        radius: Theme.cardShadowRadius(for: colorScheme),
+                        x: 0, 
+                        y: 15
+                    )
                 
                 if let thumbnail = storageManager.lastCaptureThumbnail {
                     // Content: Thumbnail
@@ -156,7 +141,7 @@ struct CapturePreviewView: View {
                         
                         Text("ready_to_capture".localized)
                             .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(Theme.textSecondary(for: colorScheme))
                             .tracking(1)
                     }
                 }
@@ -205,6 +190,7 @@ struct HeroActionButton: View {
     let description: String
     let action: () -> Void
     
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var isHovered = false
     
@@ -237,7 +223,7 @@ struct HeroActionButton: View {
                     
                     Image(systemName: icon)
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(colorScheme == .dark ? .white : color)
                         .shadow(color: color.opacity(0.6), radius: 4)
                 }
                 
@@ -245,11 +231,11 @@ struct HeroActionButton: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(label)
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary(for: colorScheme))
                     
                     Text(shortcut)
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Theme.textSecondary(for: colorScheme))
                 }
                 
                 Spacer()
@@ -257,7 +243,7 @@ struct HeroActionButton: View {
                 // Chevron hint
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white.opacity(isHovered ? 0.8 : 0.3))
+                    .foregroundColor(Theme.textSecondary(for: colorScheme).opacity(isHovered ? 0.8 : 0.3))
                     .offset(x: isHovered ? 4 : 0)
             }
             .padding(.leading, 12)
@@ -265,27 +251,17 @@ struct HeroActionButton: View {
             .frame(height: 80)
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.4))
+                    .fill(Theme.cardFill(for: colorScheme))
             )
             .background(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(.white.opacity(isHovered ? 0.08 : 0.03))
+                    .fill(colorScheme == .dark ? .white.opacity(isHovered ? 0.08 : 0.03) : .black.opacity(isHovered ? 0.05 : 0))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                .white.opacity(isHovered ? 0.4 : 0.15),
-                                .white.opacity(isHovered ? 0.15 : 0.05)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
+                    .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+            .shadow(color: Theme.cardShadow(for: colorScheme), radius: 10, y: 5)
             .scaleEffect(isHovered ? 1.02 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
             .frame(maxWidth: .infinity)
@@ -299,6 +275,7 @@ struct HeroActionButton: View {
 // MARK: - Settings Dock (Extracted for cleanliness)
 
 struct SettingsDock: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var storageManager: StorageManager
     @ObservedObject var shortcutsManager: ShortcutsManager
     @ObservedObject private var launchManager = LaunchManager.shared
@@ -315,7 +292,7 @@ struct SettingsDock: View {
                         .foregroundColor(.cyan)
                     Text(storageManager.defaultSaveDirectory.lastPathComponent)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
+                        .foregroundColor(Theme.textPrimary(for: colorScheme).opacity(0.9))
                         .lineLimit(1)
                 }
                 .padding(.horizontal, 16)
@@ -327,7 +304,7 @@ struct SettingsDock: View {
             
             Divider()
                 .frame(height: 20)
-                .background(Color.white.opacity(0.1))
+                .background(Theme.divider(for: colorScheme))
             
             // Prefix
             HStack(spacing: 8) {
@@ -338,13 +315,14 @@ struct SettingsDock: View {
                 TextField("prefix".localized, text: $shortcutsManager.currentPrefix)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundColor(Theme.textPrimary(for: colorScheme))
                     .frame(width: 80)
             }
             .padding(.horizontal, 16)
             
             Divider()
                 .frame(height: 20)
-                .background(Color.white.opacity(0.1))
+                .background(Theme.divider(for: colorScheme))
             
             // Quality Toggle
             Button(action: { shortcutsManager.toggleQuality() }) {
@@ -353,7 +331,7 @@ struct SettingsDock: View {
                         .foregroundColor(shortcutsManager.captureQuality == .quick ? .yellow : .cyan)
                     Text(shortcutsManager.captureQuality == .quick ? "quick".localized : "high".localized)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.9))
+                        .foregroundColor(Theme.textPrimary(for: colorScheme).opacity(0.9))
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
@@ -362,7 +340,7 @@ struct SettingsDock: View {
             
             Divider()
                 .frame(height: 20)
-                .background(Color.white.opacity(0.1))
+                .background(Theme.divider(for: colorScheme))
             
             // Language Switcher
             LanguageSwitcher()
@@ -370,7 +348,7 @@ struct SettingsDock: View {
             
             Divider()
                 .frame(height: 20)
-                .background(Color.white.opacity(0.1))
+                .background(Theme.divider(for: colorScheme))
             
             // Icon Toggles
             HStack(spacing: 8) {
@@ -409,35 +387,39 @@ struct SettingsDock: View {
         }
         .background(
             Capsule()
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.8))
-        )
-        .background(
-            Capsule()
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
+                .fill(Theme.dockBackground(for: colorScheme))
         )
         .overlay(
             Capsule()
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
+        .shadow(
+            color: Theme.cardShadow(for: colorScheme), 
+            radius: Theme.cardShadowRadius(for: colorScheme) + 5, 
+            y: 10
+        )
     }
 }
 
 // MARK: - Utilities
 
 struct VisualEffectBackground: NSViewRepresentable {
+    var colorScheme: ColorScheme
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .sidebar
-        view.blendingMode = .withinWindow
+        view.material = Theme.visualEffectMaterial(for: colorScheme)
+        view.blendingMode = Theme.visualEffectBlending(for: colorScheme)
         view.state = .active
         view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor(white: 0.1, alpha: 0.95).cgColor
+        view.layer?.backgroundColor = NSColor(white: colorScheme == .dark ? 0.1 : 0.9, alpha: Theme.visualEffectOpacity(for: colorScheme)).cgColor
         return view
     }
 
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = Theme.visualEffectMaterial(for: colorScheme)
+        nsView.layer?.backgroundColor = NSColor(white: colorScheme == .dark ? 0.1 : 0.9, alpha: Theme.visualEffectOpacity(for: colorScheme)).cgColor
+    }
 }
 
 struct DockToggle: View {
@@ -445,13 +427,15 @@ struct DockToggle: View {
     let icon: String
     let activeColor: Color
     let tooltip: String
+    
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
     var body: some View {
         Button(action: { isOn.toggle() }) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(isOn ? activeColor : .white.opacity(0.3))
+                .foregroundColor(isOn ? activeColor : Theme.textSecondary(for: colorScheme).opacity(0.5))
                 .frame(width: 36, height: 36)
                 .background(
                     Circle()
@@ -459,7 +443,7 @@ struct DockToggle: View {
                 )
                 .overlay(
                     Circle()
-                        .stroke(Color.white.opacity(isHovered ? 0.2 : 0.0), lineWidth: 1)
+                        .stroke(Theme.cardBorder(for: colorScheme), lineWidth: isHovered ? 1 : 0)
                 )
         }
         .buttonStyle(PlainButtonStyle())

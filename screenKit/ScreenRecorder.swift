@@ -45,9 +45,10 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         }
 
         // Apply quality scale factor to capture dimensions
+        // We use the original region (points) * scaleFactor (1x or 2x)
         let scaleFactor = quality.scaleFactor
-        let captureWidth = Int(ceil(displayRegion.width * scaleFactor))
-        let captureHeight = Int(ceil(displayRegion.height * scaleFactor))
+        let captureWidth = Int(ceil(region.width * scaleFactor))
+        let captureHeight = Int(ceil(region.height * scaleFactor))
 
         print("Recording at \(quality.description): \(captureWidth)x\(captureHeight)")
 
@@ -216,9 +217,10 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         }
 
         // Apply quality scale factor to capture dimensions
+        // We use the original region (points) * scaleFactor (1x or 2x)
         let scaleFactor = quality.scaleFactor
-        let captureWidth = Int(ceil(displayRegion.width * scaleFactor))
-        let captureHeight = Int(ceil(displayRegion.height * scaleFactor))
+        let captureWidth = Int(ceil(region.width * scaleFactor))
+        let captureHeight = Int(ceil(region.height * scaleFactor))
 
         print("Screenshot at \(quality.description): \(captureWidth)x\(captureHeight)")
 
@@ -350,13 +352,16 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     /// - Returns: CGRect for SCStreamConfiguration.sourceRect (origin top-left)
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
         // SCStreamConfiguration.sourceRect uses top-left origin (same as SwiftUI)
-        // The selection rect is already in the correct coordinate system
-        // Just pass it through directly
+        // However, SCStreamConfiguration expects PIXELS, while SwiftUI/NSScreen uses POINTS.
+        // We must scale the region by the screen's backing scale factor.
+        
+        let scale = screen.backingScaleFactor
+        
         return CGRect(
-            x: region.origin.x,
-            y: region.origin.y,
-            width: region.width,
-            height: region.height
+            x: region.origin.x * scale,
+            y: region.origin.y * scale,
+            width: region.width * scale,
+            height: region.height * scale
         )
     }
 

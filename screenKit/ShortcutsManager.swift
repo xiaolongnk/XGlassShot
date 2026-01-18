@@ -4,37 +4,37 @@ import SwiftUI
 import KeyboardShortcuts
 import Combine
 
-// MARK: - Capture Quality
+// MARK: - Recording Mode
 
-enum CaptureQuality: String, CaseIterable {
-    case quick = "quick"      // 1x scale, lower bitrate - fast sharing
-    case high = "high"        // 2x scale (Retina), higher bitrate - full quality
+enum RecordingMode: String, CaseIterable {
+    case efficiency = "efficiency"      // 1x scale, lower bitrate - optimized for size
+    case highQuality = "highQuality"    // 2x scale (Retina), higher bitrate - full quality
 
     var displayName: String {
         switch self {
-        case .quick: return "quick".localized
-        case .high: return "hq".localized
+        case .efficiency: return "Efficiency".localized
+        case .highQuality: return "High Quality".localized
         }
     }
 
     var description: String {
         switch self {
-        case .quick: return "quick_share".localized
-        case .high: return "high_quality".localized
+        case .efficiency: return "Low file size, 1x scale".localized
+        case .highQuality: return "Best resolution, 2x scale".localized
         }
     }
 
     var scaleFactor: CGFloat {
         switch self {
-        case .quick: return 1.0
-        case .high: return 2.0
+        case .efficiency: return 1.0
+        case .highQuality: return 2.0
         }
     }
 
     var videoBitrateFactor: Int {
         switch self {
-        case .quick: return 4    // ~4 bits per pixel
-        case .high: return 12    // ~12 bits per pixel
+        case .efficiency: return 4    // ~4 bits per pixel
+        case .highQuality: return 12    // ~12 bits per pixel
         }
     }
 }
@@ -60,9 +60,9 @@ final class ShortcutsManager: ObservableObject {
 
     @Published var currentPath: String = FileManager.default.homeDirectoryForCurrentUser.path
     @Published var currentPrefix: String = "bug"
-    @Published var captureQuality: CaptureQuality = .quick {
+    @Published var recordingMode: RecordingMode = .efficiency {
         didSet {
-            UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")
+            UserDefaults.standard.set(recordingMode.rawValue, forKey: "recordingMode")
             showQualityFeedback()
         }
     }
@@ -73,9 +73,9 @@ final class ShortcutsManager: ObservableObject {
 
     private init() {
         // Load saved quality preference
-        if let savedQuality = UserDefaults.standard.string(forKey: "captureQuality"),
-           let quality = CaptureQuality(rawValue: savedQuality) {
-            captureQuality = quality
+        if let savedMode = UserDefaults.standard.string(forKey: "recordingMode"),
+           let mode = RecordingMode(rawValue: savedMode) {
+            recordingMode = mode
         }
         setupDefaultShortcuts()
         setupShortcuts()
@@ -142,7 +142,7 @@ final class ShortcutsManager: ObservableObject {
     }
 
     func toggleQuality() {
-        captureQuality = (captureQuality == .quick) ? .high : .quick
+        recordingMode = (recordingMode == .efficiency) ? .highQuality : .efficiency
     }
 
 
@@ -170,7 +170,7 @@ final class ShortcutsManager: ObservableObject {
         }
 
         // Update content
-        hostingView.rootView = QualityFeedbackView(quality: captureQuality)
+        hostingView.rootView = QualityFeedbackView(mode: recordingMode)
         
         // Ensure window is visible
         window.alphaValue = 1.0
@@ -210,7 +210,7 @@ final class ShortcutsManager: ObservableObject {
         window.ignoresMouseEvents = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        let hostingView = NSHostingView(rootView: QualityFeedbackView(quality: captureQuality))
+        let hostingView = NSHostingView(rootView: QualityFeedbackView(mode: recordingMode))
         hostingView.frame = window.contentView?.bounds ?? .zero
         window.contentView = hostingView
         window.center()
@@ -367,17 +367,17 @@ struct PrefixInputView: View {
 // MARK: - Quality Feedback View
 
 struct QualityFeedbackView: View {
-    let quality: CaptureQuality
+    let mode: RecordingMode
     @ObservedObject private var localizationManager = LocalizationManager.shared
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: quality == .high ? "sparkles" : "hare")
+            Image(systemName: mode == .highQuality ? "sparkles" : "hare")
                 .font(.system(size: 20, weight: .medium))
-                .foregroundColor(quality == .high ? .yellow : .cyan)
+                .foregroundColor(mode == .highQuality ? .yellow : .cyan)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(quality.description)
+                Text(mode.description)
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundColor(.white)
 
@@ -392,7 +392,7 @@ struct QualityFeedbackView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(quality == .high ? Color.yellow.opacity(0.3) : Color.cyan.opacity(0.3), lineWidth: 1)
+                .stroke(mode == .highQuality ? Color.yellow.opacity(0.3) : Color.cyan.opacity(0.3), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
     }

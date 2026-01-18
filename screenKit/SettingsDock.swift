@@ -6,6 +6,7 @@ struct SettingsDock: View {
     @ObservedObject var shortcutsManager: ShortcutsManager
     @ObservedObject private var launchManager = LaunchManager.shared
     @ObservedObject private var localizationManager = LocalizationManager.shared
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         HStack(spacing: 0) {
@@ -44,6 +45,7 @@ struct SettingsDock: View {
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundColor(Theme.textPrimary(for: colorScheme))
                         .frame(width: 100)
+                        .focused($isInputFocused)
                         .onValueChanged(of: shortcutsManager.currentPrefix) { newValue in
                             let filtered = newValue.filter { !":/".contains($0) }
                             if filtered != newValue {
@@ -144,6 +146,9 @@ struct SettingsDock: View {
             radius: Theme.cardShadowRadius(for: colorScheme) + 5, 
             y: 10
         )
+        .onTapGesture {
+            isInputFocused = false
+        }
     }
 }
 

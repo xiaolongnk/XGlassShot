@@ -29,9 +29,15 @@ struct ContentView: View {
             // Frosted glass overlay
             if reduceTransparency {
                 Theme.background(for: colorScheme).ignoresSafeArea()
+                    .onTapGesture {
+                        NSApp.keyWindow?.makeFirstResponder(nil)
+                    }
             } else {
                 VisualEffectBackground(colorScheme: colorScheme)
                     .ignoresSafeArea()
+                    .onTapGesture {
+                        NSApp.keyWindow?.makeFirstResponder(nil)
+                    }
             }
 
             VStack(spacing: 32) {

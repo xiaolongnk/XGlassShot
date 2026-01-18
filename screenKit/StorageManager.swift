@@ -328,8 +328,8 @@ final class StorageManager: ObservableObject {
     func playCaptureConfirmation() {
         guard playCaptureSound else { return }
 
-        // Play system camera shutter sound (1108 is the screen capture sound)
-        AudioServicesPlaySystemSound(1108)
+        // Play a clear sound effect (Tink) for better audibility
+        NSSound(named: "Tink")?.play()
     }
 
     private var flashWindow: NSWindow?

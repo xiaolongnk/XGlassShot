@@ -81,7 +81,7 @@ struct LanguageSwitcher: View {
                         insertion: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity),
                         removal: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity)
                     ))
-                    .offset(y: -230) // Move significantly higher for longer list
+                    .offset(y: -200) // Move significantly higher for longer list
                     .shadow(color: .black.opacity(0.25), radius: 20, y: 5) // Slightly stronger shadow
                 }
                 .frame(width: 3000, height: 3000)

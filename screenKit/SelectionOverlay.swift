@@ -106,11 +106,14 @@ struct SelectionOverlayView: View {
     @ObservedObject var overlay: SelectionOverlay
     let screen: NSScreen
 
-    @State private var startPoint: CGPoint = .zero
-    @State private var currentPoint: CGPoint = .zero
-    @State private var isDragging: Bool = false
-    @State private var isDrawingAnnotation: Bool = false
-    @State private var isThisScreenActive: Bool = false
+    @State private var hoveredEdge: ResizeEdge = .none
+    @State private var isResizing: Bool = false
+    @State private var resizeEdge: ResizeEdge = .none
+    @State private var initialRect: CGRect = .zero
+
+    enum ResizeEdge {
+        case none, top, bottom, left, right
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -119,7 +122,7 @@ struct SelectionOverlayView: View {
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
 
-                if isThisScreenActive && (isDragging || overlay.selectionRect != .zero) {
+                if isThisScreenActive && (isDragging || isResizing || overlay.selectionRect != .zero) {
                     // Selection rectangle with viewfinder style
                     ViewfinderRect(rect: overlay.selectionRect)
                     
@@ -137,15 +140,41 @@ struct SelectionOverlayView: View {
                     }
                 }
             }
+            .onHover { location in
+                guard isThisScreenActive && overlay.selectionRect != .zero else { return }
+                
+                // Check if hovering over edges
+                hoveredEdge = detectEdge(at: location, rect: overlay.selectionRect)
+                
+                // Update cursor
+                switch hoveredEdge {
+                case .top, .bottom:
+                    NSCursor.resizeUpDown.set()
+                case .left, .right:
+                    NSCursor.resizeLeftRight.set()
+                case .none:
+                    NSCursor.crosshair.set()
+                }
+            }
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        if !isDragging && !isDrawingAnnotation {
+                        if !isDragging && !isDrawingAnnotation && !isResizing {
                             let location = value.startLocation
                             
-                            // Check if start location is substantially inside existing selection to start annotation
-                            // We use a small inset to allow resizing/moving selection in future if needed (though not implemented yet)
-                            if isThisScreenActive && overlay.selectionRect.insetBy(dx: 5, dy: 5).contains(location) {
+                            // 1. Check for Resize (High priority)
+                            let edge = detectEdge(at: location, rect: overlay.selectionRect)
+                            if edge != .none {
+                                isResizing = true
+                                resizeEdge = edge
+                                initialRect = overlay.selectionRect
+                                isThisScreenActive = true
+                                return
+                            }
+                            
+                            // 2. Check for Annotation (Inside)
+                            // We use a small inset to allow resizing/moving selection in future if needed
+                            if isThisScreenActive && overlay.selectionRect.insetBy(dx: 10, dy: 10).contains(location) {
                                 isDrawingAnnotation = true
                                 startPoint = CGPoint(
                                     x: location.x - overlay.selectionRect.minX,
@@ -153,7 +182,7 @@ struct SelectionOverlayView: View {
                                 )
                                 currentPoint = startPoint
                             } else {
-                                // Start new selection
+                                // 3. Start new selection (Outside)
                                 isDragging = true
                                 isThisScreenActive = true
                                 overlay.setCurrentScreen(screen)
@@ -163,6 +192,8 @@ struct SelectionOverlayView: View {
                                 currentPoint = location
                                 updateSelectionRect()
                             }
+                        } else if isResizing {
+                             updateResize(value: value)
                         } else if isDrawingAnnotation {
                              // Update current annotation point (relative to selection)
                              currentPoint = CGPoint(
@@ -170,12 +201,15 @@ struct SelectionOverlayView: View {
                                  y: value.location.y - overlay.selectionRect.minY
                              )
                         } else {
-                            // Update selection
+                            // Update normal selection
                             currentPoint = value.location
                             updateSelectionRect()
                         }
                     }
                     .onEnded { _ in
+                        isResizing = false
+                        resizeEdge = .none
+                        
                         if isDrawingAnnotation {
                             // Finalize annotation
                             let rect = calculateAnnotationRect(start: startPoint, end: currentPoint)
@@ -194,6 +228,54 @@ struct SelectionOverlayView: View {
         }
     }
 
+    private func detectEdge(at point: CGPoint, rect: CGRect) -> ResizeEdge {
+        let threshold: CGFloat = 10
+        
+        let inHp = point.x >= rect.minX - threshold && point.x <= rect.maxX + threshold
+        let inVp = point.y >= rect.minY - threshold && point.y <= rect.maxY + threshold
+        
+        if inHp && abs(point.y - rect.minY) <= threshold { return .top }
+        if inHp && abs(point.y - rect.maxY) <= threshold { return .bottom }
+        if inVp && abs(point.x - rect.minX) <= threshold { return .left }
+        if inVp && abs(point.x - rect.maxX) <= threshold { return .right }
+        
+        return .none
+    }
+    
+    private func updateResize(value: DragGesture.Value) {
+        var newRect = initialRect
+        let translation = value.translation
+        
+        switch resizeEdge {
+        case .top:
+            // Adjust minY, height changes inversely
+            // Ensure height doesn't go negative
+            let newHeight = max(10, initialRect.height - translation.height)
+            let newY = initialRect.maxY - newHeight // Anchor bottom
+            newRect.origin.y = newY
+            newRect.size.height = newHeight
+            
+        case .bottom:
+            // Adjust height
+            newRect.size.height = max(10, initialRect.height + translation.height)
+            
+        case .left:
+            // Adjust minX, width changes inversely
+            let newWidth = max(10, initialRect.width - translation.width)
+            let newX = initialRect.maxX - newWidth // Anchor right
+            newRect.origin.x = newX
+            newRect.size.width = newWidth
+            
+        case .right:
+            // Adjust width
+            newRect.size.width = max(10, initialRect.width + translation.width)
+            
+        case .none:
+            break
+        }
+        
+        overlay.selectionRect = newRect
+    }
 
     private func updateSelectionRect() {
         let minX = min(startPoint.x, currentPoint.x)

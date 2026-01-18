@@ -12,8 +12,8 @@ enum CaptureQuality: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .low: return "Efficiency".localized
-        case .high: return "High Quality".localized
+        case .low: return "Low".localized
+        case .high: return "High".localized
         }
     }
 

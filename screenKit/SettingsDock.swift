@@ -146,9 +146,6 @@ struct SettingsDock: View {
             radius: Theme.cardShadowRadius(for: colorScheme) + 5, 
             y: 10
         )
-        .onTapGesture {
-            isInputFocused = false
-        }
     }
 }
 

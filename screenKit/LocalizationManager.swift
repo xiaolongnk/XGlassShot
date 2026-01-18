@@ -62,7 +62,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         case .french: return "🇫🇷"
         case .german: return "🇩🇪"
         case .korean: return "🇰🇷"
-        case .traditionalChinese: return "🇹🇼"
+        case .traditionalChinese: return "🇭🇰"
         case .italian: return "🇮🇹"
         case .dutch: return "🇳🇱"
         }

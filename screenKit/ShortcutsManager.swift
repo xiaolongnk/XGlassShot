@@ -128,12 +128,16 @@ final class ShortcutsManager: ObservableObject {
     }
 
     private func handleCaptureZone() {
-        guard activeInputWindow == nil else { return }
+        if activeInputWindow != nil {
+            closeActiveWindow()
+        }
         OverlayManager.shared.showSelectionOverlay()
     }
 
     private func handleCaptureScreenshot() {
-        guard activeInputWindow == nil else { return }
+        if activeInputWindow != nil {
+            closeActiveWindow()
+        }
         OverlayManager.shared.showScreenshotOverlay()
     }
 

@@ -26,20 +26,24 @@ final class OverlayManager: ObservableObject {
             PermissionManager.shared.openSystemSettings()
             return
         }
+        guard let selectionOverlay = selectionOverlay else {
+            print("Selection overlay not initialized")
+            return
+        }
         guard !isShowingOverlay else { return }
         
         isShowingOverlay = true
         
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect, annotations, screen in
+        selectionOverlay.onConfirm = { [weak self] rect, annotations, screen in
             await self?.handleSelectionConfirmed(rect: rect, annotations: annotations, screen: screen)
         }
 
-        selectionOverlay?.onCancel = { [weak self] in
+        selectionOverlay.onCancel = { [weak self] in
             await self?.handleSelectionCancelled()
         }
 
-        selectionOverlay?.show()
+        selectionOverlay.show()
     }
 
     func showScreenshotOverlay() {
@@ -47,20 +51,24 @@ final class OverlayManager: ObservableObject {
             PermissionManager.shared.openSystemSettings()
             return
         }
+        guard let selectionOverlay = selectionOverlay else {
+            print("Selection overlay not initialized")
+            return
+        }
         guard !isShowingOverlay else { return }
 
         isShowingOverlay = true
 
         // Configure SelectionOverlay with callbacks
-        selectionOverlay?.onConfirm = { [weak self] rect, annotations, screen in
+        selectionOverlay.onConfirm = { [weak self] rect, annotations, screen in
             await self?.handleScreenshotCaptured(rect: rect, annotations: annotations, screen: screen)
         }
 
-        selectionOverlay?.onCancel = { [weak self] in
+        selectionOverlay.onCancel = { [weak self] in
             await self?.handleSelectionCancelled()
         }
 
-        selectionOverlay?.show()
+        selectionOverlay.show()
     }
 
     private func handleScreenshotCaptured(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {

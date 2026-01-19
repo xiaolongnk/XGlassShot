@@ -11,13 +11,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CDD1DE282F13F4C600508BDC /* screenKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = screenKit.app; path = GlassCap.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CDD1DE282F13F4C600508BDC /* GlassCap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlassCap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		CDD1DE2A2F13F4C600508BDC /* screenKit */ = {
+		CDD1DE2A2F13F4C600508BDC /* GlassCap */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = screenKit;
+			path = GlassCap;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -37,7 +37,7 @@
 		CDD1DE1F2F13F4C600508BDC = {
 			isa = PBXGroup;
 			children = (
-				CDD1DE2A2F13F4C600508BDC /* screenKit */,
+				CDD1DE2A2F13F4C600508BDC /* GlassCap */,
 				CDD1DE292F13F4C600508BDC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -45,7 +45,7 @@
 		CDD1DE292F13F4C600508BDC /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CDD1DE282F13F4C600508BDC /* screenKit.app */,
+				CDD1DE282F13F4C600508BDC /* GlassCap.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,9 +53,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		CDD1DE272F13F4C600508BDC /* screenKit */ = {
+		CDD1DE272F13F4C600508BDC /* GlassCap */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CDD1DE332F13F4C600508BDC /* Build configuration list for PBXNativeTarget "screenKit" */;
+			buildConfigurationList = CDD1DE332F13F4C600508BDC /* Build configuration list for PBXNativeTarget "GlassCap" */;
 			buildPhases = (
 				CDD1DE242F13F4C600508BDC /* Sources */,
 				CDD1DE252F13F4C600508BDC /* Frameworks */,
@@ -66,14 +66,14 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				CDD1DE2A2F13F4C600508BDC /* screenKit */,
+				CDD1DE2A2F13F4C600508BDC /* GlassCap */,
 			);
-			name = screenKit;
+			name = GlassCap;
 			packageProductDependencies = (
 				CD4868812F13FC1B00718E9A /* KeyboardShortcuts */,
 			);
-			productName = screenKit;
-			productReference = CDD1DE282F13F4C600508BDC /* screenKit.app */;
+			productName = GlassCap;
+			productReference = CDD1DE282F13F4C600508BDC /* GlassCap.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -91,7 +91,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CDD1DE232F13F4C600508BDC /* Build configuration list for PBXProject "screenKit" */;
+			buildConfigurationList = CDD1DE232F13F4C600508BDC /* Build configuration list for PBXProject "GlassCap" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -108,7 +108,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				CDD1DE272F13F4C600508BDC /* screenKit */,
+				CDD1DE272F13F4C600508BDC /* GlassCap */,
 			);
 		};
 /* End PBXProject section */
@@ -285,7 +285,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.xiaolongou.screenKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiaolongou.GlassCap;
 				PRODUCT_NAME = GlassCap;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -328,7 +328,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.xiaolongou.screenKit;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xiaolongou.GlassCap;
 				PRODUCT_NAME = GlassCap;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -343,7 +343,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CDD1DE232F13F4C600508BDC /* Build configuration list for PBXProject "screenKit" */ = {
+		CDD1DE232F13F4C600508BDC /* Build configuration list for PBXProject "GlassCap" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CDD1DE312F13F4C600508BDC /* Debug */,
@@ -352,7 +352,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CDD1DE332F13F4C600508BDC /* Build configuration list for PBXNativeTarget "screenKit" */ = {
+		CDD1DE332F13F4C600508BDC /* Build configuration list for PBXNativeTarget "GlassCap" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CDD1DE342F13F4C600508BDC /* Debug */,

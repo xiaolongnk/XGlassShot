@@ -7,7 +7,7 @@
    - Deleted `ContentView 2.swift` (duplicate)
 
 2. **Main App File Updated**
-   - Replaced default `screenKitApp.swift` with proper `ScreenKitApp`
+   - Replaced default `GlassCapApp.swift` with proper `ScreenKitApp`
    - Added AppDelegate for permission handling
    - Added manager initialization
 
@@ -19,8 +19,8 @@
 ## 📋 Current Project Structure
 
 ```
-screenKit/screenKit/
-├── screenKitApp.swift          ✅ Main entry point
+GlassCap/GlassCap/
+├── GlassCapApp.swift          ✅ Main entry point
 ├── ContentView.swift          ✅ Main window view
 ├── ScreenRecorder.swift       ✅ Screen recording service
 ├── SelectionOverlay.swift    ✅ Region selection UI
@@ -81,7 +81,7 @@ Before building, verify:
 
 ### "Multiple @main attributes"
 **Solution**: Only one @main should exist
-- ✅ `screenKitApp.swift` has @main
+- ✅ `GlassCapApp.swift` has @main
 - ❌ No other files should have @main
 
 ### Build Errors

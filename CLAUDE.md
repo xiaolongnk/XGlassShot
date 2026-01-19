@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build and Run
 
-This is a macOS SwiftUI app. Open `screenKit.xcodeproj` in Xcode and build/run with `Cmd+R`.
+This is a macOS SwiftUI app. Open `GlassCap.xcodeproj` in Xcode and build/run with `Cmd+R`.
 
 **Requirements:** macOS 12.3+, Xcode 14.0+, Swift 5.9+
 

@@ -8,11 +8,11 @@ The `KeyboardShortcuts` module cannot be found because the package dependency ha
 ### Step-by-Step Instructions
 
 1. **Open your Xcode project**
-   - Open `screenKit.xcodeproj` in Xcode
+   - Open `GlassCap.xcodeproj` in Xcode
 
 2. **Navigate to Package Dependencies**
    - Click on the **blue project icon** at the top of the file navigator (left side)
-   - Select the **screenKit** project (not the target)
+   - Select the **GlassCap** project (not the target)
    - Click on the **"Package Dependencies"** tab
 
 3. **Add the Package**
@@ -26,7 +26,7 @@ The `KeyboardShortcuts` module cannot be found because the package dependency ha
    - Click **"Add Package"**
 
 5. **Add to Target**
-   - Make sure **"KeyboardShortcuts"** is checked for the **screenKit** target
+   - Make sure **"KeyboardShortcuts"** is checked for the **GlassCap** target
    - Click **"Add Package"**
 
 6. **Verify**
@@ -38,9 +38,9 @@ The `KeyboardShortcuts` module cannot be found because the package dependency ha
 If you prefer command line:
 
 ```bash
-cd /Users/rex/data/screenKit/screenKit
+cd /Users/rex/data/GlassCap/GlassCap
 # Open Xcode project
-open screenKit.xcodeproj
+open GlassCap.xcodeproj
 ```
 
 Then follow steps 2-6 above in Xcode.

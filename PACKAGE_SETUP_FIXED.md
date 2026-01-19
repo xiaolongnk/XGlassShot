@@ -24,7 +24,7 @@
    - Click "Add Package"
 
 5. **Select target:**
-   - Make sure **screenKit** is checked
+   - Make sure **GlassCap** is checked
    - Click "Add Package"
 
 ## Alternative: If That Still Fails
@@ -36,7 +36,7 @@
 ### Option B: Manual Package Resolution
 1. Close Xcode
 2. Delete these folders if they exist:
-   - `~/Library/Developer/Xcode/DerivedData/screenKit-*`
+   - `~/Library/Developer/Xcode/DerivedData/GlassCap-*`
    - `.build` folder in project directory
 3. Reopen Xcode
 4. Try adding package again
@@ -44,7 +44,7 @@
 ### Option C: Use Swift Package Manager Directly
 Open Terminal in your project directory and run:
 ```bash
-cd /Users/rex/data/screenKit/screenKit
+cd /Users/rex/data/GlassCap/GlassCap
 swift package resolve
 ```
 

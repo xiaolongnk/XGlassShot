@@ -10,7 +10,7 @@
    (Note: without `.git` at the end)
 3. Click **Add Package**
 4. Select version **2.0.0** or later
-5. Make sure **screenKit** target is checked
+5. Make sure **GlassCap** target is checked
 6. Click **Add Package**
 
 ## Method 2: Search in Xcode

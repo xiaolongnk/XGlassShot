@@ -25,11 +25,11 @@ struct GlassCapApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 550, minHeight: 600)
+                .frame(minWidth: 660, minHeight: 620)
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 550, height: 620)
+        .defaultSize(width: 660, height: 620)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }

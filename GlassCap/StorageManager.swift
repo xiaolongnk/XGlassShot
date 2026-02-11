@@ -38,12 +38,8 @@ final class StorageManager: ObservableObject {
             if savedDirectory.isEmpty {
                 return defaultPicturesDirectory
             }
-            let url = URL(fileURLWithPath: savedDirectory)
-            // Verify directory exists and is writable
-            if isDirectoryWritable(url) {
-                return url
-            }
-            return defaultPicturesDirectory
+            // Always try to use the saved directory even if we can't confirm writability (sandbox limitations)
+            return URL(fileURLWithPath: savedDirectory)
         }
         set {
             savedDirectory = newValue.path
@@ -191,6 +187,8 @@ final class StorageManager: ObservableObject {
         let filename = generateScreenshotFilename(prefix: prefix)
 
         // Try silent save first if configured
+        // We now optimistically try to save to the default directory.
+        // If it fails (e.g., sandbox issue without bookmark), we catch the error and fall back to the panel.
         if let (directory, releaseAccess) = getTargetDirectory() {
             defer {
                 if releaseAccess {

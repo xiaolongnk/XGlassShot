@@ -24,8 +24,8 @@ struct DockToggle: View {
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(
-                            Theme.cardMaterial(for: colorScheme)
-                                .clipShape(Capsule())
+                            Capsule()
+                                .fill(Theme.cardMaterial(for: colorScheme))
                                 .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
                         )
                         .overlay(

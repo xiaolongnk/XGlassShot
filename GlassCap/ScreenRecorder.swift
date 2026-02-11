@@ -334,33 +334,67 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     /// Find the SCDisplay that matches the given NSScreen
     private func findDisplay(for screen: NSScreen, in displays: [SCDisplay]) -> SCDisplay? {
         // Get the CGDirectDisplayID from NSScreen
-        guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else {
+        // Key is "NSScreenNumber", value is NSNumber (which holds a UInt32)
+        guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
+            print("Could not find NSScreenNumber for screen: \(screen)")
             return displays.first
         }
-
+        
+        let displayID = screenNumber.uint32Value
+        
         // Find matching SCDisplay by displayID
-        return displays.first { $0.displayID == screenNumber } ?? displays.first
+        if let match = displays.first(where: { $0.displayID == displayID }) {
+            return match
+        }
+        
+        print("No SCDisplay found matching ID: \(displayID). Available: \(displays.map { $0.displayID })")
+        
+        // Fallback: Geometry matching (if exact ID fails)
+        // Check if any display frame matches the screen frame (allowing for some rounding errors)
+        // SCDisplay frame is in global coordinates, same as NSScreen.frame (usually)
+        // Note: NSScreen.frame has (0,0) at bottom-left of primary, SCDisplay might differ in coordinate space origin?
+        // Actually SCDisplay frame is usually top-left based. NSScreen is bottom-left.
+        // Let's stick to ID matching as primary. If that fails, just return first as fallback.
+        
+        return displays.first
     }
 
     // MARK: - Coordinate Conversion
 
     /// Convert selection rect from screen-relative SwiftUI coordinates to SCDisplay sourceRect coordinates
     /// - Parameters:
-    ///   - region: The selection rect in SwiftUI coordinates (origin top-left, relative to window)
+    ///   - region: The selection rect in SwiftUI coordinates (origin top-left, relative to the window/screen)
     ///   - screen: The NSScreen where selection was made
     ///   - display: The target SCDisplay for capture
-    /// - Returns: CGRect for SCStreamConfiguration.sourceRect (origin top-left)
+    /// - Returns: CGRect for SCStreamConfiguration.sourceRect (local coordinates relative to display top-left)
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
-        // SCStreamConfiguration.sourceRect must be in global display coordinates (points)
-        // SelectionOverlay 'region' is relative to the screen/display top-left (points)
-        // display.frame gives the global origin of the display
+        // SCStreamConfiguration.sourceRect must be in LOCAL display coordinates.
+        // i.e., (0,0) is the top-left of the display itself, regardless of where it is on the desktop.
         
-        return CGRect(
-            x: display.frame.origin.x + region.origin.x,
-            y: display.frame.origin.y + region.origin.y,
-            width: region.width,
-            height: region.height
-        )
+        // SelectionOverlay 'region' is already relative to the screen's top-left (0,0).
+        // Since we are capturing *this specific display*, and the region is relative to *this screen*,
+        // the coordinates should map 1:1 if the resolution matches (points vs pixels).
+        // NSScreen and SCDisplay both use "points" (logical pixels).
+        
+        // However, we need to be careful about rounding and bounds.
+        // The sourceRect must be fully contained within the display bounds (0, 0, width, height).
+        
+        var sourceRect = region
+        
+        // Intersect with display bounds to ensure we don't request out-of-bounds capture
+        // SCDisplay logic: bounds are (0, 0, width, height)
+        let displayBounds = CGRect(origin: .zero, size: display.frame.size)
+        sourceRect = sourceRect.intersection(displayBounds)
+        
+        // Ensure strictly positive dimensions
+        if sourceRect.width <= 0 || sourceRect.height <= 0 {
+             print("Warning: Source rect became empty after intersection. fallback to full screen.")
+             return displayBounds
+        }
+
+        print("Converted Selection: \(region) -> Display Local: \(sourceRect) (Display Size: \(display.frame.size))")
+
+        return sourceRect
     }
 
     /// Applies a 1px inner border to the image

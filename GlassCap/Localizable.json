@@ -23,7 +23,9 @@
     "choose_location": "Choose a location to save your recording",
     "save_cancelled": "Save was cancelled",
     "directory_not_writable": "Cannot write to the selected directory",
-    "invalid_data": "Invalid data to save"
+    "invalid_data": "Invalid data to save",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "zh-Hans": {
     "record": "录制",
@@ -49,7 +51,9 @@
     "choose_location": "选择保存录制的位置",
     "save_cancelled": "保存已取消",
     "directory_not_writable": "无法写入所选目录",
-    "invalid_data": "无效数据"
+    "invalid_data": "无效数据",
+    "enabled": "已启用",
+    "disabled": "已禁用"
   },
   "ja": {
     "record": "録画",

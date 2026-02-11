@@ -1,90 +1,57 @@
-# ScreenKit
+# GlassCap
 
-A macOS screen recording application with a modern UI and global keyboard shortcuts.
+**GlassCap** is a high-performance, modern screen recording and screenshot application for macOS, built with **ScreenCaptureKit** and **SwiftUI**. It offers a seamless, "glassmorphism" interface for capturing regions, recording video, and managing your capture workflow with global hotkeys.
 
-## Features
+## ✨ Features
 
-- 🎥 Screen recording with region selection
-- ⌨️ Global keyboard shortcuts
-- 🎨 Modern glassmorphism UI
-- 📁 Customizable save paths and prefixes
-- 🔒 Permission management
+- **Area Selection**: Intuitive region selection with adjustable borders and real-time dimension feedback.
+- **Screen Recording**: High-quality video recording using Apple's latest ScreenCaptureKit API.
+- **Instant Screenshots**: Capture any region and save it instantly to your preferred folder.
+- **Settings Dock**: A floating, interactive "Command Bar" for quick access to:
+    - 📁 **Save Location**: Select and remember your destination folder.
+    - 🏷️ **Filename Suffix**: Add custom tags/suffixes to your filenames dynamically.
+    - ⚡ **Quality Toggles**: Switch between Performance (Low) and Quality (High) modes.
+    - 🔊 **Feedback**: Toggle capture sound effects.
+    - 🔳 **Screenshot Border**: Optional 1px stylistic border for all screenshots.
+    - 🚀 **Auto Start**: Option to launch at login.
+- **Global Shortcuts**: Control the app from anywhere on your system.
+- **Multi-Monitor Support**: Precise capture and selection across all connected displays.
 
-## Requirements
+## ⌨️ Keyboard Shortcuts
 
-- macOS 12.3 or later
-- Xcode 14.0 or later
-- Swift 5.9 or later
+- `⌘ ⇧ 1`: **Record Region** (Triggers area selection for video recording)
+- `⌘ ⇧ 2`: **Capture Screenshot** (Triggers area selection for instant image capture)
+- `⌘ ⇧ P`: **Change Path** (Quickly select a new default save directory)
+- `⌘ ⇧ L`: **Set Filename Suffix** (Quickly focus the filename suffix input)
 
-## Setup Instructions
+## 🛠️ Technical Requirements
 
-### Option 1: Create Xcode Project Manually
+- **macOS**: 12.3 or later (ScreenCaptureKit support required)
+- **Xcode**: 14.0+
+- **Developer Resource**: Requires Screen Recording permissions in System Settings.
 
-1. Open Xcode
-2. Create a new project:
-   - Choose "macOS" → "App"
-   - Product Name: `ScreenKit`
-   - Interface: `SwiftUI`
-   - Language: `Swift`
-   - Minimum Deployment: `macOS 12.3`
-
-3. Add all Swift files from this directory to your project
-
-4. Add KeyboardShortcuts dependency:
-   - File → Add Package Dependencies
-   - URL: `https://github.com/sindresorhus/KeyboardShortcuts.git`
-   - Version: `2.0.0` or later
-
-5. Configure Info.plist:
-   - Add `NSScreenCaptureUsageDescription` (already in Info.plist)
-   - Add `NSCameraUsageDescription` (already in Info.plist)
-
-6. Set deployment target:
-   - Project Settings → General → Minimum Deployments → macOS 12.3
-
-### Option 2: Use Swift Package Manager
-
-1. Open Terminal
-2. Navigate to project directory
-3. Run: `swift package generate-xcodeproj` (if needed)
-4. Open the generated `.xcodeproj` in Xcode
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-ScreenKit/
-├── ScreenKitApp.swift          # Main app entry point
-├── ContentView.swift           # Main window view
-├── ScreenRecorder.swift        # Screen recording service
-├── SelectionOverlay.swift      # Region selection UI
-├── OverlayManager.swift        # Overlay coordination
-├── ShortcutsManager.swift      # Global shortcuts
-├── PermissionManager.swift     # Permission handling
-├── CommandBar.swift            # Command pill UI
-├── DashboardSettingsView.swift  # Settings view
-├── GlassView.swift             # Glass effect component
-├── TerminalPathInput.swift     # Path input with autocomplete
-└── Info.plist                  # App configuration
+GlassCap/
+├── GlassCapApp.swift      # Application entry point & lifecycle
+├── ContentView.swift       # Main window and Command Bar UI
+├── SettingsDock.swift      # Floating settings and toggle management
+├── ScreenRecorder.swift    # Core SCKit logic, coordinate conversion, and saving
+├── SelectionOverlay.swift  # Cross-display SwiftUI selection windows
+├── StorageManager.swift    # Robust file storage, bookmarks, and silent save logic
+├── ShortcutsManager.swift  # Global hotkey registration and handling
+└── Theme.swift             # Centralized design system (colors, shadows, glass)
 ```
 
-## Keyboard Shortcuts
+## 🚀 Getting Started
 
-- **⌘⇧1** - Capture Zone (start recording)
-- **⌘⇧P** - Quick Change Path
-- **⌘⇧L** - Quick Change Prefix
+1. **Permissions**: On first launch, GlassCap will request Screen Recording access. You must grant this in *System Settings > Privacy & Security > Screen Recording*.
+2. **Shortcuts**: Use `⌘ ⇧ 2` to take your first screenshot.
+3. **Save Location**: Click the Folder icon in the settings dock to set your preferred destination. Enable the **Question Mark Folder** icon if you want to be asked for a location every single time.
 
-## Permissions
+## 📜 Recent Development Highlights
 
-On first launch, the app will request:
-- Screen Recording permission (required)
-- Camera permission (optional, for future features)
-
-## Building
-
-1. Open `ScreenKit.xcodeproj` in Xcode
-2. Select your development team in Signing & Capabilities
-3. Build and Run (⌘R)
-
-## License
-
-Copyright © 2024. All rights reserved.
+- **Activation Fix**: The app now automatically gains focus when triggered via shortcut, allowing immediate interaction without an extra click.
+- **Multi-Monitor Accuracy**: Robust display identification enables precise capture on secondary monitors, even with mixed resolutions or non-standard orientations.
+- **Optimistic Silent Save**: Faster, quieter saving logic that works reliably within the macOS sandbox environment.

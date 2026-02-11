@@ -45,6 +45,9 @@ class SelectionOverlay: ObservableObject {
             overlayWindow.makeKeyAndOrderFront(nil)
             windows.append(overlayWindow)
         }
+        
+        // Activate app to ensure we catch all input events immediately
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func hide() {

@@ -12,12 +12,27 @@ struct DockToggle: View {
     @State private var tooltipTimer: Timer?
 
     var body: some View {
-        Button(action: { 
+        Button(action: {
             isOn.toggle()
             triggerTooltip()
         }) {
-            ZStack {
-                // Tooltip
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(isOn ? activeColor : Theme.textSecondary(for: colorScheme).opacity(0.5))
+                .frame(width: 36, height: 36)
+                .background(
+                    Circle()
+                        .fill(isOn ? activeColor.opacity(0.1) : .clear)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Theme.cardBorder(for: colorScheme), lineWidth: isHovered ? 1 : 0)
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .frame(width: 36, height: 36)
+        .overlay(alignment: .bottom) {
+            Group {
                 if showStatusTooltip {
                     Text("\(tooltip): \(isOn ? "enabled".localized : "disabled".localized)")
                         .font(.system(size: 11, weight: .semibold))
@@ -33,28 +48,11 @@ struct DockToggle: View {
                                 .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
                         )
                         .offset(y: -45)
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .move(edge: .bottom)),
-                            removal: .opacity
-                        ))
-                        .zIndex(1)
                 }
-
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(isOn ? activeColor : Theme.textSecondary(for: colorScheme).opacity(0.5))
-                    .frame(width: 36, height: 36)
-                    .background(
-                        Circle()
-                            .fill(isOn ? activeColor.opacity(0.1) : .clear)
-                    )
-                    .overlay(
-                        Circle()
-                            .stroke(Theme.cardBorder(for: colorScheme), lineWidth: isHovered ? 1 : 0)
-                    )
+                Color.clear.frame(width: 36, height: 36)
             }
+            .frame(width: 36, height: 36)
         }
-        .buttonStyle(PlainButtonStyle())
         .onHover { isHovered = $0 }
         .help(tooltip)
     }
@@ -62,15 +60,9 @@ struct DockToggle: View {
     private func triggerTooltip() {
         showStatusTooltip = false
         tooltipTimer?.invalidate()
-        
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-            showStatusTooltip = true
-        }
-        
+        showStatusTooltip = true
         tooltipTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
-            withAnimation(.easeOut(duration: 0.5)) {
-                showStatusTooltip = false
-            }
+            showStatusTooltip = false
         }
     }
 }

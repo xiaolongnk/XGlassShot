@@ -14,16 +14,13 @@ struct LanguageSwitcher: View {
     
     var body: some View {
         Button(action: {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                isExpanded.toggle()
-            }
+            isExpanded.toggle()
         }) {
             HStack(spacing: 6) {
                 Image(systemName: "globe")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.cyan)
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isExpanded)
                 
                 Text(localizationManager.currentLanguage.flag)
                     .font(.system(size: 14))
@@ -61,26 +58,18 @@ struct LanguageSwitcher: View {
                         .frame(width: 3000, height: 3000) // Large enough to cover screen
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                isExpanded = false
-                            }
+                            isExpanded = false
                         }
                         
                     LanguageMenu(
                         currentLanguage: localizationManager.currentLanguage,
                         hoveredLanguage: $hoveredLanguage,
                         onSelect: { language in
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                localizationManager.currentLanguage = language
-                                isExpanded = false
-                            }
+                            localizationManager.currentLanguage = language
+                            isExpanded = false
                         }
                     )
 
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity),
-                        removal: .scale(scale: 0.95, anchor: .bottom).combined(with: .opacity)
-                    ))
                     .offset(y: -200) // Move significantly higher for longer list
                     .shadow(color: .black.opacity(0.25), radius: 20, y: 5) // Slightly stronger shadow
                 }

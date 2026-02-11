@@ -32,26 +32,27 @@ struct DockToggle: View {
         .buttonStyle(PlainButtonStyle())
         .frame(width: 36, height: 36)
         .overlay(alignment: .bottom) {
-            Group {
-                if showStatusTooltip {
-                    Text("\(tooltip): \(isOn ? "enabled".localized : "disabled".localized)")
-                        .font(.system(size: 11, weight: .semibold))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(
-                            Capsule()
-                                .fill(Theme.cardMaterial(for: colorScheme))
-                                .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
-                        )
-                        .overlay(
-                            Capsule()
-                                .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
-                        )
-                        .offset(y: -45)
+            Color.clear
+                .frame(width: 36, height: 36)
+                .overlay(alignment: .bottom) {
+                    if showStatusTooltip {
+                        Text("\(tooltip): \(isOn ? "enabled".localized : "disabled".localized)")
+                            .font(.system(size: 11, weight: .semibold))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Theme.cardMaterial(for: colorScheme))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
+                            )
+                            .fixedSize(horizontal: true, vertical: true)
+                            .offset(y: -45)
+                    }
                 }
-                Color.clear.frame(width: 36, height: 36)
-            }
-            .frame(width: 36, height: 36)
         }
         .onHover { isHovered = $0 }
         .help(tooltip)

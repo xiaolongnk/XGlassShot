@@ -1,4 +1,23 @@
 import SwiftUI
+import Combine
+
+@MainActor
+final class StatusTooltipState: ObservableObject {
+    static let shared = StatusTooltipState()
+    @Published var activeTooltipID: String?
+    private var hideTimer: Timer?
+    
+    func showTooltip(id: String) {
+        hideTimer?.invalidate()
+        activeTooltipID = id
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.activeTooltipID = nil
+            }
+        }
+        RunLoop.main.add(hideTimer!, forMode: .common)
+    }
+}
 
 struct DockToggle: View {
     @Binding var isOn: Bool
@@ -7,14 +26,17 @@ struct DockToggle: View {
     let tooltip: String
     
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var tooltipState = StatusTooltipState.shared
     @State private var isHovered = false
-    @State private var showStatusTooltip = false
-    @State private var tooltipTimer: Timer?
+
+    private var showStatusTooltip: Bool {
+        tooltipState.activeTooltipID == tooltip
+    }
 
     var body: some View {
         Button(action: {
             isOn.toggle()
-            triggerTooltip()
+            tooltipState.showTooltip(id: tooltip)
         }) {
             Image(systemName: icon)
                 .font(.system(size: 14))
@@ -56,14 +78,5 @@ struct DockToggle: View {
         }
         .onHover { isHovered = $0 }
         .help(tooltip)
-    }
-
-    private func triggerTooltip() {
-        showStatusTooltip = false
-        tooltipTimer?.invalidate()
-        showStatusTooltip = true
-        tooltipTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
-            showStatusTooltip = false
-        }
     }
 }

@@ -100,13 +100,14 @@ class SelectionOverlay: ObservableObject {
     }
     
     func confirmSelection() {
+        guard isActive else { return }
         guard let screen = currentScreen else { return }
-        
-        // Check if there is a valid selection
-        if selectionRect.width > 10 && selectionRect.height > 10 {
-            Task { @MainActor in
-                await onConfirm?(selectionRect, annotations, screen)
-            }
+        guard selectionRect.width > 10 && selectionRect.height > 10 else { return }
+        let rect = selectionRect
+        let ann = annotations
+        hide()
+        Task { @MainActor in
+            await onConfirm?(rect, ann, screen)
         }
     }
 

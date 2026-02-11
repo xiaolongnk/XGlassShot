@@ -1,6 +1,6 @@
 ---
 name: long-term-memory
-description: Maintains project long-term memory by reading and appending to .cursor/memory/MEMORY.md. Use at the start of sessions for context and after substantive conversations to log what was communicated and decided.
+description: Maintains project long-term memory by reading and appending to .cursor/memory/MEMORY.md. Use at the start of sessions for context and after every conversation to log what was communicated and decided.
 ---
 
 # Long-term memory
@@ -16,7 +16,7 @@ description: Maintains project long-term memory by reading and appending to .cur
 
 ## When to append
 
-After **any substantive conversation** (feature work, bugfix, refactor, design decision, or multi-turn Q&A that changes project state or understanding), append one entry to MEMORY.md.
+After **every conversation**, append one entry to MEMORY.md. Do not skip; log each exchange so the project has a full record.
 
 ## Entry format
 
@@ -25,7 +25,7 @@ Add under a date section. Use `## YYYY-MM-DD` only when that date does not alrea
 ```markdown
 ## YYYY-MM-DD
 
-- **Short title.** One or two sentences: what was requested, what was done, and any decision or follow-up. No need to log trivial single-line replies.
+- **Short title.** One or two sentences: what was requested, what was done, and any decision or follow-up.
 ```
 
 Keep entries concise (1–3 sentences). Include: user intent, outcome (e.g. file/feature changed), and decisions or open points if any.
@@ -34,4 +34,4 @@ Keep entries concise (1–3 sentences). Include: user intent, outcome (e.g. file
 
 - Append by adding to the **bottom** of MEMORY.md (newest last).
 - Do not remove or edit older entries except to fix obvious typos.
-- If the conversation was trivial (e.g. single clarification, no code or decision), skip appending.
+- Log every conversation; do not skip based on perceived importance.

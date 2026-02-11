@@ -42,12 +42,22 @@ class SelectionOverlay: ObservableObject {
             hostingView.frame = NSRect(origin: .zero, size: screen.frame.size)
             overlayWindow.contentView = hostingView
 
-            overlayWindow.makeKeyAndOrderFront(nil)
+            overlayWindow.orderFront(nil)
             windows.append(overlayWindow)
         }
         
         // Activate app to ensure we catch all input events immediately
         NSApp.activate(ignoringOtherApps: true)
+        
+        // Make the window under the cursor key so the first click starts selection on that monitor
+        let mouseLocation = NSEvent.mouseLocation
+        if let screenUnderMouse = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }),
+           let idx = NSScreen.screens.firstIndex(where: { $0 === screenUnderMouse }),
+           idx < windows.count {
+            windows[idx].makeKeyAndOrderFront(nil)
+        } else if let first = windows.first {
+            first.makeKeyAndOrderFront(nil)
+        }
     }
 
     func hide() {

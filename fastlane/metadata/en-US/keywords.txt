@@ -1,0 +1,1 @@
+screen capture,screenshot,record,region,recording,clipboard,quality,shortcut,multi-monitor

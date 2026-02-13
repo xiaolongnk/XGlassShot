@@ -1,0 +1,1 @@
+One-click region capture and recording with global shortcuts. Choose your save folder, add filename tags, and switch quality on the fly. Works across multiple monitors.

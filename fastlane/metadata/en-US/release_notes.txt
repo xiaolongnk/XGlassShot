@@ -1,0 +1,7 @@
+Welcome to GlassCap.
+
+• Region screenshot and screen recording with global shortcuts.
+• Save location and filename suffix.
+• Low/High quality.
+• Optional sound and screenshot border.
+• Multi-monitor support.

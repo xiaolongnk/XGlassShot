@@ -1,0 +1,11 @@
+GlassCap is a modern screen capture app for Mac. Record a region or take a screenshot with a single shortcut—no menus, no clutter. Built with Apple's ScreenCaptureKit and SwiftUI for high quality and a clean, glass-style interface.
+
+Capture • Select any area on screen and capture it as an image or start a video recording.
+
+Shortcuts • ⌘⇧2 for screenshot, ⌘⇧1 for record. Change save path (⌘⇧P) and filename suffix (⌘⇧L) without leaving your workflow.
+
+Settings dock • Pick save location, toggle Low/High quality, optional capture sound and screenshot border, launch at login.
+
+Multi-monitor • Accurate selection and capture on every display.
+
+Requires macOS 12.3 or later and Screen Recording permission.

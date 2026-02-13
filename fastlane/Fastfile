@@ -1,0 +1,50 @@
+# GlassCap — Fastlane for Mac App Store
+# Usage: bundle exec fastlane release
+# Or: bundle exec fastlane build && bundle exec fastlane deliver_metadata
+
+default_platform(:mac)
+
+platform :mac do
+  desc "Build GlassCap.app for release"
+  lane :build do
+    build_app(
+      workspace: nil,
+      project: "GlassCap.xcodeproj",
+      scheme: "GlassCap",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "GlassCap.app",
+      clean: true
+    )
+  end
+
+  desc "Upload metadata only (no build). Edit fastlane/metadata/ then run this."
+  lane :deliver_metadata do
+    deliver(
+      app_identifier: "com.xiaolongou.glasscap",
+      platform: "osx",
+      username: ENV["FASTLANE_APPLE_ID"] || ENV["DELIVER_USER"],
+      team_id: ENV["FASTLANE_TEAM_ID"],
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      submit_for_review: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Build and upload to App Store Connect (metadata + .app)"
+  lane :release do
+    build
+    deliver(
+      app_identifier: "com.xiaolongou.glasscap",
+      platform: "osx",
+      username: ENV["FASTLANE_APPLE_ID"] || ENV["DELIVER_USER"],
+      team_id: ENV["FASTLANE_TEAM_ID"],
+      skip_screenshots: true,
+      force: true,
+      submit_for_review: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+end

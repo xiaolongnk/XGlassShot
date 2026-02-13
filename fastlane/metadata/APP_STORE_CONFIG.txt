@@ -1,0 +1,7 @@
+# Fallback for Support URL, Privacy URL, and Copyright (used if ENV is not set).
+# Prefer setting in ~/.zshrc: export FASTLANE_SUPPORT_URL=... FASTLANE_PRIVACY_URL=... FASTLANE_COPYRIGHT=...
+# If only FASTLANE_SUPPORT_URL is set, it is used for both support and privacy.
+# Sync runs automatically before deliver_metadata and release; or run: ruby fastlane/scripts/sync_metadata_urls.rb
+
+SUPPORT_AND_PRIVACY_URL=https://example.com
+COPYRIGHT=Copyright © 2024. All rights reserved.

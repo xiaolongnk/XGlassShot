@@ -29,7 +29,7 @@ Build GlassCap.app for release
 [bundle exec] fastlane mac deliver_metadata
 ```
 
-Upload metadata only (no build). Edit fastlane/metadata/ then run this.
+Upload metadata only (no build). Syncs support/privacy/copyright from ENV or APP_STORE_CONFIG, then uploads.
 
 ### mac release
 

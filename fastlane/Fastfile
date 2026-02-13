@@ -18,8 +18,10 @@ platform :mac do
     )
   end
 
-  desc "Upload metadata only (no build). Edit fastlane/metadata/ then run this."
+  desc "Upload metadata only (no build). Syncs support/privacy/copyright from ENV or APP_STORE_CONFIG, then uploads."
   lane :deliver_metadata do
+    project_root = File.expand_path("..", File.dirname(__FILE__))
+    sh("ruby \"#{File.join(project_root, 'fastlane', 'scripts', 'sync_metadata_urls.rb')}\"")
     deliver(
       app_identifier: "com.xiaolongou.glasscap",
       platform: "osx",
@@ -35,6 +37,8 @@ platform :mac do
 
   desc "Build and upload to App Store Connect (metadata + .app)"
   lane :release do
+    project_root = File.expand_path("..", File.dirname(__FILE__))
+    sh("ruby \"#{File.join(project_root, 'fastlane', 'scripts', 'sync_metadata_urls.rb')}\"")
     build
     deliver(
       app_identifier: "com.xiaolongou.glasscap",

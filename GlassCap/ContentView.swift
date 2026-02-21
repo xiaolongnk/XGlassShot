@@ -80,14 +80,6 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            setupSelectionOverlay()
-        }
-    }
-
-    private func setupSelectionOverlay() {
-        let overlay = SelectionOverlay()
-        OverlayManager.shared.setSelectionOverlay(overlay)
     }
 }
 

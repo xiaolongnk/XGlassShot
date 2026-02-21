@@ -36,19 +36,23 @@ class SelectionOverlay: ObservableObject {
             overlayWindow.backgroundColor = .clear
             overlayWindow.isOpaque = false
             overlayWindow.ignoresMouseEvents = false
-            overlayWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            overlayWindow.hidesOnDeactivate = false
+            overlayWindow.acceptsMouseMovedEvents = true
+            overlayWindow.collectionBehavior = [
+                .canJoinAllSpaces,
+                .fullScreenAuxiliary,
+                .transient,
+                .ignoresCycle
+            ]
 
             let hostingView = NSHostingView(rootView: SelectionOverlayView(overlay: self, screen: screen))
             hostingView.frame = NSRect(origin: .zero, size: screen.frame.size)
             overlayWindow.contentView = hostingView
 
-            overlayWindow.orderFront(nil)
+            overlayWindow.orderFrontRegardless()
             windows.append(overlayWindow)
         }
-        
-        // Activate app to ensure we catch all input events immediately
-        NSApp.activate(ignoringOtherApps: true)
-        
+
         // Make the window under the cursor key so the first click starts selection on that monitor
         let mouseLocation = NSEvent.mouseLocation
         if let screenUnderMouse = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }),
@@ -524,6 +528,10 @@ struct DimensionBadge: View {
 
 class SelectionWindow: NSWindow {
     override var canBecomeKey: Bool {
+        return true
+    }
+
+    override var canBecomeMain: Bool {
         return true
     }
 }

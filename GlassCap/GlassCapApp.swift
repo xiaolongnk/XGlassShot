@@ -42,6 +42,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Initialize Status Bar Manager
         statusBarManager = StatusBarManager.shared
+
+        // Ensure overlay is ready even if the main window is not shown
+        Task { @MainActor in
+            OverlayManager.shared.ensureSelectionOverlayReady()
+        }
         
         // Show and activate window after app is fully initialized
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {

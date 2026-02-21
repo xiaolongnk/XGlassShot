@@ -15,13 +15,22 @@ final class OverlayManager: ObservableObject {
     private var statusItem: NSStatusItem?
     private var selectionOverlay: SelectionOverlay?
     
-    private init() {}
+    private init() {
+        selectionOverlay = SelectionOverlay()
+    }
     
     func setSelectionOverlay(_ overlay: SelectionOverlay) {
         selectionOverlay = overlay
     }
+
+    func ensureSelectionOverlayReady() {
+        if selectionOverlay == nil {
+            selectionOverlay = SelectionOverlay()
+        }
+    }
     
     func showSelectionOverlay() {
+        ensureSelectionOverlayReady()
         guard PermissionManager.shared.canRecordScreen() else {
             PermissionManager.shared.openSystemSettings()
             return
@@ -47,6 +56,7 @@ final class OverlayManager: ObservableObject {
     }
 
     func showScreenshotOverlay() {
+        ensureSelectionOverlayReady()
         guard PermissionManager.shared.canRecordScreen() else {
             PermissionManager.shared.openSystemSettings()
             return
@@ -168,4 +178,3 @@ final class OverlayManager: ObservableObject {
         statusItem = nil
     }
 }
-

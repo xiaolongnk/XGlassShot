@@ -21,8 +21,8 @@ sudo tccutil reset Accessibility $BUNDLE_ID
 echo "🔹 正在重置完全磁盘访问权限..."
 sudo tccutil reset All $BUNDLE_ID
 
-cd ~/Library/Developer/Xcode/DerivedData/GlassCap-dvrfekbfomdokbaxdlignpcjiacm/Build/Products/Debug/
-./GlassCap.app/Contents/MacOS/GlassCap
+# cd ~/Library/Developer/Xcode/DerivedData/GlassCap-dvrfekbfomdokbaxdlignpcjiacm/Build/Products/Debug/
+# ./GlassCap.app/Contents/MacOS/GlassCap
 echo "✅ 重置完成！"
 echo "💡 下次从 Cursor/Xcode 启动应用时，系统会重新触发权限引导。"
 echo "⚠️ 请记得在 '系统设置 -> 隐私与安全性 -> 屏幕录制' 中手动重新勾选一次。"

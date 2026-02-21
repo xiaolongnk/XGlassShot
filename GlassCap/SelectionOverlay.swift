@@ -27,12 +27,12 @@ class SelectionOverlay: ObservableObject {
         for screen in NSScreen.screens {
             let overlayWindow = SelectionWindow(
                 contentRect: screen.frame,
-                styleMask: [.borderless],
+                styleMask: [.borderless, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false
             )
 
-            overlayWindow.level = .screenSaver
+            overlayWindow.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow)))
             overlayWindow.backgroundColor = .clear
             overlayWindow.isOpaque = false
             overlayWindow.ignoresMouseEvents = false
@@ -526,7 +526,12 @@ struct DimensionBadge: View {
     }
 }
 
-class SelectionWindow: NSWindow {
+class SelectionWindow: NSPanel {
+    override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
+        super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
+        self.becomesKeyOnlyIfNeeded = false
+    }
+
     override var canBecomeKey: Bool {
         return true
     }

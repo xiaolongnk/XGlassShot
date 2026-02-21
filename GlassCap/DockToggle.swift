@@ -10,12 +10,12 @@ final class StatusTooltipState: ObservableObject {
     func showTooltip(id: String) {
         hideTimer?.invalidate()
         activeTooltipID = id
-        hideTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                self?.activeTooltipID = nil
-            }
-        }
+        hideTimer = Timer.scheduledTimer(timeInterval: 2.0, target: self, selector: #selector(handleHideTimer(_:)), userInfo: nil, repeats: false)
         RunLoop.main.add(hideTimer!, forMode: .common)
+    }
+
+    @objc private func handleHideTimer(_ timer: Timer) {
+        activeTooltipID = nil
     }
 }
 

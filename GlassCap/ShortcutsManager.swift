@@ -45,7 +45,6 @@ enum AppShortcut: String, CaseIterable {
     case captureZone = "captureZone"
     case captureScreenshot = "captureScreenshot"
     case toggleQuality = "toggleQuality"
-    case changePath = "changePath"
     case changePrefix = "changePrefix"
 
     var name: KeyboardShortcuts.Name {
@@ -58,7 +57,6 @@ enum AppShortcut: String, CaseIterable {
 final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
 
-    @Published var currentPath: String = FileManager.default.homeDirectoryForCurrentUser.path
     @Published var currentPrefix: String = "bug" {
         didSet {
             UserDefaults.standard.set(currentPrefix, forKey: "currentPrefix")
@@ -100,9 +98,6 @@ final class ShortcutsManager: ObservableObject {
         if KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.q, modifiers: [.command, .shift]), for: AppShortcut.toggleQuality.name)
         }
-        if KeyboardShortcuts.getShortcut(for: AppShortcut.changePath.name) == nil {
-            KeyboardShortcuts.setShortcut(.init(.p, modifiers: [.command, .shift]), for: AppShortcut.changePath.name)
-        }
         if KeyboardShortcuts.getShortcut(for: AppShortcut.changePrefix.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.l, modifiers: [.command, .shift]), for: AppShortcut.changePrefix.name)
         }
@@ -122,11 +117,6 @@ final class ShortcutsManager: ObservableObject {
         // Toggle Quality: Cmd+Shift+Q
         KeyboardShortcuts.onKeyUp(for: AppShortcut.toggleQuality.name) { [weak self] in
             self?.toggleQuality()
-        }
-
-        // Change Path: Cmd+Shift+P
-        KeyboardShortcuts.onKeyUp(for: AppShortcut.changePath.name) { [weak self] in
-            self?.handleChangePath()
         }
 
         // Change Prefix: Cmd+Shift+L
@@ -226,55 +216,9 @@ final class ShortcutsManager: ObservableObject {
         feedbackWindow = window
     }
     
-    private func handleChangePath() {
-        guard activeInputWindow == nil else { return }
-        showPathInputWindow()
-    }
-    
     private func handleChangePrefix() {
         guard activeInputWindow == nil else { return }
         showPrefixInputWindow()
-    }
-    
-    private func showPathInputWindow() {
-        closeActiveWindow()
-        
-        let screenFrame = NSScreen.main?.frame ?? .zero
-        let window = NSWindow(
-            contentRect: NSRect(x: screenFrame.midX - 250, y: screenFrame.midY - 50, width: 500, height: 100),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.level = .floating
-        window.backgroundColor = .clear
-        window.isOpaque = false
-        window.ignoresMouseEvents = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
-        let hostingView = NSHostingView(
-            rootView: TerminalPathInput(currentPath: Binding(
-                get: { self.currentPath },
-                set: { self.currentPath = $0 }
-            )) {
-                self.closeActiveWindow()
-            }
-            .background(Color.clear)
-        )
-        hostingView.frame = window.contentView?.bounds ?? .zero
-        window.contentView = hostingView
-        
-        window.makeKeyAndOrderFront(nil)
-        window.center()
-        NSApp.activate(ignoringOtherApps: true)
-        
-        activeInputWindow = window
-        
-        // Focus text field after a brief delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            window.makeFirstResponder(hostingView)
-        }
     }
     
     private func showPrefixInputWindow() {

@@ -3,15 +3,24 @@ import AppKit
 import SwiftUI
 import Combine
 
+enum CapturePostAction: Equatable {
+    case none
+    case copyText
+    case describe
+    case beautify
+}
+
 @available(macOS 12.3, *)
 @MainActor
 final class OverlayManager: ObservableObject {
-    
+
     static let shared = OverlayManager()
-    
+
     @Published var isShowingOverlay = false
     @Published var isRecording = false
-    
+    @Published var pendingPostAction: CapturePostAction = .none
+
+    private var nextPostAction: CapturePostAction = .none
     private var statusItem: NSStatusItem?
     private var selectionOverlay: SelectionOverlay?
     
@@ -55,6 +64,11 @@ final class OverlayManager: ObservableObject {
         selectionOverlay.show()
     }
 
+    func showScreenshotOverlay(postAction: CapturePostAction) {
+        nextPostAction = postAction
+        showScreenshotOverlay()
+    }
+
     func showScreenshotOverlay() {
         ensureSelectionOverlayReady()
         guard PermissionManager.shared.canRecordScreen() else {
@@ -82,20 +96,21 @@ final class OverlayManager: ObservableObject {
     }
 
     private func handleScreenshotCaptured(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {
-        // Hide overlay immediately
         selectionOverlay?.hide()
         isShowingOverlay = false
 
-        // Wait 0.5 seconds
         try? await Task.sleep(nanoseconds: 500_000_000)
 
-        // Capture Screenshot with current quality setting
         let quality = ShortcutsManager.shared.captureQuality
         do {
             _ = try await ScreenRecorder.shared.captureScreenshot(region: rect, annotations: annotations, screen: screen, quality: quality)
+            if nextPostAction != .none {
+                pendingPostAction = nextPostAction
+            }
         } catch {
             print("Failed to capture screenshot: \(error)")
         }
+        nextPostAction = .none
     }
 
     private func handleSelectionConfirmed(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {

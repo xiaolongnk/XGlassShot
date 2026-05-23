@@ -4,6 +4,7 @@ import AppKit
 @available(macOS 12.3, *)
 struct CapturePreviewView: View {
     @ObservedObject var storageManager: StorageManager
+    @ObservedObject private var overlayManager = OverlayManager.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
@@ -134,6 +135,16 @@ struct CapturePreviewView: View {
                         BeautifulExportView(sourceImage: image)
                     }
                 }
+            }
+        }
+        .onChange(of: overlayManager.pendingPostAction) { _, action in
+            guard action != .none else { return }
+            overlayManager.pendingPostAction = .none
+            switch action {
+            case .copyText: runOCR()
+            case .describe: runAIDescribe()
+            case .beautify: showBeautifulExport = true
+            case .none: break
             }
         }
     }

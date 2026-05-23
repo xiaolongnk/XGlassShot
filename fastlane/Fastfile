@@ -1,3 +1,5 @@
+require "json"
+
 # GlassCap — Fastlane for Mac App Store
 # Usage: bundle exec fastlane release
 # Or: bundle exec fastlane build && bundle exec fastlane deliver_metadata
@@ -35,52 +37,6 @@ platform :mac do
     )
   end
 
-<<<<<<< Updated upstream
-=======
-  desc "Build and upload to TestFlight"
-  lane :beta do
-    api_key_path = File.expand_path("~/.fastlane/api_key.json")
-    if File.exist?(api_key_path)
-      key_data = JSON.parse(File.read(api_key_path))
-      app_store_connect_api_key(
-        key_id:      key_data["key_id"],
-        issuer_id:   key_data["issuer_id"],
-        key_content: key_data["key"],
-        duration:    1200,
-        in_house:    false
-      )
-    else
-      app_store_connect_api_key(
-        key_id:       ENV["ASC_KEY_ID"],
-        issuer_id:    ENV["ASC_ISSUER_ID"],
-        key_filepath: ENV["ASC_KEY_PATH"],
-        in_house:     false
-      )
-    end
-    build_app(
-      project: "GlassCap.xcodeproj",
-      scheme: "GlassCap",
-      export_method: "app-store",
-      output_directory: "./build",
-      output_name: "GlassCap",
-      clean: true,
-      export_options: {
-        method: "app-store",
-        provisioningProfiles: {
-          "com.xiaolongou.glasscap" => "GlassCap Mac App Store"
-        }
-      }
-    )
-    upload_to_testflight(
-      pkg: "./build/GlassCap.pkg",
-      app_identifier: "com.xiaolongou.glasscap",
-      team_id: ENV["FASTLANE_TEAM_ID"],
-      uses_non_exempt_encryption: false,
-      skip_waiting_for_build_processing: true
-    )
-  end
-
->>>>>>> Stashed changes
   desc "Build and upload to TestFlight"
   lane :beta do
     api_key_path = File.expand_path("~/.fastlane/api_key.json")

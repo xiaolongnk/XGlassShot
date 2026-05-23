@@ -96,7 +96,8 @@ final class OverlayManager: ObservableObject {
     }
 
     private func handleScreenshotCaptured(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {
-        selectionOverlay?.hide()
+        // The overlay was already hidden by confirmSelection() before this callback fires.
+        // Only reset the manager-level flag here; do not call hide() again.
         isShowingOverlay = false
 
         try? await Task.sleep(nanoseconds: 500_000_000)
@@ -114,11 +115,11 @@ final class OverlayManager: ObservableObject {
     }
 
     private func handleSelectionConfirmed(rect: CGRect, annotations: [CGRect], screen: NSScreen) async {
-        // Hide overlay immediately
-        selectionOverlay?.hide()
+        // The overlay was already hidden by confirmSelection() before this callback fires.
+        // Only reset the manager-level flag here; do not call hide() again.
         isShowingOverlay = false
 
-        // Wait 0.5 seconds
+        // Wait 0.5 seconds before starting recording so the overlay is fully off-screen
         try? await Task.sleep(nanoseconds: 500_000_000)
 
         // Start recording with current quality setting
@@ -133,8 +134,11 @@ final class OverlayManager: ObservableObject {
             print("Failed to start recording: \(error)")
         }
     }
-    
+
     private func handleSelectionCancelled() async {
+        // onCancel is fired either by ESC (which also triggers NSPanel's native dismiss)
+        // or by confirmSelection() when guards fail. In both cases the overlay windows
+        // may still be showing — call hide() here to guarantee clean teardown.
         selectionOverlay?.hide()
         isShowingOverlay = false
     }

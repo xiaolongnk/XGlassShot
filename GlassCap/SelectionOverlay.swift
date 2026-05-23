@@ -93,26 +93,43 @@ class SelectionOverlay: ObservableObject {
     
     private func handleKeyDown(event: NSEvent) -> NSEvent? {
         guard isActive else { return event }
-        
-        if event.keyCode == 36 { // Enter
+
+        if event.keyCode == 36 { // Enter/Return
             confirmSelection()
-            return nil // Consume event
+            return nil // Always consume Enter when overlay is active
+        } else if event.keyCode == 76 { // Numpad Enter
+            confirmSelection()
+            return nil
         } else if event.keyCode == 53 { // Escape
             Task { @MainActor in
                 await onCancel?()
             }
             return nil // Consume event
         }
-        
+
         return event
     }
-    
+
     func confirmSelection() {
         guard isActive else { return }
-        guard let screen = currentScreen else { return }
-        guard selectionRect.width > 10 && selectionRect.height > 10 else { return }
+        guard let screen = currentScreen else {
+            // No screen selected yet — hide the overlay so the user isn't stuck
+            Task { @MainActor in
+                await onCancel?()
+            }
+            return
+        }
+        guard selectionRect.width > 10 && selectionRect.height > 10 else {
+            // Selection too small — hide overlay so the user isn't stuck with
+            // a persistent dim and a swallowed Enter key
+            Task { @MainActor in
+                await onCancel?()
+            }
+            return
+        }
         let rect = selectionRect
         let ann = annotations
+        // Hide first so the overlay is off-screen before the async capture begins
         hide()
         Task { @MainActor in
             await onConfirm?(rect, ann, screen)

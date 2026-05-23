@@ -41,19 +41,21 @@ struct ContentView: View {
             }
 
             VStack(spacing: 0) {
-                // Zone 1: Compact header (40pt)
+                // Zone 1: Compact header
                 CompactHeaderView()
 
-                // Zone 2: Preview + action buttons (fills remaining space)
+                // Zone 2: Preview + action buttons (natural height, top-anchored)
                 CapturePreviewView(storageManager: storageManager)
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .frame(maxHeight: .infinity)
+                    .padding(.top, 12)
+                    .padding(.bottom, 8)
+
+                Spacer(minLength: 0)
 
                 // Zone 3: Capture action buttons (Record + Capture side-by-side)
                 CaptureControlsRow()
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 10)
 
                 // Zone 4: Thin status bar
                 CompactStatusBar(storageManager: storageManager, shortcutsManager: shortcutsManager)
@@ -67,9 +69,12 @@ struct ContentView: View {
 // MARK: - Zone 1: Compact Header
 
 struct CompactHeaderView: View {
+    @State private var showSettings = false
+    @ObservedObject private var storageManager = StorageManager.shared
+    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
+
     var body: some View {
         HStack {
-            // App icon + name
             HStack(spacing: 6) {
                 Image(systemName: "camera.aperture")
                     .font(.system(size: 14, weight: .medium))
@@ -79,18 +84,18 @@ struct CompactHeaderView: View {
                     .foregroundStyle(.primary)
             }
             Spacer()
-            // Settings button
-            HStack(spacing: 4) {
-                Button(action: {
-                    NSApp.keyWindow?.makeFirstResponder(nil)
-                }) {
-                    Image(systemName: "gear")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28, height: 28)
-                        .background(.ultraThinMaterial, in: Circle())
-                }
-                .buttonStyle(.plain)
+            Button(action: { showSettings.toggle() }) {
+                Image(systemName: "gear")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showSettings, arrowEdge: .top) {
+                SettingsDock(storageManager: storageManager, shortcutsManager: shortcutsManager)
+                    .frame(width: 480)
+                    .padding(.vertical, 12)
             }
         }
         .padding(.horizontal, 20)

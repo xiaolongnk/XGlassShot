@@ -267,6 +267,8 @@ struct CapturePreviewView: View {
                     // Auto-copy to clipboard
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
+                    // Store in clipboard register so the menu bar can show it
+                    ClipboardRegisterManager.shared.setOCRText(text, forURL: url)
                 }
             } catch {
                 extractedText = ""

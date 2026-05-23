@@ -202,76 +202,130 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
     
     @MainActor
     func captureScreenshot(region: CGRect, annotations: [CGRect], screen: NSScreen, quality: CaptureQuality) async throws -> URL {
-        // Find the SCDisplay matching the NSScreen
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
-            throw ScreenRecorderError.noDisplayFound
-        }
-
-        // Convert selection rect (relative to screen) to display coordinates
-        let displayRegion = convertToDisplayCoordinates(region, screen: screen, display: targetDisplay)
-
-        // Validate region dimensions
-        guard displayRegion.width >= 1 && displayRegion.height >= 1 else {
+        guard region.width >= 1 && region.height >= 1 else {
             throw ScreenRecorderError.writerSetupFailed
         }
 
-        // Apply quality scale factor to capture dimensions
-        // We use the original region (points) * scaleFactor (1x or 2x)
-        let scaleFactor = quality.scaleFactor
-        let captureWidth = Int(ceil(region.width * scaleFactor))
-        let captureHeight = Int(ceil(region.height * scaleFactor))
+        let backingScale = screen.backingScaleFactor
+        let rawImage: CGImage
 
-        print("Screenshot at \(quality.description): \(captureWidth)x\(captureHeight)")
+        if #available(macOS 26.0, *) {
+            // macOS 26+: dedicated SCScreenshotConfiguration avoids SCStreamConfiguration,
+            // which is the path that always triggers the system recording indicator.
+            let config = SCScreenshotConfiguration()
+            config.showsCursor = true
+            if quality == .low {
+                config.width = Int(ceil(region.width))
+                config.height = Int(ceil(region.height))
+            }
+            let globalRect = screenLocalToGlobal(region, screen: screen)
+            rawImage = try await withCheckedThrowingContinuation { continuation in
+                SCScreenshotManager.captureScreenshot(rect: globalRect, configuration: config) { output, error in
+                    if let error = error { continuation.resume(throwing: error); return }
+                    guard let image = output?.sdrImage else {
+                        continuation.resume(throwing: ScreenRecorderError.noDisplayFound); return
+                    }
+                    continuation.resume(returning: image)
+                }
+            }
+        } else if #available(macOS 15.2, *) {
+            // macOS 15.2+: captureImage(in:) does not require SCContentFilter/SCStreamConfiguration,
+            // so it avoids the full stream setup that triggers the recording indicator.
+            let globalRect = screenLocalToGlobal(region, screen: screen)
+            rawImage = try await withCheckedThrowingContinuation { continuation in
+                SCScreenshotManager.captureImage(in: globalRect) { image, error in
+                    if let error = error { continuation.resume(throwing: error); return }
+                    guard let image = image else {
+                        continuation.resume(throwing: ScreenRecorderError.noDisplayFound); return
+                    }
+                    continuation.resume(returning: image)
+                }
+            }
+        } else {
+            // macOS 14.0–15.1: full SCContentFilter path (shows recording indicator on ≥15).
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard let targetDisplay = findDisplay(for: screen, in: content.displays) else {
+                throw ScreenRecorderError.noDisplayFound
+            }
+            let displayRegion = convertToDisplayCoordinates(region, screen: screen, display: targetDisplay)
+            guard displayRegion.width >= 1 && displayRegion.height >= 1 else {
+                throw ScreenRecorderError.writerSetupFailed
+            }
+            let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
+            let config = SCStreamConfiguration()
+            config.sourceRect = displayRegion
+            config.width = Int(ceil(region.width * quality.scaleFactor))
+            config.height = Int(ceil(region.height * quality.scaleFactor))
+            config.pixelFormat = kCVPixelFormatType_32BGRA
+            config.showsCursor = true
+            rawImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        }
 
-        // Create configuration
-        let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
-        let config = SCStreamConfiguration()
-        config.sourceRect = displayRegion
-        config.width = captureWidth
-        config.height = captureHeight
-        config.pixelFormat = kCVPixelFormatType_32BGRA
-        config.showsCursor = true
+        // APIs ≥15.2 return native-resolution images; downscale for low quality.
+        var finalImage: CGImage = rawImage
+        let scaleFactor: CGFloat
+        if #available(macOS 15.2, *) {
+            if quality == .low && backingScale > 1.0 {
+                let w = Int(ceil(region.width))
+                let h = Int(ceil(region.height))
+                if let down = downsampleCGImage(rawImage, to: CGSize(width: w, height: h)) {
+                    finalImage = down
+                }
+            }
+            scaleFactor = quality == .low ? 1.0 : backingScale
+        } else {
+            scaleFactor = quality.scaleFactor
+        }
 
-        let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
-
-        
-        // Apply outline if configured
-        var finalImage = image
         if StorageManager.shared.addScreenshotOutline {
-            if let outlinedImage = applyOutline(to: image) {
-                finalImage = outlinedImage
-            }
+            if let outlined = applyOutline(to: finalImage) { finalImage = outlined }
         }
-        
-        // Draw annotations
         if !annotations.isEmpty {
-            if let annotatedImage = drawAnnotations(on: finalImage, annotations: annotations, sourceRect: displayRegion, scaleFactor: scaleFactor) {
-                finalImage = annotatedImage
+            if let annotated = drawAnnotations(on: finalImage, annotations: annotations, sourceRect: region, scaleFactor: scaleFactor) {
+                finalImage = annotated
             }
         }
 
-        // Convert to PNG data first (deep copy/serialization)
         let bitmapRep = NSBitmapImageRep(cgImage: finalImage)
         guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
             throw ScreenRecorderError.writerSetupFailed
         }
-
-        // Copy to clipboard using the clean data-backed NSImage
         if let clipboardImage = NSImage(data: pngData) {
             let pasteboard = NSPasteboard.general
             pasteboard.clearContents()
             pasteboard.writeObjects([clipboardImage])
         }
-
-        // Use StorageManager for silent auto-save
         let prefix = ShortcutsManager.shared.currentPrefix
         let destinationURL = try await StorageManager.shared.saveScreenshot(data: pngData, prefix: prefix)
-
-        // Show visual flash feedback
         StorageManager.shared.showVisualFlash()
-
         return destinationURL
+    }
+
+    // Convert screen-local coordinates (top-left origin at this screen's top-left) to
+    // global CG display space (top-left origin at primary screen's top-left), used by
+    // SCScreenshotManager APIs that accept a display-agnostic rect.
+    private func screenLocalToGlobal(_ rect: CGRect, screen: NSScreen) -> CGRect {
+        let primaryHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
+        let globalX = screen.frame.origin.x + rect.origin.x
+        let globalY = primaryHeight - screen.frame.origin.y - screen.frame.height + rect.origin.y
+        return CGRect(x: globalX, y: globalY, width: rect.width, height: rect.height)
+    }
+
+    private func downsampleCGImage(_ image: CGImage, to size: CGSize) -> CGImage? {
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        guard let context = CGContext(
+            data: nil,
+            width: Int(size.width),
+            height: Int(size.height),
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else { return nil }
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(origin: .zero, size: size))
+        return context.makeImage()
     }
 
     // MARK: - SCStreamDelegate

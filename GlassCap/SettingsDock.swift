@@ -14,39 +14,38 @@ struct SettingsDock: View {
         HStack(spacing: 0) {
             // Path Selector
             Button(action: {
-                 Task { await storageManager.selectSaveDirectory() }
+                Task { await storageManager.selectSaveDirectory() }
             }) {
-                HStack(spacing: 8) {
+                HStack(spacing: 7) {
                     Image(systemName: "folder.fill")
-                        .foregroundColor(.cyan)
+                        .foregroundColor(.accentColor)
+                        .font(.system(size: 13))
                     Text(storageManager.defaultSaveDirectory.lastPathComponent)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Theme.textPrimary(for: colorScheme).opacity(0.9))
+                        .font(Theme.fontSecondary)
+                        .foregroundColor(Theme.textPrimary(for: colorScheme))
                         .lineLimit(1)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
                 .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
             .help("Change save location")
-            
-            Divider()
-                .frame(height: 20)
-                .background(Theme.divider(for: colorScheme))
-            
-            // Prefix
-            HStack(spacing: 8) {
+
+            dockDivider
+
+            // Filename suffix
+            HStack(spacing: 7) {
                 Image(systemName: "tag.fill")
-                    .foregroundColor(.purple.opacity(0.8))
-                    .font(.system(size: 12))
-                
+                    .foregroundColor(.purple.opacity(0.75))
+                    .font(.system(size: 11))
+
                 ZStack(alignment: .trailing) {
-                    TextField("Filename suffix...", text: $shortcutsManager.currentPrefix)
+                    TextField("Suffix…", text: $shortcutsManager.currentPrefix)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .font(Theme.fontMono)
                         .foregroundColor(Theme.textPrimary(for: colorScheme))
-                        .frame(width: 100)
+                        .frame(width: 92)
                         .focused($isInputFocused)
                         .onValueChanged(of: shortcutsManager.currentPrefix) { newValue in
                             let filtered = newValue.filter { !":/".contains($0) }
@@ -54,71 +53,67 @@ struct SettingsDock: View {
                                 shortcutsManager.currentPrefix = filtered
                             }
                         }
-                    
+
                     if !shortcutsManager.currentPrefix.isEmpty {
                         Button(action: { shortcutsManager.currentPrefix = "" }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(Theme.textSecondary(for: colorScheme).opacity(0.5))
-                                .font(.system(size: 12))
+                                .foregroundColor(Theme.textSecondary(for: colorScheme).opacity(0.45))
+                                .font(.system(size: 11))
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .padding(.trailing, 0)
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 14)
             .help("This text will be appended to the saved file name")
-            
-            Divider()
-                .frame(height: 20)
-                .background(Theme.divider(for: colorScheme))
-            
+
+            dockDivider
+
             // Quality Toggle
             Button(action: { shortcutsManager.toggleQuality() }) {
                 HStack(spacing: 6) {
                     Image(systemName: shortcutsManager.captureQuality == .low ? "hare.fill" : "sparkles")
-                        .foregroundColor(shortcutsManager.captureQuality == .low ? .cyan : .yellow)
+                        .foregroundColor(shortcutsManager.captureQuality == .low ? .accentColor : .yellow)
+                        .font(.system(size: 12))
                     Text(shortcutsManager.captureQuality.displayName)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Theme.textPrimary(for: colorScheme).opacity(0.9))
+                        .font(Theme.fontSecondary)
+                        .foregroundColor(Theme.textPrimary(for: colorScheme))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 13)
             }
             .buttonStyle(PlainButtonStyle())
             .help(shortcutsManager.captureQuality.description)
-            
-            Divider()
-                .frame(height: 20)
-                .background(Theme.divider(for: colorScheme))
-            
+
+            dockDivider
+
             // Language Switcher
             LanguageSwitcher()
                 .padding(.horizontal, 8)
-            
-            Divider()
-                .frame(height: 20)
-                .background(Theme.divider(for: colorScheme))
-            
+
+            dockDivider
+
             // AI Settings button
             Button(action: { showAISettings = true }) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(aiManager.hasAPIKey ? .yellow : Theme.textSecondary(for: colorScheme).opacity(0.5))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(
+                        aiManager.hasAPIKey
+                            ? .yellow
+                            : Theme.textSecondary(for: colorScheme).opacity(0.45)
+                    )
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 13)
                     .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
             .help(aiManager.hasAPIKey ? "AI features enabled" : "Set up AI features")
             .sheet(isPresented: $showAISettings) { AISettingsView() }
 
-            Divider()
-                .frame(height: 20)
-                .background(Theme.divider(for: colorScheme))
+            dockDivider
 
             // Icon Toggles
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 DockToggle(
                     isOn: Binding(
                         get: { launchManager.isAutoStartEnabled },
@@ -135,14 +130,14 @@ struct SettingsDock: View {
                     activeColor: .pink,
                     tooltip: "Play a sound effect when capturing"
                 )
-                
+
                 DockToggle(
                     isOn: $storageManager.alwaysAskWhereToSave,
                     icon: "questionmark.folder.fill",
                     activeColor: .orange,
                     tooltip: "Always ask where to save before saving"
                 )
-                
+
                 DockToggle(
                     isOn: $storageManager.addScreenshotOutline,
                     icon: "square.dashed",
@@ -150,21 +145,33 @@ struct SettingsDock: View {
                     tooltip: "Add a 1px border to screenshots"
                 )
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 10)
         }
+        // Floating frosted appearance
         .background(
-            Capsule()
-                .fill(Theme.dockBackground(for: colorScheme))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.ultraThinMaterial)
         )
         .overlay(
-            Capsule()
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
         )
+        // Two-layer shadow for floating elevation
         .shadow(
-            color: Theme.cardShadow(for: colorScheme), 
-            radius: Theme.cardShadowRadius(for: colorScheme) + 5, 
-            y: 10
+            color: Theme.cardShadowDepth(for: colorScheme),
+            radius: 4, x: 0, y: 2
         )
+        .shadow(
+            color: Theme.cardShadowElevation(for: colorScheme),
+            radius: 18, x: 0, y: 8
+        )
+    }
+
+    // Shared thin divider used between dock segments
+    private var dockDivider: some View {
+        Rectangle()
+            .fill(Theme.divider(for: colorScheme))
+            .frame(width: 1, height: 20)
     }
 }
 

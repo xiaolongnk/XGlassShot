@@ -19,71 +19,107 @@ struct CapturePreviewView: View {
     @State private var showAIPopover = false
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             // Preview card
             Button(action: { storageManager.revealLastCapture() }) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(Theme.cardFill(for: colorScheme))
+                    // Card surface — frosted material base
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(.ultraThinMaterial)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
                                 .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
                         )
-                        .shadow(
-                            color: Theme.cardShadow(for: colorScheme),
-                            radius: Theme.cardShadowRadius(for: colorScheme),
-                            x: 0, y: 15
-                        )
+                    // Two-layer shadow applied via modifiers below
 
                     if let thumbnail = storageManager.lastCaptureThumbnail {
                         Image(nsImage: thumbnail)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .padding(8)
-                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                            .transition(
+                                .opacity.combined(with: .scale(scale: 0.97))
+                            )
                     } else {
-                        VStack(spacing: 16) {
+                        // Empty state — centered icon + tagline
+                        VStack(spacing: 14) {
                             ZStack {
+                                // Subtle gradient halo behind icon only
                                 Circle()
-                                    .fill(RadialGradient(colors: [Color.cyan.opacity(0.1), .clear],
-                                                        center: .center, startRadius: 0, endRadius: 80))
-                                    .frame(width: 140, height: 140)
+                                    .fill(
+                                        RadialGradient(
+                                            colors: [Color.accentColor.opacity(0.12), .clear],
+                                            center: .center,
+                                            startRadius: 0,
+                                            endRadius: 56
+                                        )
+                                    )
+                                    .frame(width: 96, height: 96)
+
                                 Image(systemName: "camera.macro")
-                                    .font(.system(size: 48, weight: .light))
-                                    .foregroundStyle(LinearGradient(
-                                        colors: [.cyan.opacity(0.8), .purple.opacity(0.8)],
-                                        startPoint: .topLeading, endPoint: .bottomTrailing))
-                                    .shadow(color: .cyan.opacity(0.3), radius: 10)
+                                    .font(.system(size: 38, weight: .light))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.accentColor.opacity(0.75),
+                                                Color.accentColor.opacity(0.45)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
                             }
-                            Text("ready_to_capture".localized)
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundColor(Theme.textSecondary(for: colorScheme))
-                                .tracking(1)
+
+                            VStack(spacing: 4) {
+                                Text("ready_to_capture".localized)
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(Theme.textPrimary(for: colorScheme))
+
+                                Text("⌘⇧1  ·  ⌘⇧2")
+                                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                                    .foregroundColor(Theme.textCaption(for: colorScheme))
+                            }
                         }
                     }
 
+                    // Hover overlay — reveal-in-Finder hint
                     if isHovered && storageManager.lastCaptureThumbnail != nil {
                         ZStack {
-                            Color.black.opacity(0.3)
-                                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                            HStack(spacing: 8) {
+                            Color.black.opacity(0.28)
+                                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+
+                            HStack(spacing: 7) {
                                 Image(systemName: "folder.fill")
                                 Text("reveal_file".localized)
                             }
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 16).padding(.vertical, 8)
-                            .background(Capsule().fill(.ultraThinMaterial)
-                                            .shadow(color: .black.opacity(0.2), radius: 5, y: 2))
-                            .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 0.5))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(.ultraThinMaterial)
+                                    .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
+                            )
+                            .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 0.5))
                         }
+                        .transition(.opacity)
                     }
                 }
                 .frame(height: 240)
                 .frame(maxWidth: .infinity)
+                // Two-layer shadow: tight depth + large diffuse
+                .shadow(
+                    color: Theme.cardShadowDepth(for: colorScheme),
+                    radius: 6, x: 0, y: 3
+                )
+                .shadow(
+                    color: Theme.cardShadowElevation(for: colorScheme),
+                    radius: 24, x: 0, y: 12
+                )
                 .scaleEffect(isHovered ? 1.01 : 1.0)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovered)
+                .animation(Theme.springStandard, value: isHovered)
             }
             .buttonStyle(PlainButtonStyle())
             .onHover { isHovered = $0 }
@@ -91,7 +127,7 @@ struct CapturePreviewView: View {
 
             // Action buttons — only shown when there's a capture
             if storageManager.lastCaptureURL != nil {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     // OCR button
                     captureActionButton(
                         icon: isExtracting ? "hourglass" : "text.viewfinder",
@@ -122,13 +158,16 @@ struct CapturePreviewView: View {
                     captureActionButton(
                         icon: "paintbrush.pointed.fill",
                         label: "Beautify",
-                        color: .cyan,
+                        color: .accentColor,
                         disabled: false
                     ) {
                         showBeautifulExport = true
                     }
                 }
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .transition(
+                    .opacity.combined(with: .move(edge: .bottom))
+                )
+                .animation(Theme.springStandard, value: storageManager.lastCaptureURL != nil)
                 .sheet(isPresented: $showBeautifulExport) {
                     if let url = storageManager.lastCaptureURL,
                        let image = NSImage(contentsOf: url) {
@@ -156,7 +195,7 @@ struct CapturePreviewView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Extracted Text")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                 Spacer()
                 if let text = extractedText, !text.isEmpty {
                     Button("Copy") {
@@ -165,19 +204,19 @@ struct CapturePreviewView: View {
                         showOCRPopover = false
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.cyan)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.accentColor)
                 }
             }
             if let text = extractedText {
                 if text.isEmpty {
                     Text("No text found in this image.")
-                        .font(.system(size: 12))
+                        .font(Theme.fontSecondary)
                         .foregroundColor(.secondary)
                 } else {
                     ScrollView {
                         Text(text)
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(Theme.fontMono)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -196,7 +235,7 @@ struct CapturePreviewView: View {
                 Image(systemName: "sparkles")
                     .foregroundColor(.yellow)
                 Text("AI Description")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                 Spacer()
                 if let text = aiDescription {
                     Button("Copy") {
@@ -205,17 +244,17 @@ struct CapturePreviewView: View {
                         showAIPopover = false
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.cyan)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.accentColor)
                 }
             }
             if let error = aiError {
                 Text(error)
-                    .font(.system(size: 12))
+                    .font(Theme.fontSecondary)
                     .foregroundColor(.red)
             } else if let description = aiDescription {
                 Text(description)
-                    .font(.system(size: 12))
+                    .font(Theme.fontSecondary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -233,20 +272,23 @@ struct CapturePreviewView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                 Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
             }
             .foregroundColor(disabled ? .secondary : color)
             .padding(.horizontal, 14)
-            .padding(.vertical, 7)
+            .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(color.opacity(disabled ? 0.05 : 0.12))
+                    .fill(color.opacity(disabled ? 0.05 : 0.10))
             )
-            .overlay(Capsule().stroke(color.opacity(disabled ? 0.1 : 0.25), lineWidth: 1))
+            .overlay(
+                Capsule()
+                    .stroke(color.opacity(disabled ? 0.08 : 0.22), lineWidth: 1)
+            )
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(disabled)
@@ -264,7 +306,6 @@ struct CapturePreviewView: View {
                 let text = try await OCRManager.shared.extractText(from: url)
                 extractedText = text
                 if !text.isEmpty {
-                    // Auto-copy to clipboard
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                     // Store in clipboard register so the menu bar can show it

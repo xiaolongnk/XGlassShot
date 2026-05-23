@@ -107,7 +107,7 @@ struct CapturePreviewView: View {
                         .transition(.opacity)
                     }
                 }
-                .frame(height: 240)
+                .frame(height: 190)
                 .frame(maxWidth: .infinity)
                 // Two-layer shadow: tight depth + large diffuse
                 .shadow(

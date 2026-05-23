@@ -65,10 +65,14 @@ class SelectionOverlay: ObservableObject {
     }
 
     func hide() {
-        // Clear content views first to prevent SwiftUI from accessing overlay during deallocation
+        // Order out first so AppKit removes the window from the screen hierarchy,
+        // then clear the content view to release the SwiftUI hosting tree.
+        // Reversing this order (contentView = nil before orderOut) can leave the
+        // window in an inconsistent state where orderOut has no visible effect,
+        // causing the dim overlay to persist on screen.
         for window in windows {
-            window.contentView = nil
             window.orderOut(nil)
+            window.contentView = nil
         }
         windows.removeAll()
         isActive = false

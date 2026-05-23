@@ -232,6 +232,9 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         config.height = captureHeight
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.showsCursor = true
+        if #available(macOS 14.2, *) {
+            config.showsRecordingIndicator = false
+        }
 
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
 

@@ -12,5 +12,7 @@
 	<true/>
 	<key>com.apple.security.assets.movies.read-write</key>
 	<true/>
+	<key>com.apple.security.screen-capture</key>
+	<true/>
 </dict>
 </plist>

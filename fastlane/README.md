@@ -31,6 +31,14 @@ Build GlassCap.app for release
 
 Upload metadata only (no build). Syncs support/privacy/copyright from ENV or APP_STORE_CONFIG, then uploads.
 
+### mac beta
+
+```sh
+[bundle exec] fastlane mac beta
+```
+
+Build and upload to TestFlight
+
 ### mac release
 
 ```sh

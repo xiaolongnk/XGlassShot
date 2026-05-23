@@ -40,16 +40,17 @@ struct ContentView: View {
                     }
             }
 
-            VStack(spacing: 32) {
-                // Top Spacer to push content down
-                Spacer()
+            VStack(spacing: 0) {
+                Spacer(minLength: 24)
 
-                // Main Feature: Capture Preview
+                // Main Feature: Capture Preview — focal point in upper third
                 CapturePreviewView(storageManager: storageManager)
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, 28)
+
+                Spacer(minLength: 24)
 
                 // Primary Actions
-                HStack(spacing: 24) {
+                HStack(spacing: 16) {
                     // Record Button
                     HeroActionButton(
                         icon: "record.circle.fill",
@@ -59,24 +60,25 @@ struct ContentView: View {
                         description: "Select an area to record screen",
                         action: { OverlayManager.shared.showSelectionOverlay() }
                     )
-                    
+
                     // Screenshot Button
                     HeroActionButton(
                         icon: "camera.fill",
                         label: "capture".localized,
                         shortcut: "⌘⇧2",
-                        color: .cyan,
+                        color: .accentColor,
                         description: "Select an area to take a screenshot",
                         action: { OverlayManager.shared.showScreenshotOverlay() }
                     )
                 }
-                .padding(.horizontal, 40)
+                .padding(.horizontal, 28)
 
-                Spacer()
+                Spacer(minLength: 20)
 
-                // Integrated Settings Dock
+                // Floating Settings Dock
                 SettingsDock(storageManager: storageManager, shortcutsManager: shortcutsManager)
-                    .padding(.bottom, 40)
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 28)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -383,6 +383,23 @@ final class StorageManager: ObservableObject {
         lastCaptureURL = url
         lastCaptureURLString = url.path
         loadThumbnail(for: url)
+        pushToClipboardRegister(url: url)
+    }
+
+    private func pushToClipboardRegister(url: URL) {
+        // Only register image captures (not video recordings)
+        guard url.pathExtension.lowercased() == "png" || url.pathExtension.lowercased() == "jpg" else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            let thumbnail: NSImage
+            if let img = NSImage(contentsOf: url) {
+                thumbnail = img.resized(to: NSSize(width: 120, height: 80))
+            } else {
+                thumbnail = NSImage()
+            }
+            DispatchQueue.main.async {
+                ClipboardRegisterManager.shared.addEntry(imageURL: url, thumbnail: thumbnail)
+            }
+        }
     }
 
     private func loadThumbnail(for url: URL) {

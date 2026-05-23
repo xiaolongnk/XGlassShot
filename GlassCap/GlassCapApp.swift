@@ -75,11 +75,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Request screen recording permission on launch
+        // Request screen recording permission on launch.
+        // Use the live SCShareableContent check — CGPreflightScreenCaptureAccess()
+        // is cached per-process and can return false even when TCC has the grant.
         Task {
-            if !PermissionManager.shared.canRecordScreen() {
-                _ = await PermissionManager.shared.requestScreenRecordingPermission()
-            }
+            _ = await PermissionManager.shared.requestScreenRecordingPermission()
         }
     }
     

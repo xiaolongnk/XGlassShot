@@ -78,6 +78,11 @@ platform :mac do
       uses_non_exempt_encryption: false,
       skip_waiting_for_build_processing: true
     )
+
+    # Post-upload: poll until VALID, patch export compliance if needed,
+    # confirm IN_BETA_TESTING. Exits non-zero if build never becomes distributable.
+    build_version = get_info_plist_value(path: "GlassCap/Info.plist", key: "CFBundleVersion")
+    sh("python3 ../script/asc-verify-build.py 6757980673 #{build_version}")
   end
 
   desc "Build and upload to App Store Connect (metadata + .app)"

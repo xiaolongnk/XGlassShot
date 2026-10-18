@@ -1,48 +1,27 @@
-# GlassCap Technical Memory & Overview
+# Architecture
 
-This document serves as a persistent technical context for LLMs and developers working on the **GlassCap** project. It records architectural decisions, critical discoveries, and "gotchas" that are not immediately obvious from the code.
+The GUI is a sandboxed SwiftUI macOS app. ScreenCaptureKit supplies pixels; Apple Vision performs local OCR. No cloud AI service, network client, analytics or StoreKit product is part of the app.
 
-## 🏗️ Architecture
+## Capture and display ownership
 
-### 1. Overlay Selection (`SelectionOverlay.swift`)
-- **Mechanism**: The app creates an `NSWindow` for every `NSScreen` currently connected. 
-- **Window Level**: Uses `.screenSaver` level to ensure overlays appear above almost all other content.
-- **SwiftUI Integration**: Each window hosts a `SelectionOverlayView`. Coordinate mapping is extremely sensitive here due to differences between AppKit (bottom-left) and SwiftUI/ScreenCaptureKit (top-left).
+`OverlayManager` and `CaptureSession` serialize selection, capture and recording finalization. Each selection belongs to a concrete display ID. `SelectionOverlay` provides a window per display, activates the selected screen and cancels when the layout changes. `CaptureGeometry` transforms the rectangle into top-left coordinates local to that exact display and rejects invalid/missing targets. Never fall back to another display or to a full-screen image.
 
-### 2. Capture Engine (`ScreenRecorder.swift`)
-- **API**: Uses `ScreenCaptureKit` (`SCStream`).
-- **Coordinate Conversion**: 
-    - `convertToDisplayCoordinates`: Maps SwiftUI logical points back to `SCStreamConfiguration.sourceRect`.
-    - **CRITICAL**: `SCStreamConfiguration` expects **local display coordinates**. (0,0) is always the top-left of the target display, regardless of its position in the global desktop layout.
-- **Display Matching**: Matches `NSScreen` to `SCDisplay` using `NSScreenNumber`. 
-    - **Gotcha**: `NSScreenNumber` must be extracted as `NSNumber` and then converted via `.uint32Value` to match `SCDisplay.displayID`. Direct casting to `CGDirectDisplayID` (UInt32) often fails.
+`ScreenRecorder` uses the validated region and chosen 1×/2× quality. `RecordingWriter` serializes samples and encoder state on its sample queue and validates finalization before success. Recordings are video-only MOV files. Staged recovery files survive cancelled or failed saves.
 
-### 3. File Storage (`StorageManager.swift`)
-- **Sandbox Compliance**: Uses security-scoped bookmarks to persist access to user-selected folders.
-- **Silent Save**: Implements an "optimistic write" pattern.
-    - **Decision**: Avoid relying on `FileManager.isWritableFile`. In sandbox, it often returns false for valid paths until an actual write attempt is made.
-    - **Pattern**: `do { try data.write(...) } catch { // fall back to NSSavePanel }`
+## Files and previews
 
-## 🧩 Key Technical Discoveries
+`StorageManager` holds a security-scoped bookmark for the user's selected save directory. The latest capture holds an independent grant so changing the destination does not invalidate preview/OCR/editing access. Failed bookmark creation leaves the existing destination intact. `CaptureFileStore` sanitizes prefixes, generates collision-resistant names and performs exclusive automatic writes.
 
-### Multi-Monitor Coordinates
-- **Discovery**: When using `SCStreamConfiguration`, the `sourceRect` is relative to the `SCDisplay.frame`. If you provide global coordinates (e.g., x: -1920 for a left monitor), the stream will fail with `com.apple.ScreenCaptureKit.SCStreamErrorDomain Code=-3812` ("contentRect does not contain sourceRect").
-- **Fix**: Always normalize selection relative to the specific `NSScreen.frame` before passing to the capture engine.
+`CaptureThumbnail` uses ImageIO downsampling. Preview results are checked against the current URL before publication. OCR runs off the UI thread; follow-up requests carry their actual capture URL. Beautification presentation uses an identifiable request rather than a Boolean plus a separately mutable file URL.
 
-### App Activation via Shortcuts
-- **Discovery**: Global shortcuts via `KeyboardShortcuts` do not automatically bring the application to the foreground. This results in the overlay appearing but not responding to mouse/keyboard until the user clicks it manually.
-- **Fix**: Call `NSApp.activate(ignoringOtherApps: true)` immediately when showing the selection overlay.
+## Appearance
 
-## 🛠️ Feature Matrix & Settings
+`AppAppearance` persists System/Day/Night and background transparency. `BackgroundImageStore` validates and normalizes imported images to a local PNG with a 2400-pixel longest-side bound; failed imports preserve the current image. `GlassSurface` changes only the background. Native material under controls preserves readability. Reduce Transparency wins over decorative background effects.
 
-| Setting | Internal Key | Description |
-| :--- | :--- | :--- |
-| **Silent Save** | `alwaysAskWhereToSave` | `false` attempts direct write; `true` forces `NSSavePanel`. |
-| **Quality** | `captureQuality` | Adjusts resolution/scaling in `SCStreamConfiguration`. |
-| **Outline** | `addScreenshotOutline` | Post-processing step applying a 1px border to the final `CGImage`. |
-| **Suffix** | `currentPrefix` | User-defined string appended to date-stamped filenames. |
+## Automation
 
-## 🚀 Known Limitations & Roadmap
-- **Video Format**: Currently hardcoded to `.mov` via `AVAssetWriter`.
-- **Audio Capture**: Not currently implemented.
-- **Window Capture**: Logic exists in `SCShareableContent` but the UI is presently focused on region capture.
+The separate Swift package under `glasscap-cli/` exposes JSON discovery, screenshot and recording commands. It has its own caller permissions and explicit destinations. The GUI's sandbox preferences are not a hidden CLI configuration channel. See [the CLI contract](glasscap-cli/README.md).
+
+## Verification and release
+
+Core tests cover geometry/session boundaries, exclusive file writes, recording finalization, thumbnail bounds, OCR, image composition and background persistence. Display checks require physical hardware; unit tests cannot establish behavior after unplugging a monitor. See [contributing](CONTRIBUTING.md), [UI review](docs/apple-ui-workflow.md) and [store release](docs/Fastlane.md).

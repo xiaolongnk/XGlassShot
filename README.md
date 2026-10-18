@@ -1,95 +1,72 @@
 # GlassCap
 
-**GlassCap** is a high-performance, modern screen recording and screenshot application for macOS, built with **ScreenCaptureKit** and **SwiftUI**. It provides a compact native workspace for capturing regions, recording video, and managing captures with global hotkeys.
+A free, open-source screenshot and screen-recording utility for macOS. Built with SwiftUI, ScreenCaptureKit and local Apple Vision OCR. No account, cloud AI, analytics, subscriptions or in-app purchases.
 
-## ✨ Features
+The existing Mac App Store record is **XGlassShot** ([store page](https://apps.apple.com/app/id6757980673)); its new free release is being prepared for review. The source project and desktop workspace are called GlassCap.
 
-- **Area Selection**: Intuitive region selection with adjustable borders and real-time dimension feedback.
-- **Screen Recording**: High-quality video recording using Apple's latest ScreenCaptureKit API.
-- **Instant Screenshots**: Capture any region and save it instantly to your preferred folder.
-- **Native Settings**: A compact settings sheet with General, Appearance, Capture, and Saving tabs. Choose the destination, filename prefix, background image, transparency, quality, capture feedback, and launch-at-login behavior.
-- **Global Shortcuts**: Control the app from anywhere on your system.
-- **Multi-Monitor Support**: Precise capture and selection across all connected displays.
+## Capture, save, automate
 
-## ⌨️ Keyboard Shortcuts
+- Select an area on the display you choose, including secondary displays. Standard 1× and Retina 2× capture.
+- Save screenshots and video recordings to a folder you control. Customize filename prefixes, including Unicode and spaces. Automatic captures never overwrite an existing file.
+- Copy images, recognize Chinese/English text locally, or add a background, padding and rounded corners with the local beautification editor.
+- Use a compact workspace with Day, Night or Follow System appearance. Import a local background image and adjust background transparency without fading your capture.
+- Drive captures from scripts and agents with the JSON CLI: discover capabilities and displays, provide explicit destinations, and check exit status before consuming output.
 
-- `⌘ ⇧ 1`: **Record Region** (Triggers area selection for video recording)
-- `⌘ ⇧ 2`: **Capture Screenshot** (Triggers area selection for instant image capture)
-- `⌘ ⇧ Q`: **Toggle Quality** (Switch between 1x and 2x capture)
-- `⌘ ⇧ L`: **Set Filename Suffix** (Quickly focus the filename suffix input)
+## Requirements and build
 
-## 🛠️ Technical Requirements
+macOS 14.6+ for the GUI (14.0+ for the CLI), Xcode 26.2+ and Screen Recording permission when capturing. The current verified toolchain is Xcode 26.6. Audio recording, scrolling capture and annotations are not included.
 
-- **macOS**: 14.6 or later
-- **Xcode**: 26.2 or later
-- **Developer Resource**: Requires Screen Recording permissions in System Settings.
-
-## 📁 Project Structure
-
-```
-GlassCap/
-├── GlassCapApp.swift      # Application entry point & lifecycle
-├── ContentView.swift       # Glass workspace and native toolbar
-├── SettingsDock.swift      # Content-sized settings sheet
-├── ScreenRecorder.swift    # Core SCKit logic, coordinate conversion, and saving
-├── SelectionOverlay.swift  # Cross-display SwiftUI selection windows
-├── StorageManager.swift    # Robust file storage, bookmarks, and silent save logic
-├── ShortcutsManager.swift  # Global hotkey registration and handling
-└── Theme.swift             # Centralized design system (colors, shadows, glass)
+```sh
+git clone https://github.com/xiaolongnk/screenkit.git
+cd screenkit
+open GlassCap.xcodeproj
 ```
 
-## 🚀 Getting Started
+Select your own development team and unique bundle identifier in Xcode before running. Apple signing certificates and App Store credentials are not included. For an unsigned compile:
 
-1. **Permissions**: On first launch, GlassCap will request Screen Recording access. You must grant this in *System Settings > Privacy & Security > Screen Recording*.
-2. **Shortcuts**: Use `⌘ ⇧ 2` to take your first screenshot.
-3. **Save Location**: Click the folder in the status bar to choose the destination, or open Settings → Saving. Enable **Ask where to save** for a save panel after each capture.
+```sh
+xcodebuild -project GlassCap.xcodeproj -scheme GlassCap -configuration Debug CODE_SIGNING_ALLOWED=NO build
+```
 
-## 📜 Recent Development Highlights
+For an already configured signing environment, `bash script/build-local.sh /absolute/build-directory` creates and verifies a signed local app. It does not install, upload or publish it.
 
-- **Activation Fix**: The app now automatically gains focus when triggered via shortcut, allowing immediate interaction without an extra click.
-- **Multi-Monitor Accuracy**: Robust display identification enables precise capture on secondary monitors, even with mixed resolutions or non-standard orientations.
-- **Optimistic Silent Save**: Faster, quieter saving logic that works reliably within the macOS sandbox environment.
+## Usage
 
-## Reliability baseline (Build 14)
+- **⌘⇧2:** choose an area for a screenshot. Drag, then Return to capture or Esc to cancel.
+- **⌘⇧1:** choose an area for recording; stop from the app or menu bar.
+- **⌘⇧Q:** toggle capture quality.
+- **⌘,:** open settings. **Saving** controls the folder, filename prefix and optional save panel; **Appearance** controls the theme, image and transparency.
+- Use the arrow beside Screenshot to select a specific display. No unavailable-display fallback silently captures another screen.
+- Recordings cancelled at the save panel remain in the sandbox's recovery folder. Choose **Recover Recordings…** from the menu to find them.
 
-- Cloud AI description and API-key settings have been removed. Local Vision OCR stays on-device. The app clears the legacy `anthropicAPIKey` preference at launch and no longer has a network-client entitlement.
-- Selection, capture, recording, and finalization are serialized. Cancelling a selection clears its action; follow-up OCR/beautification is bound to the actual capture URL.
-- Automatic captures use collision-resistant names and never overwrite existing files. Explicit replacements through the save panel are staged before replacing the destination.
-- A missing display or invalid region produces an error; it never falls back to another display or the full screen.
-- Recordings are written under Application Support/GlassCap/Recovery inside the sandbox. Cancelling or failing a save retains the source. Use **Recover Recordings…** in the menu bar to find it. Successfully saved recovery copies are removed.
-- Capture and recording failures are shown to the user. The main Record button becomes Stop Recording while recording.
+Permission is requested when you start a capture. Allow GlassCap in System Settings → Privacy & Security → Screen Recording if requested, then retry. Full Disk Access and Accessibility access are not prerequisites for ordinary capture.
 
-### Verify and build locally
+## Agent-friendly CLI
 
-```bash
+```sh
+bash glasscap-cli/install.sh
+glasscap capabilities
+glasscap screens
+glasscap screenshot --screen 1 --region 100,120,640,400 --quality high --directory "$PWD/captures" --prefix "design-review"
+```
+
+Relist displays before selecting an index. Regions are top-left coordinates in points local to that display. Successful commands return JSON and exit 0; capture failures return an error and exit nonzero. The CLI has its own terminal permissions and destinations; it does not silently read sandboxed GUI preferences. See [CLI documentation](glasscap-cli/README.md) and [AGENTS.md](AGENTS.md).
+
+## Verification
+
+```sh
 swift test
-bash script/build-local.sh /absolute/path/to/build-directory
+swift test --package-path glasscap-cli
+bash script/verify-displays.sh /absolute/evidence-directory
 ```
 
-The local build script embeds the source revision, marks dirty sources, verifies the code signature, and prints the generated app path. It does not install or publish the app. Settings → General shows the version/build; its tooltip shows the source revision.
+The hardware check uses the production selection/capture sources and requires two physical displays plus Screen Recording permission. See [contributing](CONTRIBUTING.md), the [Apple UI review workflow](docs/apple-ui-workflow.md) and [release process](docs/Fastlane.md). Hardware limitations are recorded explicitly rather than inferred from unit tests.
 
-External tools and AI agents can use the existing `glasscap-cli` JSON screenshot interface. The GUI does not call a model service. See [glasscap-cli/README.md](glasscap-cli/README.md).
+## Privacy, support and license
 
-## Glass capture workspace (Build 17)
+Captures, OCR, editing, preferences and imported backgrounds stay on your Mac. The app has no network-client entitlement. Imported backgrounds are retained as bounded local copies. The separate GitHub/support website follows its hosting provider's privacy policy.
 
-The main window opens at 500×400 points. It follows the approved Concept 02: compact toolbar, a clear preview canvas, labeled local image actions, and persistent folder/prefix shortcuts in the footer. Settings open as a compact content-sized sheet with General, Appearance, Capture, and Saving sections; ⌘, opens the same sheet.
-
-Appearance supports Follow System, Day, and Night. Glass transparency is adjustable from 0–80% and persists across launches. In Settings → Appearance, choose a local background image or remove it to return to desktop glass. The app keeps a metadata-free PNG copy under its sandbox's `Application Support/GlassCap/Appearance`, bounded to 2400 pixels on the longest side. Moving or deleting the original does not affect the saved background; invalid imports preserve the previous image. Images stay local. The frosted background changes while screenshot pixels and text keep full opacity; controls have their own readable material. macOS Reduce Transparency takes precedence. Native Liquid Glass controls are used on macOS 26; standard native controls support macOS 14.6 and later.
-
-Saving settings show the full destination, editable prefix, and filename-pattern preview. The footer opens the directory chooser or prefix settings directly. Bookmarks are retained for the selected directory and restored on launch; a failed bookmark creation keeps the previous destination. Automatic filenames preserve Unicode/interior spaces, remove unsafe separators, and include a timestamp and random suffix to avoid collisions.
-
-Local Vision OCR supports Chinese/English mixed text and runs off the UI thread. Beautification remains local (background, padding, rounded corners); its sheet is bound directly to the captured image. Neither feature calls a model service. Previews are downsampled to 1200 pixels and restore file access before loading.
-
-Agents can use `glasscap capabilities` plus explicit `--directory` and `--prefix` options. The CLI has its own destinations and terminal permissions; it never silently changes GUI preferences. See [AGENTS.md](AGENTS.md) and [CLI documentation](glasscap-cli/README.md).
-
-Selection ownership is derived from one display ID. Switching displays removes the previous screen's active selection; dragging past an edge is bounded to the selected screen. A screen-layout change cancels an in-progress selection. Capture flash feedback uses the selected display too.
-
-For a real two-display check, grant screen capture access to the terminal and run:
-
-```bash
-bash script/verify-displays.sh /absolute/path/to/evidence-directory
-```
-
-This compiles the production `ScreenRecorder` and `SelectionOverlay` sources with test-only file storage, checks 20 selection ownership switches, and compares standard and Retina captures against an independent ScreenCaptureKit reference for each connected display. The report includes display IDs, desktop origins, output dimensions, and pixel differences. It does not create or reposition UI windows. The main app is built separately with `script/build-local.sh`.
-
-The Build 16 design pass used [Design macOS Interfaces](https://github.com/0xKoru/apple-hig-codex-skills/tree/6563e765da1e66e5fe443637baeb75eba97b7e35/skills/design-macos-interfaces) alongside the local SwiftUI Expert skill. The layout follows Apple's [macOS guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) and [toolbar conventions](https://developer.apple.com/design/human-interface-guidelines/toolbars). The implementation preserves selected-display capture and local follow-up actions while unifying the main workspace, settings sheet, and editor backgrounds.
+- [Privacy policy](https://xiaolongnk.github.io/screenkit/privacy.html)
+- [Support](https://xiaolongnk.github.io/screenkit/support.html) and [issues](https://github.com/xiaolongnk/screenkit/issues)
+- [Security reporting](SECURITY.md)
+- [MIT license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md)

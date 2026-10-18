@@ -1,7 +1,19 @@
-# Fastlane (Mac App Store)
+# Mac App Store release
 
-- **Lanes:** `bundle exec fastlane deliver_metadata` (metadata only), `bundle exec fastlane release` (build + upload).
-- **Env (required):** `FASTLANE_APPLE_ID`, `FASTLANE_TEAM_ID` (e.g. in `~/.zshrc`).
-- **Copyright, Support URL, Privacy URL:** Set in **~/.zshrc** (preferred): `export FASTLANE_SUPPORT_URL="https://..."` and `FASTLANE_PRIVACY_URL="https://..."` (or one for both), optionally `FASTLANE_COPYRIGHT="Copyright © ..."`. The sync script runs automatically before `deliver_metadata` and `release` and writes these into each locale’s metadata files for upload. Fallback: `fastlane/metadata/APP_STORE_CONFIG.txt`.
-- **Gotchas:** Pass `app_identifier` and `platform: "osx"` in the Fastfile; do not pass `support_url`/`privacy_url` as strings in the Fastfile—use the metadata files above.
-- **Full deliver setup and troubleshooting:** `.cursor/skills/app-store-assets/fastlane-deliver.md`.
+The GUI targets macOS, not iOS. Verify it on a physical Mac; there is no iPhone simulator gate for this target. Run core and CLI tests and inspect Day/Night, capture/cancel, saving, OCR and beautification before upload. The current App Store record is XGlassShot, bundle `com.xiaolongou.glasscap`, app ID `6757980673`.
+
+Use the Gemfile with a supported Ruby and `bundle install`, or an existing Fastlane installation. Keep `~/.fastlane/api_key.json` outside the repository, or configure `ASC_API_KEY_JSON` / `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`. Never print or commit key contents. Contributors building their own fork must use their own app identity, team and profiles.
+
+```sh
+swift test
+swift test --package-path glasscap-cli
+GLASSCAP_RELEASE_DIR=/absolute/release-directory bundle exec fastlane mac build
+GLASSCAP_RELEASE_DIR=/absolute/release-directory bundle exec fastlane mac beta
+bundle exec fastlane mac deliver_metadata
+```
+
+`build` requires clean committed source, embeds the revision, archives to a fresh release directory and exports a signed `.pkg`. Mac distribution needs both Apple Distribution and Mac Developer Installer private keys, plus the Store provisioning profile. `beta` builds and uploads but does not declare Apple processing successful or submit for review. `release` additionally uploads text metadata. Each lane uses API-key authentication.
+
+Before a public release, verify the exact uploaded build reaches `VALID`, attach it to the matching marketing version, confirm no stale build remains selected, check the free price schedule across territories, reachable support/privacy URLs, current screenshots, privacy answers, review notes and any prior rejection feedback. The App Store listing must remain free, with no IAP/subscriptions. Review submission and availability are separate from binary upload; report the actual server state.
+
+Store screenshots must show real UI with generic content, contain no private captures and meet Apple's Mac dimensions (16:10, e.g. 1280×800). Keep raw evidence and release artifacts outside source. Do not use previous personal verification screenshots as marketing assets. Check the distribution signature, embedded profile, privacy manifest, sandbox and absence of development debug entitlement in the exported app.

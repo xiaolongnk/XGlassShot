@@ -1,8 +1,3 @@
-# App Store Connect app identity
-# Fill in apple_id and team_id (Team ID from developer.apple.com/account)
 app_identifier "com.xiaolongou.glasscap"
-apple_id ENV["FASTLANE_APPLE_ID"] || "YOUR_APPLE_ID@example.com"
-team_id ENV["FASTLANE_TEAM_ID"] || "YOUR_TEAM_ID"
-
-# Mac app
+team_id ENV.fetch("FASTLANE_TEAM_ID", "UU76YYR83R")
 for_platform :mac

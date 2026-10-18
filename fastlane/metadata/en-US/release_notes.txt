@@ -1,7 +1,1 @@
-Welcome to GlassCap.
-
-• Region screenshot and screen recording with global shortcuts.
-• Save location and filename suffix.
-• Low/High quality.
-• Optional sound and screenshot border.
-• Multi-monitor support.
+A redesigned compact Mac workspace with Day/Night appearance, custom image backgrounds and adjustable transparency. Flexible save folders and filename prefixes, selected-display capture, local OCR and beautification. Improved saving and recording reliability. Free and open source under MIT.

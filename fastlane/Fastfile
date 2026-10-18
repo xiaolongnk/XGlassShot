@@ -1,104 +1,56 @@
 require "json"
+require "shellwords"
 
-# GlassCap — Fastlane for Mac App Store
-# Usage: bundle exec fastlane release
-# Or: bundle exec fastlane build && bundle exec fastlane deliver_metadata
-
+# Credentials and signing assets stay outside the repository.
 default_platform(:mac)
 
 platform :mac do
-  desc "Build GlassCap.app for release"
-  lane :build do
-    build_app(
-      workspace: nil,
-      project: "GlassCap.xcodeproj",
-      scheme: "GlassCap",
-      export_method: "app-store",
-      output_directory: "./build",
-      output_name: "GlassCap.app",
-      clean: true
-    )
-  end
-
-  desc "Upload metadata only (no build). Syncs support/privacy/copyright from ENV or APP_STORE_CONFIG, then uploads."
-  lane :deliver_metadata do
-    project_root = File.expand_path("..", File.dirname(__FILE__))
-    sh("ruby \"#{File.join(project_root, 'fastlane', 'scripts', 'sync_metadata_urls.rb')}\"")
-    deliver(
-      app_identifier: "com.xiaolongou.glasscap",
-      platform: "osx",
-      username: ENV["FASTLANE_APPLE_ID"] || ENV["DELIVER_USER"],
-      team_id: ENV["FASTLANE_TEAM_ID"],
-      skip_binary_upload: true,
-      skip_screenshots: true,
-      force: true,
-      submit_for_review: false,
-      precheck_include_in_app_purchases: false
-    )
-  end
-
-  desc "Build and upload to TestFlight"
-  lane :beta do
-    api_key_path = File.expand_path("~/.fastlane/api_key.json")
-    if File.exist?(api_key_path)
-      key_data = JSON.parse(File.read(api_key_path))
-      app_store_connect_api_key(
-        key_id:      key_data["key_id"],
-        issuer_id:   key_data["issuer_id"],
-        key_content: key_data["key"],
-        duration:    1200,
-        in_house:    false
-      )
+  before_all do
+    key_path = ENV.fetch("ASC_API_KEY_JSON", File.expand_path("~/.fastlane/api_key.json"))
+    if File.file?(key_path)
+      key = JSON.parse(File.read(key_path))
+      app_store_connect_api_key(key_id: key.fetch("key_id"), issuer_id: key.fetch("issuer_id"),
+        key_content: key.fetch("key"), is_key_content_base64: !key.fetch("key").include?("BEGIN"), duration: 1200)
     else
-      app_store_connect_api_key(
-        key_id:       ENV["ASC_KEY_ID"],
-        issuer_id:    ENV["ASC_ISSUER_ID"],
-        key_filepath: ENV["ASC_KEY_PATH"],
-        in_house:     false
-      )
+      app_store_connect_api_key(key_id: ENV.fetch("ASC_KEY_ID"), issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+        key_filepath: ENV.fetch("ASC_KEY_PATH"), duration: 1200)
     end
-    build_app(
-      project: "GlassCap.xcodeproj",
-      scheme: "GlassCap",
-      export_method: "app-store",
-      output_directory: "./build",
-      output_name: "GlassCap",
-      clean: true,
-      export_options: {
-        method: "app-store",
-        provisioningProfiles: {
-          "com.xiaolongou.glasscap" => "GlassCap Mac App Store"
-        }
-      }
-    )
-    upload_to_testflight(
-      pkg: "./build/GlassCap.pkg",
-      app_identifier: "com.xiaolongou.glasscap",
-      team_id: ENV["FASTLANE_TEAM_ID"],
-      uses_non_exempt_encryption: false,
-      skip_waiting_for_build_processing: true
-    )
-
-    # Post-upload: poll until VALID, patch export compliance if needed,
-    # confirm IN_BETA_TESTING. Exits non-zero if build never becomes distributable.
-    build_version = get_info_plist_value(path: "GlassCap/Info.plist", key: "CFBundleVersion")
-    sh("python3 ../script/asc-verify-build.py 6757980673 #{build_version}")
   end
 
-  desc "Build and upload to App Store Connect (metadata + .app)"
-  lane :release do
-    project_root = File.expand_path("..", File.dirname(__FILE__))
-    sh("ruby \"#{File.join(project_root, 'fastlane', 'scripts', 'sync_metadata_urls.rb')}\"")
+  desc "Archive and export a signed Mac App Store package; no upload"
+  lane :build do
+    project_root = File.expand_path("..", __dir__)
+    output = ENV.fetch("GLASSCAP_RELEASE_DIR", File.join(project_root, "build", "store"))
+    revision = sh("git -C #{project_root.shellescape} rev-parse --short=12 HEAD", log: false).strip
+    UI.user_error!("Commit source changes before archiving") unless sh("git -C #{project_root.shellescape} status --porcelain", log: false).strip.empty?
+    build_app(project: File.join(project_root, "GlassCap.xcodeproj"), scheme: "GlassCap", clean: true,
+      archive_path: File.join(output, "GlassCap.xcarchive"), derived_data_path: File.join(output, "DerivedData"),
+      output_directory: output, output_name: "GlassCap", export_method: "app-store",
+      xcargs: "GLASSCAP_SOURCE_REVISION=#{revision}",
+      export_options: { method: "app-store-connect", signingStyle: "manual", teamID: "UU76YYR83R",
+        signingCertificate: "Apple Distribution", installerSigningCertificate: "3rd Party Mac Developer Installer",
+        provisioningProfiles: { "com.xiaolongou.glasscap" => "Mac Team Store Provisioning Profile: com.xiaolongou.glasscap" } })
+  end
+
+  desc "Build and upload the package to App Store Connect; no review submission"
+  lane :beta do
     build
-    deliver(
-      app_identifier: "com.xiaolongou.glasscap",
-      platform: "osx",
-      username: ENV["FASTLANE_APPLE_ID"] || ENV["DELIVER_USER"],
-      team_id: ENV["FASTLANE_TEAM_ID"],
-      skip_screenshots: true,
-      force: true,
-      submit_for_review: false,
-      precheck_include_in_app_purchases: false
-    )
+    output = ENV.fetch("GLASSCAP_RELEASE_DIR", File.expand_path("../build/store", __dir__))
+    upload_to_testflight(pkg: File.join(output, "GlassCap.pkg"), app_identifier: "com.xiaolongou.glasscap",
+      uses_non_exempt_encryption: false, skip_waiting_for_build_processing: true,
+      changelog: File.read(File.expand_path("metadata/en-US/release_notes.txt", __dir__)))
+  end
+
+  desc "Upload listing text only; preserve screenshots and do not submit"
+  lane :deliver_metadata do
+    deliver(app_identifier: "com.xiaolongou.glasscap", platform: "osx", app_version: "1.0",
+      metadata_path: File.expand_path("metadata", __dir__), skip_binary_upload: true, skip_screenshots: true,
+      force: true, submit_for_review: false, precheck_include_in_app_purchases: false)
+  end
+
+  desc "Build/upload package and listing; review remains a separate explicit action"
+  lane :release do
+    beta
+    deliver_metadata
   end
 end

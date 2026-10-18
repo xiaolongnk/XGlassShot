@@ -1,11 +1,18 @@
-GlassCap is a modern screen capture app for Mac. Record a region or take a screenshot with a single shortcut—no menus, no clutter. Built with Apple's ScreenCaptureKit and SwiftUI for high quality and a clean, glass-style interface.
+XGlassShot, built from the open-source GlassCap project, is a lightweight screenshot and recording tool for Mac. Free to download, with no account, subscription, in-app purchase or cloud AI service.
 
-Capture • Select any area on screen and capture it as an image or start a video recording.
+CAPTURE ON THE DISPLAY YOU CHOOSE
+Select an area for a screenshot or video recording. Use Standard 1× or Retina 2× image quality. Global shortcuts: ⌘⇧2 for screenshots and ⌘⇧1 for recordings.
 
-Shortcuts • ⌘⇧2 for screenshot, ⌘⇧1 for record. Change save path (⌘⇧P) and filename suffix (⌘⇧L) without leaving your workflow.
+YOUR FOLDER. YOUR FILENAMES.
+Choose a save folder and customize the filename prefix, including Unicode and spaces. Automatic captures receive unique names and never overwrite an existing file. An optional save panel gives you control for each capture.
 
-Settings dock • Pick save location, toggle Low/High quality, optional capture sound and screenshot border, launch at login.
+LOCAL IMAGE TOOLS
+Copy images, recognize Chinese and English text with Apple Vision, or add a background, padding and rounded corners in the beautification editor. These operations stay on your Mac.
 
-Multi-monitor • Accurate selection and capture on every display.
+A COMPACT MAC WORKSPACE
+Choose Day, Night or Follow System. Import your own background image and adjust its transparency while keeping the actual screenshot clear. Keyboard navigation and native controls fit your Mac workflow.
 
-Requires macOS 12.3 or later and Screen Recording permission.
+OPEN SOURCE AND AGENT-FRIENDLY
+The MIT-licensed source includes a separate JSON command-line tool for scripts and agents. The CLI is built separately from the store app; setup instructions are on the project website.
+
+Requires macOS 14.6 or later and Screen Recording permission for capture. Recordings currently contain video only. No analytics, advertising or tracking.

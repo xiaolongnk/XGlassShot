@@ -1,0 +1,22 @@
+name: Verify
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mac:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: xcodebuild -version
+      - name: Core tests
+        run: swift test
+      - name: CLI tests
+        run: swift test --package-path glasscap-cli
+      - name: Unsigned GUI build
+        run: xcodebuild -project GlassCap.xcodeproj -scheme GlassCap -configuration Debug -derivedDataPath build/ci CODE_SIGNING_ALLOWED=NO build

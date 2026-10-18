@@ -29,7 +29,7 @@ platform :mac do
       xcargs: "GLASSCAP_SOURCE_REVISION=#{revision}",
       export_options: { method: "app-store-connect", signingStyle: "manual", teamID: "UU76YYR83R",
         signingCertificate: "Apple Distribution", installerSigningCertificate: "3rd Party Mac Developer Installer",
-        provisioningProfiles: { "com.xiaolongou.glasscap" => "Mac Team Store Provisioning Profile: com.xiaolongou.glasscap" } })
+        provisioningProfiles: { "com.xiaolongou.glasscap" => ENV.fetch("GLASSCAP_STORE_PROFILE", "GlassCap Mac App Store") } })
   end
 
   desc "Build and upload the package to App Store Connect; no review submission"

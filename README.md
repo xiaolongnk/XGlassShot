@@ -9,9 +9,9 @@ Your display. Your folder. Your filenames. Everything stays local.
 
 [![macOS 14.6+](https://img.shields.io/badge/macOS-14.6%2B-333333)](#get-xglassshot)
 [![MIT license](https://img.shields.io/badge/license-MIT-536957)](LICENSE)
-[![Verify](https://github.com/xiaolongnk/xglassshot/actions/workflows/verify.yml/badge.svg)](https://github.com/xiaolongnk/xglassshot/actions/workflows/verify.yml)
+[![Verify](https://github.com/xiaolongnk/XGlassShot/actions/workflows/verify.yml/badge.svg)](https://github.com/xiaolongnk/XGlassShot/actions/workflows/verify.yml)
 
-[Website](https://xiaolongnk.github.io/xglassshot/) · [Get started](#get-xglassshot) · [CLI & agents](#agent-friendly-cli) · [中文介绍](#中文介绍)
+[Website](https://xiaolongnk.github.io/XGlassShot/) · [Get started](#get-xglassshot) · [CLI & agents](#agent-friendly-cli) · [中文介绍](#中文介绍)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/main-night.png">
@@ -58,7 +58,7 @@ Requires **macOS 14.6+** for the app, **macOS 14+** for the separate CLI, and Sc
 The app, repository and store listing now share one name: **XGlassShot**. The bundle identifier, saved settings, folder grants, recovery files and legacy CLI state paths stay compatible. Existing GitHub links redirect to this repository. Update your remote with:
 
 ```sh
-git remote set-url origin https://github.com/xiaolongnk/xglassshot.git
+git remote set-url origin https://github.com/xiaolongnk/XGlassShot.git
 ```
 
 The command-line tool is now built from `xglassshot-cli/` and installed as `xglassshot`. An existing `glasscap` installation is left intact; update scripts to the new command when ready.
@@ -70,8 +70,8 @@ The command-line tool is now built from `xglassshot-cli/` and installed as `xgla
 Use Xcode 26.2+; the current verified toolchain is Xcode 26.6.
 
 ```sh
-git clone https://github.com/xiaolongnk/xglassshot.git
-cd xglassshot
+git clone https://github.com/xiaolongnk/XGlassShot.git
+cd XGlassShot
 open XGlassShot.xcodeproj
 ```
 
@@ -119,8 +119,8 @@ The hardware check uses the production selection/capture sources and requires tw
 
 Captures, OCR, editing, preferences and imported backgrounds stay on your Mac. The app has no network-client entitlement. Imported backgrounds are retained as bounded local copies. The separate GitHub/support website follows its hosting provider's privacy policy.
 
-- [Privacy policy](https://xiaolongnk.github.io/xglassshot/privacy.html)
-- [Support](https://xiaolongnk.github.io/xglassshot/support.html) and [issues](https://github.com/xiaolongnk/xglassshot/issues)
+- [Privacy policy](https://xiaolongnk.github.io/XGlassShot/privacy.html)
+- [Support](https://xiaolongnk.github.io/XGlassShot/support.html) and [issues](https://github.com/xiaolongnk/XGlassShot/issues)
 - [Security reporting](SECURITY.md)
 - [MIT license](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md)
 

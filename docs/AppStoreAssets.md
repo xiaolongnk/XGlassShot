@@ -1,6 +1,6 @@
 # Mac App Store assets
 
-Canonical listing text is under `fastlane/metadata/en-US/` and `zh-Hans/`. Preserve the existing App Store names (XGlassShot / GlassCap for Mac), bundle identifier and app record; the unqualified GlassCap name was previously unavailable. Do not silently rename the store app during upload.
+Canonical listing text is under `fastlane/metadata/en-US/` and `zh-Hans/`. Use XGlassShot for both store localizations, preserving the existing bundle identifier and app record; the unqualified GlassCap name was previously unavailable. The previous Chinese listing name included “for Mac” and was rejected under guideline 5.2.5. Do not reintroduce Apple product names into the store name or subtitle.
 
 Version 1.0 is free, with no IAP or subscriptions. The app processes captures/OCR locally. The separate CLI is available from source and is not part of the store app package. The supported GUI minimum is macOS 14.6. Do not advertise audio recording, annotations, cloud AI or unsupported older macOS versions.
 

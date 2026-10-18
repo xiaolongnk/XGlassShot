@@ -2,7 +2,7 @@
 
 The GUI targets macOS, not iOS. Verify it on a physical Mac; there is no iPhone simulator gate for this target. Run core and CLI tests and inspect Day/Night, capture/cancel, saving, OCR and beautification before upload. The current App Store record is XGlassShot, bundle `com.xiaolongou.glasscap`, app ID `6757980673`.
 
-Use the Gemfile with a supported Ruby and `bundle install`, or an existing Fastlane installation. Keep `~/.fastlane/api_key.json` outside the repository, or configure `ASC_API_KEY_JSON` / `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`. Never print or commit key contents. Contributors building their own fork must use their own app identity, team and profiles.
+Use the Gemfile with Ruby 3.3+ and Bundler 4 (`bundle install`). The lockfile pins the reviewed release-tooling dependencies; run release lanes with `bundle exec` so an older global Fastlane does not bypass those versions. Keep `~/.fastlane/api_key.json` outside the repository, or configure `ASC_API_KEY_JSON` / `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`. Never print or commit key contents. Contributors building their own fork must use their own app identity, team and profiles.
 
 ```sh
 swift test

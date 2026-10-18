@@ -23,3 +23,12 @@ fastlane/report.xml
 fastlane/README.md
 fastlane/screenshots/
 .cursor/memory/
+
+# Local signing credentials and editor conversation context
+.secrets/
+secrets/
+*.pem
+*.key
+api_key*.json
+AuthKey_*
+.cursor/skills/

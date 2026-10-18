@@ -7,8 +7,6 @@ struct SettingsDock: View {
     @ObservedObject private var launchManager = LaunchManager.shared
     @ObservedObject private var localizationManager = LocalizationManager.shared
     @FocusState private var isInputFocused: Bool
-    @State private var showAISettings = false
-    @ObservedObject private var aiManager = AIManager.shared
 
     var body: some View {
         HStack(spacing: 0) {
@@ -90,25 +88,6 @@ struct SettingsDock: View {
             // Language Switcher
             LanguageSwitcher()
                 .padding(.horizontal, 8)
-
-            dockDivider
-
-            // AI Settings button
-            Button(action: { showAISettings = true }) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(
-                        aiManager.hasAPIKey
-                            ? .yellow
-                            : Theme.textSecondary(for: colorScheme).opacity(0.45)
-                    )
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 13)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(PlainButtonStyle())
-            .help(aiManager.hasAPIKey ? "AI features enabled" : "Set up AI features")
-            .sheet(isPresented: $showAISettings) { AISettingsView() }
 
             dockDivider
 

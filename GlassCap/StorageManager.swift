@@ -11,6 +11,7 @@ import AppKit
 import AudioToolbox
 import UniformTypeIdentifiers
 import Combine
+import AVFoundation
 
 @available(macOS 12.3, *)
 @MainActor
@@ -136,29 +137,42 @@ final class StorageManager: ObservableObject {
     // MARK: - File Naming
 
     func generateScreenshotFilename(prefix: String = "") -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMdd-HHmmss"
-        let timestamp = formatter.string(from: Date())
-        
-        var prefixPart = prefix
-        if !prefixPart.isEmpty && !prefixPart.hasSuffix("_") {
-            prefixPart += "_"
-        }
-        
-        return "\(prefixPart)\(timestamp).png"
+        CaptureFileStore.filename(prefix: prefix, extension: "png")
     }
 
     func generateRecordingFilename(prefix: String = "") -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMdd-HHmmss"
-        let timestamp = formatter.string(from: Date())
-        
-        var prefixPart = prefix
-        if !prefixPart.isEmpty && !prefixPart.hasSuffix("_") {
-            prefixPart += "_"
+        CaptureFileStore.filename(prefix: prefix, extension: "mov")
+    }
+
+    @AppStorage("pendingRecordingPath") private var pendingRecordingPath = ""
+    var pendingRecordingURL: URL? {
+        guard !pendingRecordingPath.isEmpty,
+              FileManager.default.fileExists(atPath: pendingRecordingPath) else { return nil }
+        return URL(fileURLWithPath: pendingRecordingPath)
+    }
+
+    func recoveryDirectory() throws -> URL {
+        let support = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let directory = support.appendingPathComponent("GlassCap/Recovery", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory
+    }
+
+    func makeRecoveryRecordingURL() throws -> URL {
+        let url = try recoveryDirectory().appendingPathComponent(generateRecordingFilename())
+        pendingRecordingPath = url.path
+        return url
+    }
+
+    private func recordingSaved(from source: URL) {
+        // Never remove the recovery source until the destination copy has succeeded.
+        do {
+            try FileManager.default.removeItem(at: source)
+            if pendingRecordingPath == source.path { pendingRecordingPath = "" }
+        } catch {
+            // A redundant recovery copy is preferable to losing a recording.
+            NSLog("GlassCap: could not remove saved recovery copy: %@", error.localizedDescription)
         }
-        
-        return "\(prefixPart)\(timestamp).mov"
     }
 
     // MARK: - Save Operations
@@ -199,7 +213,7 @@ final class StorageManager: ObservableObject {
             let destinationURL = directory.appendingPathComponent(filename)
             
             do {
-                try data.write(to: destinationURL)
+                try CaptureFileStore.writeScreenshot(data, to: destinationURL)
                 
                 // Update last capture
                 updateLastCapture(url: destinationURL)
@@ -234,14 +248,8 @@ final class StorageManager: ObservableObject {
             let destinationURL = directory.appendingPathComponent(filename)
             
             do {
-                 // Remove existing file if present
-                try? FileManager.default.removeItem(at: destinationURL)
-
-                // Copy from temp location
-                try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-
-                // Clean up temp file
-                try? FileManager.default.removeItem(at: tempURL)
+                try CaptureFileStore.copyRecording(from: tempURL, to: destinationURL)
+                recordingSaved(from: tempURL)
 
                 // Update last capture
                 updateLastCapture(url: destinationURL)
@@ -274,7 +282,7 @@ final class StorageManager: ObservableObject {
             throw StorageError.saveCancelled
         }
 
-        try data.write(to: destinationURL)
+        try data.write(to: destinationURL, options: .atomic)
 
         // Update last capture
         updateLastCapture(url: destinationURL)
@@ -298,19 +306,22 @@ final class StorageManager: ObservableObject {
         let response = await savePanel.begin()
 
         guard response == .OK, let destinationURL = savePanel.url else {
-            // Clean up temp file
-            try? FileManager.default.removeItem(at: tempURL)
+            // The recording stays in the persistent Recovery folder.
             throw StorageError.saveCancelled
         }
 
-        // Remove existing file if present
-        try? FileManager.default.removeItem(at: destinationURL)
-
-        // Copy from temp location
-        try FileManager.default.copyItem(at: tempURL, to: destinationURL)
-
-        // Clean up temp file
-        try? FileManager.default.removeItem(at: tempURL)
+        if destinationURL.resolvingSymlinksInPath() == tempURL.resolvingSymlinksInPath() {
+            pendingRecordingPath = ""
+            updateLastCapture(url: destinationURL)
+            playCaptureConfirmation()
+            return destinationURL
+        }
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            try CaptureFileStore.replaceRecording(from: tempURL, to: destinationURL)
+        } else {
+            try CaptureFileStore.copyRecording(from: tempURL, to: destinationURL)
+        }
+        recordingSaved(from: tempURL)
 
         // Update last capture
         updateLastCapture(url: destinationURL)
@@ -467,50 +478,5 @@ final class StorageManager: ObservableObject {
     func revealLastCapture() {
         guard let url = lastCaptureURL else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-}
-
-// MARK: - Storage Errors
-
-enum StorageError: LocalizedError {
-    case saveCancelled
-    case directoryNotWritable
-    case invalidData
-
-    var errorDescription: String? {
-        switch self {
-        case .saveCancelled:
-            return "save_cancelled".localized
-        case .directoryNotWritable:
-            return "directory_not_writable".localized
-        case .invalidData:
-            return "invalid_data".localized
-        }
-    }
-}
-
-// MARK: - NSImage Extension
-
-import AVFoundation
-
-extension NSImage {
-    func resized(to targetSize: NSSize) -> NSImage {
-        let aspectRatio = size.width / size.height
-        var newSize = targetSize
-
-        if aspectRatio > targetSize.width / targetSize.height {
-            newSize.height = targetSize.width / aspectRatio
-        } else {
-            newSize.width = targetSize.height * aspectRatio
-        }
-
-        let newImage = NSImage(size: newSize)
-        newImage.lockFocus()
-        draw(in: NSRect(origin: .zero, size: newSize),
-             from: NSRect(origin: .zero, size: size),
-             operation: .copy,
-             fraction: 1.0)
-        newImage.unlockFocus()
-        return newImage
     }
 }

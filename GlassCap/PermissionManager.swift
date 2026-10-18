@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import CoreGraphics
 import Combine
+import ScreenCaptureKit
 
 @available(macOS 10.15, *)
 @MainActor
@@ -19,17 +20,16 @@ final class PermissionManager: ObservableObject {
         return CGPreflightScreenCaptureAccess()
     }
     
-    func requestScreenRecordingPermission() async -> Bool {
-        // CGRequestScreenCaptureAccess returns immediately
-        let granted = CGRequestScreenCaptureAccess()
-        
-        await MainActor.run {
-            hasPermission = granted
+    func checkLivePermission() async -> Bool {
+        do {
+            _ = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            hasPermission = true
+        } catch {
+            hasPermission = false
         }
-        
-        return granted
+        return hasPermission
     }
-    
+
     func updatePermissionStatus() {
         hasPermission = canRecordScreen()
     }

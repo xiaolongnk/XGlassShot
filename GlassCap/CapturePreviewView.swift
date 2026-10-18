@@ -11,12 +11,9 @@ struct CapturePreviewView: View {
     // Action states
     @State private var isExtracting = false
     @State private var extractedText: String?
-    @State private var isDescribing = false
-    @State private var aiDescription: String?
-    @State private var aiError: String?
     @State private var showBeautifulExport = false
+    @State private var beautifulExportURL: URL?
     @State private var showOCRPopover = false
-    @State private var showAIPopover = false
 
     var body: some View {
         VStack(spacing: 14) {
@@ -141,19 +138,6 @@ struct CapturePreviewView: View {
                         ocrPopoverContent
                     }
 
-                    // AI describe button
-                    captureActionButton(
-                        icon: isDescribing ? "hourglass" : "sparkles",
-                        label: isDescribing ? "Asking…" : "Describe",
-                        color: .yellow,
-                        disabled: isDescribing
-                    ) {
-                        runAIDescribe()
-                    }
-                    .popover(isPresented: $showAIPopover, arrowEdge: .top) {
-                        aiPopoverContent
-                    }
-
                     // Beautiful export button
                     captureActionButton(
                         icon: "paintbrush.pointed.fill",
@@ -161,6 +145,7 @@ struct CapturePreviewView: View {
                         color: .accentColor,
                         disabled: false
                     ) {
+                        beautifulExportURL = storageManager.lastCaptureURL
                         showBeautifulExport = true
                     }
                 }
@@ -169,22 +154,26 @@ struct CapturePreviewView: View {
                 )
                 .animation(Theme.springStandard, value: storageManager.lastCaptureURL != nil)
                 .sheet(isPresented: $showBeautifulExport) {
-                    if let url = storageManager.lastCaptureURL,
+                    if let url = beautifulExportURL,
                        let image = NSImage(contentsOf: url) {
                         BeautifulExportView(sourceImage: image)
                     }
                 }
             }
         }
-        .onChange(of: overlayManager.pendingPostAction) { _, action in
-            guard action != .none else { return }
-            overlayManager.pendingPostAction = .none
-            switch action {
-            case .copyText: runOCR()
-            case .describe: runAIDescribe()
-            case .beautify: showBeautifulExport = true
-            case .none: break
-            }
+        .onChange(of: overlayManager.pendingPostAction) { _, _ in consumePostAction() }
+        .onAppear { consumePostAction() }
+    }
+
+    private func consumePostAction() {
+        guard let request = overlayManager.pendingPostAction else { return }
+        overlayManager.pendingPostAction = nil
+        switch request.action {
+        case .copyText: runOCR(url: request.url)
+        case .beautify:
+            beautifulExportURL = request.url
+            showBeautifulExport = true
+        case .none: break
         }
     }
 
@@ -229,41 +218,6 @@ struct CapturePreviewView: View {
     }
 
     @ViewBuilder
-    private var aiPopoverContent: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "sparkles")
-                    .foregroundColor(.yellow)
-                Text("AI Description")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                Spacer()
-                if let text = aiDescription {
-                    Button("Copy") {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(text, forType: .string)
-                        showAIPopover = false
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(.accentColor)
-                }
-            }
-            if let error = aiError {
-                Text(error)
-                    .font(Theme.fontSecondary)
-                    .foregroundColor(.red)
-            } else if let description = aiDescription {
-                Text(description)
-                    .font(Theme.fontSecondary)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(16)
-        .frame(width: 320)
-    }
-
-    @ViewBuilder
     private func captureActionButton(
         icon: String,
         label: String,
@@ -296,8 +250,8 @@ struct CapturePreviewView: View {
 
     // MARK: - Actions
 
-    private func runOCR() {
-        guard let url = storageManager.lastCaptureURL else { return }
+    private func runOCR(url sourceURL: URL? = nil) {
+        guard let url = sourceURL ?? storageManager.lastCaptureURL else { return }
         isExtracting = true
         extractedText = nil
         showOCRPopover = false
@@ -312,34 +266,11 @@ struct CapturePreviewView: View {
                     ClipboardRegisterManager.shared.setOCRText(text, forURL: url)
                 }
             } catch {
-                extractedText = ""
+                extractedText = error.localizedDescription
             }
             isExtracting = false
             showOCRPopover = true
         }
     }
 
-    private func runAIDescribe() {
-        guard let url = storageManager.lastCaptureURL else { return }
-        guard AIManager.shared.hasAPIKey else {
-            aiError = "No API key set. Open AI settings (⚙) to add your Anthropic key."
-            aiDescription = nil
-            showAIPopover = true
-            return
-        }
-        isDescribing = true
-        aiDescription = nil
-        aiError = nil
-        showAIPopover = false
-        Task {
-            do {
-                let description = try await AIManager.shared.describeImage(at: url)
-                aiDescription = description
-            } catch {
-                aiError = error.localizedDescription
-            }
-            isDescribing = false
-            showAIPopover = true
-        }
-    }
 }

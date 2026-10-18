@@ -126,7 +126,7 @@ struct RecordStart: AsyncParsableCommand {
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd-HHmmss"
         let ts = fmt.string(from: Date())
-        return dir.appendingPathComponent("glasscap-\(ts).mov")
+        return dir.appendingPathComponent("glasscap-\(ts)-\(UUID().uuidString.prefix(8)).mov")
     }
 }
 
@@ -271,22 +271,25 @@ struct RecordDaemon: AsyncParsableCommand {
               let x = Int(parts[0]), let y = Int(parts[1]),
               let w = Int(parts[2]), let h = Int(parts[3]),
               w > 0, h > 0 else {
-            return CGRect(origin: .zero, size: screen.frame.size)
+            JSONOutput.failure("Invalid region. Expected x,y,w,h with positive dimensions.")
         }
         return CGRect(x: x, y: y, width: w, height: h)
     }
 
     private func findDisplay(for screen: NSScreen, in displays: [SCDisplay]) -> SCDisplay? {
         guard let num = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
-            return displays.first
+            return nil
         }
-        return displays.first(where: { $0.displayID == num.uint32Value }) ?? displays.first
+        return displays.first(where: { $0.displayID == num.uint32Value })
     }
 
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
         let displayBounds = CGRect(origin: .zero, size: display.frame.size)
-        let clipped = region.intersection(displayBounds)
-        return (clipped.isNull || clipped.width <= 0 || clipped.height <= 0) ? displayBounds : clipped
+        guard region.origin.x.isFinite, region.origin.y.isFinite,
+              region.width >= 1, region.height >= 1, displayBounds.contains(region) else {
+            JSONOutput.failure("Capture region is outside the selected display. No capture was made.")
+        }
+        return region
     }
 }
 

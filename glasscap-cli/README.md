@@ -4,7 +4,7 @@ A standalone Swift command-line tool that exposes GlassCap's screenshot and scre
 
 ## Requirements
 
-- macOS 12.3+
+- macOS 14.0+
 - Screen Recording permission granted to the terminal in System Settings > Privacy & Security > Screen Recording
 
 ## Installation
@@ -86,3 +86,9 @@ All errors exit with code 1 and print a JSON error object:
 - Recording state is persisted to `~/.glasscap-cli-state.json`; the background daemon exits automatically on `record stop`
 - Default screenshot path: `~/Pictures/GlassCap/glasscap-<timestamp>.png`
 - Default recording path: `~/Movies/GlassCap/glasscap-<timestamp>.mov`
+
+### Safe screenshot automation
+
+Screenshots refuse to overwrite an existing `--output` file. Automatic filenames include a random suffix. A missing display, zero-sized region, or region outside the selected display fails instead of capturing unexpected content. Use `--region=-10,0,100,100` when testing negative coordinates so the argument parser treats the value as a single argument.
+
+Capture failures are returned as JSON with exit code 1. Invalid command-line syntax is reported by Swift ArgumentParser on stderr.

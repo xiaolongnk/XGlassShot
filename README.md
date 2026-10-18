@@ -21,13 +21,13 @@
 
 - `⌘ ⇧ 1`: **Record Region** (Triggers area selection for video recording)
 - `⌘ ⇧ 2`: **Capture Screenshot** (Triggers area selection for instant image capture)
-- `⌘ ⇧ P`: **Change Path** (Quickly select a new default save directory)
+- `⌘ ⇧ Q`: **Toggle Quality** (Switch between 1x and 2x capture)
 - `⌘ ⇧ L`: **Set Filename Suffix** (Quickly focus the filename suffix input)
 
 ## 🛠️ Technical Requirements
 
-- **macOS**: 12.3 or later (ScreenCaptureKit support required)
-- **Xcode**: 14.0+
+- **macOS**: 14.6 or later
+- **Xcode**: 26.2 or later
 - **Developer Resource**: Requires Screen Recording permissions in System Settings.
 
 ## 📁 Project Structure
@@ -55,3 +55,23 @@ GlassCap/
 - **Activation Fix**: The app now automatically gains focus when triggered via shortcut, allowing immediate interaction without an extra click.
 - **Multi-Monitor Accuracy**: Robust display identification enables precise capture on secondary monitors, even with mixed resolutions or non-standard orientations.
 - **Optimistic Silent Save**: Faster, quieter saving logic that works reliably within the macOS sandbox environment.
+
+## Reliability baseline (Build 14)
+
+- Cloud AI description and API-key settings have been removed. Local Vision OCR stays on-device. The app clears the legacy `anthropicAPIKey` preference at launch and no longer has a network-client entitlement.
+- Selection, capture, recording, and finalization are serialized. Cancelling a selection clears its action; follow-up OCR/beautification is bound to the actual capture URL.
+- Automatic captures use collision-resistant names and never overwrite existing files. Explicit replacements through the save panel are staged before replacing the destination.
+- A missing display or invalid region produces an error; it never falls back to another display or the full screen.
+- Recordings are written under Application Support/GlassCap/Recovery inside the sandbox. Cancelling or failing a save retains the source. Use **Recover Recordings…** in the menu bar to find it. Successfully saved recovery copies are removed.
+- Capture and recording failures are shown to the user. The main Record button becomes Stop Recording while recording.
+
+### Verify and build locally
+
+```bash
+swift test
+bash script/build-local.sh /absolute/path/to/build-directory
+```
+
+The local build script embeds the source revision, marks dirty sources, verifies the code signature, and prints the generated app path. It does not install or publish the app. The application header shows the version/build and its tooltip shows the source revision.
+
+External tools and AI agents can use the existing `glasscap-cli` JSON screenshot interface. The GUI does not call a model service. See [glasscap-cli/README.md](glasscap-cli/README.md).

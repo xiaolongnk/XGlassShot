@@ -42,10 +42,6 @@ class StatusBarManager: NSObject, NSMenuDelegate {
         copyTextItem.target = self
         menu.addItem(copyTextItem)
 
-        let describeItem = NSMenuItem(title: "Capture → Describe", action: #selector(captureAndDescribe), keyEquivalent: "")
-        describeItem.target = self
-        menu.addItem(describeItem)
-
         let beautifyItem = NSMenuItem(title: "Capture → Beautify", action: #selector(captureAndBeautify), keyEquivalent: "")
         beautifyItem.target = self
         menu.addItem(beautifyItem)
@@ -62,6 +58,11 @@ class StatusBarManager: NSObject, NSMenuDelegate {
         menu.addItem(recentItem)
         recentCapturesMenuItem = recentItem
 
+        menu.addItem(NSMenuItem.separator())
+
+        let recoveryItem = NSMenuItem(title: "Recover Recordings…".localized, action: #selector(showRecovery), keyEquivalent: "")
+        recoveryItem.target = self
+        menu.addItem(recoveryItem)
         menu.addItem(NSMenuItem.separator())
 
         let quitItem = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q")
@@ -139,12 +140,6 @@ class StatusBarManager: NSObject, NSMenuDelegate {
         }
     }
 
-    @objc private func captureAndDescribe() {
-        Task { @MainActor in
-            OverlayManager.shared.showScreenshotOverlay(postAction: .describe)
-        }
-    }
-
     @objc private func captureAndBeautify() {
         Task { @MainActor in
             OverlayManager.shared.showScreenshotOverlay(postAction: .beautify)
@@ -154,6 +149,15 @@ class StatusBarManager: NSObject, NSMenuDelegate {
     @objc private func captureScreenshot() {
         Task { @MainActor in
             OverlayManager.shared.showScreenshotOverlay()
+        }
+    }
+
+    @objc private func showRecovery() {
+        do { NSWorkspace.shared.open(try StorageManager.shared.recoveryDirectory()) }
+        catch {
+            let alert = NSAlert(error: error)
+            NSApp.activate(ignoringOtherApps: true)
+            alert.runModal()
         }
     }
 

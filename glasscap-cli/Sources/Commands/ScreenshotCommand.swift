@@ -23,6 +23,11 @@ struct ScreenshotCommand: AsyncParsableCommand {
     var output: String?
 
     func run() async throws {
+        do { try await capture() }
+        catch { JSONOutput.failure(error.localizedDescription) }
+    }
+
+    private func capture() async throws {
         PermissionCheck.requireScreenRecording()
 
         let nsScreens = NSScreen.screens
@@ -76,7 +81,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
         }
 
         // Write to disk
-        try pngData.write(to: outputURL)
+        try pngData.write(to: outputURL, options: .withoutOverwriting)
 
         JSONOutput.success(ScreenshotResponse(
             path: outputURL.path,
@@ -98,11 +103,10 @@ struct ScreenshotCommand: AsyncParsableCommand {
         let screenSize = screen.frame.size
         let rect = CGRect(x: x, y: y, width: w, height: h)
         let screenBounds = CGRect(origin: .zero, size: screenSize)
-        let clipped = rect.intersection(screenBounds)
-        guard !clipped.isNull, clipped.width > 0, clipped.height > 0 else {
+        guard screenBounds.contains(rect), rect.width > 0, rect.height > 0 else {
             JSONOutput.failure("Region \(str) does not intersect screen bounds (\(Int(screenSize.width))x\(Int(screenSize.height))).")
         }
-        return clipped
+        return rect
     }
 
     private func resolveOutputPath(_ path: String?, ext: String) throws -> URL {
@@ -113,7 +117,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             .appendingPathComponent("Pictures/GlassCap")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let ts = timestamp()
-        return dir.appendingPathComponent("glasscap-\(ts).\(ext)")
+        return dir.appendingPathComponent("glasscap-\(ts)-\(UUID().uuidString.prefix(8)).\(ext)")
     }
 
     private func timestamp() -> String {
@@ -124,15 +128,18 @@ struct ScreenshotCommand: AsyncParsableCommand {
 
     private func findDisplay(for screen: NSScreen, in displays: [SCDisplay]) -> SCDisplay? {
         guard let num = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
-            return displays.first
+            return nil
         }
         let id = num.uint32Value
-        return displays.first(where: { $0.displayID == id }) ?? displays.first
+        return displays.first(where: { $0.displayID == id })
     }
 
     private func convertToDisplayCoordinates(_ region: CGRect, screen: NSScreen, display: SCDisplay) -> CGRect {
         let displayBounds = CGRect(origin: .zero, size: display.frame.size)
-        let clipped = region.intersection(displayBounds)
-        return (clipped.isNull || clipped.width <= 0 || clipped.height <= 0) ? displayBounds : clipped
+        guard region.origin.x.isFinite, region.origin.y.isFinite,
+              region.width >= 1, region.height >= 1, displayBounds.contains(region) else {
+            JSONOutput.failure("Capture region is outside the selected display. No capture was made.")
+        }
+        return region
     }
 }

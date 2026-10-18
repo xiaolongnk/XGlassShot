@@ -73,15 +73,23 @@ struct CompactHeaderView: View {
     @ObservedObject private var storageManager = StorageManager.shared
     @ObservedObject private var shortcutsManager = ShortcutsManager.shared
 
+    private var appTitle: String {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info["CFBundleVersion"] as? String ?? "unknown"
+        return "GlassCap \(version) (\(build))"
+    }
+
     var body: some View {
         HStack {
             HStack(spacing: 6) {
                 Image(systemName: "camera.aperture")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(.secondary)
-                Text("GlassCap")
+                Text(appTitle)
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .foregroundStyle(.primary)
+                    .help("Source: " + (Bundle.main.infoDictionary?["GlassCapSourceRevision"] as? String ?? "unknown"))
             }
             Spacer()
             Button(action: { showSettings.toggle() }) {
@@ -107,10 +115,14 @@ struct CompactHeaderView: View {
 // MARK: - Zone 3: Capture Controls Row
 
 struct CaptureControlsRow: View {
+    @ObservedObject private var overlayManager = OverlayManager.shared
     var body: some View {
         HStack(spacing: 10) {
             // Record
-            Button(action: { OverlayManager.shared.showSelectionOverlay() }) {
+            Button(action: {
+                if overlayManager.isRecording { Task { await overlayManager.stopRecording() } }
+                else { overlayManager.showSelectionOverlay() }
+            }) {
                 HStack(spacing: 8) {
                     ZStack {
                         Circle().fill(Color.red.opacity(0.15)).frame(width: 28, height: 28)
@@ -119,7 +131,7 @@ struct CaptureControlsRow: View {
                             .foregroundStyle(.red)
                     }
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Record")
+                        Text(overlayManager.isRecording ? "Stop Recording".localized : "Record".localized)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                         Text("⌘⇧1")
                             .font(.system(size: 10, weight: .medium))
@@ -133,6 +145,7 @@ struct CaptureControlsRow: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
+            .disabled(overlayManager.isBusy && !overlayManager.isRecording)
 
             // Capture
             Button(action: { OverlayManager.shared.showScreenshotOverlay() }) {
@@ -158,6 +171,7 @@ struct CaptureControlsRow: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 0.5))
             }
             .buttonStyle(.plain)
+            .disabled(overlayManager.isBusy)
         }
     }
 }

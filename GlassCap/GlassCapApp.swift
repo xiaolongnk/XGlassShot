@@ -12,6 +12,7 @@ struct GlassCapApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
+        LegacySettings.removeCloudAIKey()
         // Initialize managers
         _ = LocalizationManager.shared
         _ = ShortcutsManager.shared
@@ -75,15 +76,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Request screen recording permission on launch.
-        // Use the live SCShareableContent check — CGPreflightScreenCaptureAccess()
-        // is cached per-process and can return false even when TCC has the grant.
-        Task {
-            _ = await PermissionManager.shared.requestScreenRecordingPermission()
-        }
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return false // Keep app running in background
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let manager = OverlayManager.shared
+        if manager.isShowingOverlay {
+            manager.cancelSelection()
+            return .terminateNow
+        }
+        if manager.isRecording {
+            Task { @MainActor in
+                await manager.stopRecording()
+                sender.reply(toApplicationShouldTerminate: true)
+            }
+            return .terminateLater
+        }
+        // Do not abandon a screenshot, startup, or file finalization midway.
+        if manager.isBusy {
+            NSSound.beep()
+            return .terminateCancel
+        }
+        return .terminateNow
     }
 }

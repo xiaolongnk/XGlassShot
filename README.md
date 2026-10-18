@@ -75,3 +75,17 @@ bash script/build-local.sh /absolute/path/to/build-directory
 The local build script embeds the source revision, marks dirty sources, verifies the code signature, and prints the generated app path. It does not install or publish the app. The application header shows the version/build and its tooltip shows the source revision.
 
 External tools and AI agents can use the existing `glasscap-cli` JSON screenshot interface. The GUI does not call a model service. See [glasscap-cli/README.md](glasscap-cli/README.md).
+
+## Compact capture workspace (Build 15)
+
+The main window opens at 480×440 points, with a bounded resize range and the preview taking the flexible space. Image previews are downsampled to at most 1200 pixels instead of enlarging 120×80 history thumbnails; the most recent file bookmark is restored before loading. Settings use a grouped sheet. Screenshot actions include a display menu: **Any display** or one named monitor.
+
+Selection ownership is derived from one display ID. Switching displays removes the previous screen's active selection; dragging past an edge is bounded to the selected screen. A screen-layout change cancels an in-progress selection. Capture flash feedback uses the selected display too.
+
+For a real two-display check, grant screen capture access to the terminal and run:
+
+```bash
+bash script/verify-displays.sh /absolute/path/to/evidence-directory
+```
+
+This compiles the production `ScreenRecorder` and `SelectionOverlay` sources with test-only file storage, checks 20 selection ownership switches, and compares standard and Retina captures against an independent ScreenCaptureKit reference for each connected display. The report includes display IDs, desktop origins, output dimensions, and pixel differences. It does not create or reposition UI windows. The main app is built separately with `script/build-local.sh`.

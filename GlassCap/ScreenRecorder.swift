@@ -157,7 +157,7 @@ final class ScreenRecorder: NSObject, SCStreamOutput, SCStreamDelegate {
         let destinationURL = try await StorageManager.shared.saveScreenshot(data: pngData, prefix: prefix)
 
         // Show visual flash feedback
-        StorageManager.shared.showVisualFlash()
+        StorageManager.shared.showVisualFlash(on: screen)
 
         return destinationURL
     }

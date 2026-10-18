@@ -5,8 +5,7 @@ import AppKit
 struct CapturePreviewView: View {
     @ObservedObject var storageManager: StorageManager
     @ObservedObject private var overlayManager = OverlayManager.shared
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var isHovered = false
+    @ObservedObject private var localization = LocalizationManager.shared
 
     // Action states
     @State private var isExtracting = false
@@ -15,150 +14,89 @@ struct CapturePreviewView: View {
     @State private var beautifulExportURL: URL?
     @State private var showOCRPopover = false
 
+    private var isImage: Bool {
+        guard let url = storageManager.lastCaptureURL else { return false }
+        return ["png", "jpg", "jpeg"].contains(url.pathExtension.lowercased())
+    }
+
     var body: some View {
-        VStack(spacing: 14) {
-            // Preview card
-            Button(action: { storageManager.revealLastCapture() }) {
-                ZStack {
-                    // Card surface — frosted material base
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                                .stroke(Theme.cardBorder(for: colorScheme), lineWidth: 1)
-                        )
-                    // Two-layer shadow applied via modifiers below
-
-                    if let thumbnail = storageManager.lastCaptureThumbnail {
-                        Image(nsImage: thumbnail)
+        VStack(spacing: 8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(nsColor: .controlBackgroundColor))
+                if let image = storageManager.lastCaptureThumbnail {
+                    GeometryReader { geometry in
+                        Image(nsImage: image)
                             .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .interpolation(.high)
+                            .scaledToFit()
+                            .frame(width: max(0, geometry.size.width - 16), height: max(0, geometry.size.height - 16))
                             .padding(8)
-                            .transition(
-                                .opacity.combined(with: .scale(scale: 0.97))
-                            )
-                    } else {
-                        // Empty state — centered icon + tagline
-                        VStack(spacing: 14) {
-                            ZStack {
-                                // Subtle gradient halo behind icon only
-                                Circle()
-                                    .fill(
-                                        RadialGradient(
-                                            colors: [Color.accentColor.opacity(0.12), .clear],
-                                            center: .center,
-                                            startRadius: 0,
-                                            endRadius: 56
-                                        )
-                                    )
-                                    .frame(width: 96, height: 96)
-
-                                Image(systemName: "camera.macro")
-                                    .font(.system(size: 38, weight: .light))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.accentColor.opacity(0.75),
-                                                Color.accentColor.opacity(0.45)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                            }
-
-                            VStack(spacing: 4) {
-                                Text("ready_to_capture".localized)
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                    .foregroundColor(Theme.textPrimary(for: colorScheme))
-
-                                Text("⌘⇧1  ·  ⌘⇧2")
-                                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                                    .foregroundColor(Theme.textCaption(for: colorScheme))
-                            }
-                        }
                     }
-
-                    // Hover overlay — reveal-in-Finder hint
-                    if isHovered && storageManager.lastCaptureThumbnail != nil {
-                        ZStack {
-                            Color.black.opacity(0.28)
-                                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-
-                            HStack(spacing: 7) {
-                                Image(systemName: "folder.fill")
-                                Text("reveal_file".localized)
-                            }
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(.ultraThinMaterial)
-                                    .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
-                            )
-                            .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 0.5))
-                        }
-                        .transition(.opacity)
+                    .accessibilityLabel("Last capture preview".localized)
+                } else if storageManager.isLoadingThumbnail {
+                    ProgressView().controlSize(.small)
+                } else {
+                    VStack(spacing: 10) {
+                        Image(systemName: storageManager.lastCaptureURL == nil ? "viewfinder" : "photo")
+                            .font(.system(size: 30, weight: .light))
+                            .foregroundStyle(.blue.opacity(0.8))
+                        Text(storageManager.lastCaptureURL == nil ? "Ready to capture".localized : "Preview unavailable".localized)
+                            .font(.system(size: 13, weight: .medium))
+                        Text("Choose an area on any display".localized)
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                 }
-                .frame(height: 190)
-                .frame(maxWidth: .infinity)
-                // Two-layer shadow: tight depth + large diffuse
-                .shadow(
-                    color: Theme.cardShadowDepth(for: colorScheme),
-                    radius: 6, x: 0, y: 3
-                )
-                .shadow(
-                    color: Theme.cardShadowElevation(for: colorScheme),
-                    radius: 24, x: 0, y: 12
-                )
-                .scaleEffect(isHovered ? 1.01 : 1.0)
-                .animation(Theme.springStandard, value: isHovered)
             }
-            .buttonStyle(PlainButtonStyle())
-            .onHover { isHovered = $0 }
-            .help("Click to reveal file in Finder")
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.08)))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
 
-            // Action buttons — only shown when there's a capture
-            if storageManager.lastCaptureURL != nil {
+            if let url = storageManager.lastCaptureURL {
                 HStack(spacing: 8) {
-                    // OCR button
-                    captureActionButton(
-                        icon: isExtracting ? "hourglass" : "text.viewfinder",
-                        label: isExtracting ? "Extracting…" : "Copy Text",
-                        color: .purple,
-                        disabled: isExtracting
-                    ) {
-                        runOCR()
-                    }
-                    .popover(isPresented: $showOCRPopover, arrowEdge: .top) {
-                        ocrPopoverContent
-                    }
-
-                    // Beautiful export button
-                    captureActionButton(
-                        icon: "paintbrush.pointed.fill",
-                        label: "Beautify",
-                        color: .accentColor,
-                        disabled: false
-                    ) {
-                        beautifulExportURL = storageManager.lastCaptureURL
-                        showBeautifulExport = true
-                    }
+                    Text(url.lastPathComponent)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1).truncationMode(.middle)
+                    Spacer(minLength: 0)
+                    Text(url.pathExtension.uppercased())
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.tertiary)
                 }
-                .transition(
-                    .opacity.combined(with: .move(edge: .bottom))
-                )
-                .animation(Theme.springStandard, value: storageManager.lastCaptureURL != nil)
-                .sheet(isPresented: $showBeautifulExport) {
-                    if let url = beautifulExportURL,
-                       let image = NSImage(contentsOf: url) {
-                        BeautifulExportView(sourceImage: image)
+                HStack(spacing: 14) {
+                    Button {
+                        if isImage, let image = NSImage(contentsOf: url) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.writeObjects([image])
+                        } else { NSWorkspace.shared.open(url) }
+                    } label: {
+                        Label(isImage ? "Copy image".localized : "Open recording".localized, systemImage: isImage ? "doc.on.doc" : "play.rectangle")
                     }
+                    if isImage {
+                        Button { runOCR() } label: {
+                            Label(isExtracting ? "Extracting…".localized : "Copy Text".localized, systemImage: "text.viewfinder")
+                        }
+                        .disabled(isExtracting)
+                        .popover(isPresented: $showOCRPopover, arrowEdge: .bottom) { ocrPopoverContent }
+                        Button {
+                            beautifulExportURL = url
+                            showBeautifulExport = true
+                        } label: { Label("Beautify".localized, systemImage: "paintbrush") }
+                    }
+                    Spacer(minLength: 0)
+                    Button { storageManager.revealLastCapture() } label: { Image(systemName: "folder") }
+                        .help("reveal_file".localized)
+                        .accessibilityLabel("reveal_file".localized)
                 }
+                .font(.system(size: 11))
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .frame(height: 24)
+            }
+        }
+        .sheet(isPresented: $showBeautifulExport) {
+            if let url = beautifulExportURL, let image = NSImage(contentsOf: url) {
+                BeautifulExportView(sourceImage: image)
             }
         }
         .onChange(of: overlayManager.pendingPostAction) { _, _ in consumePostAction() }
@@ -217,37 +155,6 @@ struct CapturePreviewView: View {
         .frame(width: 320)
     }
 
-    @ViewBuilder
-    private func captureActionButton(
-        icon: String,
-        label: String,
-        color: Color,
-        disabled: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                Text(label)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-            }
-            .foregroundColor(disabled ? .secondary : color)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(color.opacity(disabled ? 0.05 : 0.10))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(color.opacity(disabled ? 0.08 : 0.22), lineWidth: 1)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .disabled(disabled)
-    }
-
     // MARK: - Actions
 
     private func runOCR(url sourceURL: URL? = nil) {
@@ -258,6 +165,7 @@ struct CapturePreviewView: View {
         Task {
             do {
                 let text = try await OCRManager.shared.extractText(from: url)
+                guard storageManager.lastCaptureURL == url else { isExtracting = false; return }
                 extractedText = text
                 if !text.isEmpty {
                     NSPasteboard.general.clearContents()

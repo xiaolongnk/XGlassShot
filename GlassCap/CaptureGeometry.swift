@@ -2,6 +2,14 @@ import Foundation
 import CoreGraphics
 
 enum CaptureGeometry {
+    static func selection(start: CGPoint, end: CGPoint, bounds: CGRect) -> CGRect {
+        guard [start.x, start.y, end.x, end.y].allSatisfy({ $0.isFinite }) else { return .zero }
+        let rect = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                          width: abs(end.x - start.x), height: abs(end.y - start.y))
+        let clipped = rect.intersection(bounds)
+        return clipped.isNull ? .zero : clipped
+    }
+
     static func displayID(expected: UInt32?, available: [UInt32]) throws -> UInt32 {
         guard let expected, available.contains(expected) else { throw CaptureGeometryError.displayUnavailable }
         return expected

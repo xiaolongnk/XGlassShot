@@ -1,8 +1,43 @@
 import XCTest
+import ImageIO
+import CoreGraphics
 @preconcurrency import AVFoundation
 @testable import CaptureCore
 
 final class CaptureReliabilityTests: XCTestCase {
+    func testSelectionCannotEscapeItsOwnDisplayWhenDraggingAcrossAnEdge() throws {
+        let bounds = CGRect(x: 0, y: 0, width: 1920, height: 1080)
+        let selection = CaptureGeometry.selection(start: CGPoint(x: 1800, y: 900), end: CGPoint(x: 2400, y: 1200), bounds: bounds)
+        XCTAssertEqual(selection, CGRect(x: 1800, y: 900, width: 120, height: 180))
+        XCTAssertEqual(try CaptureGeometry.region(selection, in: bounds), selection)
+        XCTAssertEqual(CaptureGeometry.selection(start: CGPoint(x: -50, y: -50), end: CGPoint(x: -10, y: -10), bounds: bounds), .zero)
+    }
+
+    func testDisplayLocalRegionDoesNotDependOnDesktopOriginOrScale() throws {
+        let localRegion = CGRect(x: 100, y: 120, width: 300, height: 180)
+        for desktopFrame in [CGRect(x: -1920, y: 200, width: 1920, height: 1080),
+                             CGRect(x: 2304, y: -1080, width: 1920, height: 1080)] {
+            XCTAssertEqual(try CaptureGeometry.region(localRegion, in: CGRect(origin: .zero, size: desktopFrame.size)), localRegion)
+        }
+    }
+
+    func testPreviewKeepsRetinaDetailWithoutLoadingTheFullImage() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("large.png")
+        let context = try XCTUnwrap(CGContext(data: nil, width: 2400, height: 1200, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.setFillColor(CGColor(red: 0.1, green: 0.4, blue: 0.9, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: 2400, height: 1200))
+        let image = try XCTUnwrap(context.makeImage())
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let thumbnail = try XCTUnwrap(CaptureThumbnail.image(at: url))
+        XCTAssertEqual(thumbnail.width, 1200)
+        XCTAssertEqual(thumbnail.height, 600)
+    }
+
     func testLegacyKeyIsRemovedWithoutChangingCaptureSettings() throws {
         let suite = "GlassCapTests-\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

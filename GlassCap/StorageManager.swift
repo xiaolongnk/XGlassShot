@@ -31,6 +31,8 @@ final class StorageManager: ObservableObject {
 
     @Published var lastCaptureURL: URL?
     @Published var lastCaptureThumbnail: NSImage?
+    @Published private(set) var isLoadingThumbnail = false
+    private var lastCaptureAccess: URL?
 
     // MARK: - Computed Properties
 
@@ -56,13 +58,17 @@ final class StorageManager: ObservableObject {
     // MARK: - Initialization
 
     private init() {
-        // Load last capture URL
+        // Restore directory/file grants before attempting to read a preview.
+        _ = resolveBookmarkedDirectory()
+        if let bookmark = UserDefaults.standard.data(forKey: "lastCaptureBookmark") {
+            var stale = false
+            if let url = try? URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &stale),
+               url.startAccessingSecurityScopedResource() { lastCaptureAccess = url }
+        }
         if !lastCaptureURLString.isEmpty {
-            let url = URL(fileURLWithPath: lastCaptureURLString)
-            if FileManager.default.fileExists(atPath: url.path) {
-                lastCaptureURL = url
-                loadThumbnail(for: url)
-            }
+            let url = lastCaptureAccess ?? URL(fileURLWithPath: lastCaptureURLString)
+            lastCaptureURL = url
+            loadThumbnail(for: url)
         }
     }
 
@@ -343,16 +349,16 @@ final class StorageManager: ObservableObject {
 
     private var flashWindow: NSWindow?
     
-    func showVisualFlash() {
+    func showVisualFlash(on selectedScreen: NSScreen? = nil) {
         // Ensure we're on the main thread
         guard Thread.isMainThread else {
             DispatchQueue.main.async { [weak self] in
-                self?.showVisualFlash()
+                self?.showVisualFlash(on: selectedScreen)
             }
             return
         }
 
-        guard let screen = NSScreen.main else { return }
+        guard let screen = selectedScreen ?? NSScreen.main else { return }
 
         // Create window if needed
         if flashWindow == nil {
@@ -391,6 +397,11 @@ final class StorageManager: ObservableObject {
     // MARK: - Recent Capture
 
     private func updateLastCapture(url: URL) {
+        lastCaptureAccess?.stopAccessingSecurityScopedResource()
+        lastCaptureAccess = nil
+        if let bookmark = try? url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil) {
+            UserDefaults.standard.set(bookmark, forKey: "lastCaptureBookmark")
+        } else { UserDefaults.standard.removeObject(forKey: "lastCaptureBookmark") }
         lastCaptureURL = url
         lastCaptureURLString = url.path
         loadThumbnail(for: url)
@@ -414,65 +425,25 @@ final class StorageManager: ObservableObject {
     }
 
     private func loadThumbnail(for url: URL) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let thumbnail: NSImage?
-
-            if url.pathExtension.lowercased() == "png" || url.pathExtension.lowercased() == "jpg" {
-                // Load image thumbnail
-                if let image = NSImage(contentsOf: url) {
-                    thumbnail = image.resized(to: NSSize(width: 120, height: 80))
-                } else {
-                    thumbnail = nil
-                }
-            } else {
-                // Generate video thumbnail
-                thumbnail = self?.generateVideoThumbnail(for: url)
-            }
-
-            DispatchQueue.main.async {
-                self?.lastCaptureThumbnail = thumbnail
-            }
-        }
-    }
-
-    nonisolated private func generateVideoThumbnail(for url: URL) -> NSImage? {
-        let asset = AVURLAsset(url: url)
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.maximumSize = CGSize(width: 240, height: 160)
-
-        do {
-            if #available(macOS 13.0, *) {
-                return try? runSynchronously {
-                    let (cgImage, _) = try await generator.image(at: .zero)
-                    return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-                }
-            } else {
-                let cgImage = try generator.copyCGImage(at: .zero, actualTime: nil)
-                return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-            }
-        } catch {
-            print("Failed to generate video thumbnail: \(error)")
-        }
-        return nil
-    }
-
-    nonisolated private func runSynchronously<T>(_ operation: @escaping () async throws -> T) throws -> T {
-        var result: Result<T, Error>?
-        let semaphore = DispatchSemaphore(value: 0)
-        
+        isLoadingThumbnail = true
+        lastCaptureThumbnail = nil
         Task {
-            do {
-                let value = try await operation()
-                result = .success(value)
-            } catch {
-                result = .failure(error)
+            let thumbnail: NSImage?
+            if ["png", "jpg", "jpeg"].contains(url.pathExtension.lowercased()) {
+                let image = await Task.detached(priority: .userInitiated) { CaptureThumbnail.image(at: url) }.value
+                thumbnail = image.map { NSImage(cgImage: $0, size: NSSize(width: $0.width, height: $0.height)) }
+            } else {
+                let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+                generator.appliesPreferredTrackTransform = true
+                generator.maximumSize = CGSize(width: 1200, height: 900)
+                if let result = try? await generator.image(at: .zero) {
+                    thumbnail = NSImage(cgImage: result.image, size: NSSize(width: result.image.width, height: result.image.height))
+                } else { thumbnail = nil }
             }
-            semaphore.signal()
+            guard lastCaptureURL == url else { return }
+            lastCaptureThumbnail = thumbnail
+            isLoadingThumbnail = false
         }
-        
-        semaphore.wait()
-        return try result!.get()
     }
 
     func revealLastCapture() {

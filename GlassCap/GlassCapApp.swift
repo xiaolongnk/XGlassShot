@@ -19,14 +19,12 @@ struct GlassCapApp: App {
         _ = PermissionManager.shared
         _ = StorageManager.shared
 
-        // Resolve bookmarked save directory for sandbox access
-        _ = StorageManager.shared.resolveBookmarkedDirectory()
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 520, minHeight: 440)
+                .frame(minWidth: 440, minHeight: 400)
                 .onAppear {
                     // Force activation when the content view appears
                     DispatchQueue.main.async {
@@ -36,7 +34,7 @@ struct GlassCapApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
-        .defaultSize(width: 520, height: 440)
+        .defaultSize(width: 480, height: 440)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }

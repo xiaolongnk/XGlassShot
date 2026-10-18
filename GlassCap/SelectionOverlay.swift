@@ -11,20 +11,32 @@ class SelectionOverlay: ObservableObject {
     @Published var isActive: Bool = false
 
     private var windows: [NSWindow] = []
-    private(set) var currentScreen: NSScreen?
+    @Published private(set) var currentScreen: NSScreen?
+    private var screenObserver: NSObjectProtocol?
     
     // Annotations (relative to selectionRect)
     @Published var annotations: [CGRect] = []
 
     private var eventMonitor: Any?
 
-    func show() {
+    func show(on selectedScreen: NSScreen? = nil) {
         guard !isActive else { return }
         isActive = true
         setupInputMonitoring()
+        NSApp.activate(ignoringOtherApps: true)
 
-        // Create overlay windows on ALL screens
-        for screen in NSScreen.screens {
+        let screens = NSScreen.screens.filter { screen in
+            selectedScreen == nil || (selectedScreen?.displayIdentifier != 0 && screen.displayIdentifier == selectedScreen?.displayIdentifier)
+        }
+        guard !screens.isEmpty else {
+            Task { await onCancel?() }
+            return
+        }
+        screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in await self?.onCancel?() }
+        }
+        // Restrict explicit display choices, otherwise allow selection on any display.
+        for screen in screens {
             let overlayWindow = SelectionWindow(
                 contentRect: screen.frame,
                 styleMask: [.borderless, .nonactivatingPanel],
@@ -32,6 +44,7 @@ class SelectionOverlay: ObservableObject {
                 defer: false
             )
 
+            overlayWindow.title = "Select on " + screen.localizedName
             overlayWindow.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow)))
             overlayWindow.backgroundColor = .clear
             overlayWindow.isOpaque = false
@@ -55,12 +68,13 @@ class SelectionOverlay: ObservableObject {
 
         // Make the window under the cursor key so the first click starts selection on that monitor
         let mouseLocation = NSEvent.mouseLocation
-        if let screenUnderMouse = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }),
-           let idx = NSScreen.screens.firstIndex(where: { $0 === screenUnderMouse }),
+        if let screenUnderMouse = screens.first(where: { $0.frame.contains(mouseLocation) }),
+           let idx = screens.firstIndex(where: { $0 === screenUnderMouse }),
            idx < windows.count {
-            windows[idx].makeKeyAndOrderFront(nil)
+            let keyWindow = windows[idx]
+            DispatchQueue.main.async { keyWindow.makeKeyAndOrderFront(nil) }
         } else if let first = windows.first {
-            first.makeKeyAndOrderFront(nil)
+            DispatchQueue.main.async { first.makeKeyAndOrderFront(nil) }
         }
     }
 
@@ -75,6 +89,8 @@ class SelectionOverlay: ObservableObject {
             window.contentView = nil
         }
         windows.removeAll()
+        if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
+        screenObserver = nil
         isActive = false
         selectionRect = .zero
         annotations = []
@@ -137,6 +153,11 @@ class SelectionOverlay: ObservableObject {
         }
     }
 
+    func isSelectedScreen(_ screen: NSScreen) -> Bool {
+        guard let currentScreen else { return false }
+        return currentScreen.displayIdentifier != 0 && currentScreen.displayIdentifier == screen.displayIdentifier
+    }
+
     func setCurrentScreen(_ screen: NSScreen) {
         currentScreen = screen
     }
@@ -156,7 +177,9 @@ struct SelectionOverlayView: View {
     @State private var currentPoint: CGPoint = .zero
     @State private var isDragging: Bool = false
     @State private var isDrawingAnnotation: Bool = false
-    @State private var isThisScreenActive: Bool = false
+    private var isThisScreenActive: Bool {
+        overlay.isSelectedScreen(screen)
+    }
 
     enum ResizeEdge {
         case none, top, bottom, left, right
@@ -165,6 +188,20 @@ struct SelectionOverlayView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
+                VStack {
+                    HStack {
+                        Label(screen.localizedName, systemImage: "display")
+                        Spacer()
+                        Text("Drag to select · Return to capture · Esc to cancel".localized)
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .padding(12)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                    .padding(20)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+                .zIndex(1)
                 // Dimmed background
                 Color.black.opacity(0.3)
                     .ignoresSafeArea()
@@ -218,7 +255,6 @@ struct SelectionOverlayView: View {
                                 isResizing = true
                                 resizeEdge = edge
                                 initialRect = overlay.selectionRect
-                                isThisScreenActive = true
                                 return
                             }
                             
@@ -234,7 +270,6 @@ struct SelectionOverlayView: View {
                             } else {
                                 // 3. Start new selection (Outside)
                                 isDragging = true
-                                isThisScreenActive = true
                                 overlay.setCurrentScreen(screen)
                                 overlay.selectionRect = .zero // Reset selection
                                 overlay.annotations = []      // Reset annotations
@@ -328,22 +363,10 @@ struct SelectionOverlayView: View {
     }
 
     private func updateSelectionRect() {
-        let minX = min(startPoint.x, currentPoint.x)
-        let minY = min(startPoint.y, currentPoint.y)
-        let maxX = max(startPoint.x, currentPoint.x)
-        let maxY = max(startPoint.y, currentPoint.y)
-
-        overlay.selectionRect = CGRect(
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-        )
+        overlay.selectionRect = CaptureGeometry.selection(start: startPoint, end: currentPoint,
+            bounds: CGRect(origin: .zero, size: screen.frame.size))
     }
 
-
-
-    
     private func calculateAnnotationRect(start: CGPoint, end: CGPoint) -> CGRect {
         let minX = min(start.x, end.x)
         let minY = min(start.y, end.y)

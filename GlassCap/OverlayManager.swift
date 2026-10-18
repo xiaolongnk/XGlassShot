@@ -33,11 +33,11 @@ final class OverlayManager: ObservableObject {
         if selectionOverlay == nil { selectionOverlay = SelectionOverlay() }
     }
     func showSelectionOverlay() { beginSelection(.recording) }
-    func showScreenshotOverlay(postAction: CapturePostAction = .none) {
-        beginSelection(.screenshot(postAction))
+    func showScreenshotOverlay(on screen: NSScreen? = nil, postAction: CapturePostAction = .none) {
+        beginSelection(.screenshot(postAction), on: screen)
     }
 
-    private func beginSelection(_ intent: CaptureIntent) {
+    private func beginSelection(_ intent: CaptureIntent, on screen: NSScreen? = nil) {
         guard NSApp.modalWindow == nil, session.begin(intent) else { return }
         recordingInterruption = nil
         Task { @MainActor in
@@ -58,7 +58,7 @@ final class OverlayManager: ObservableObject {
                 await self?.captureConfirmed(rect: rect, annotations: annotations, screen: screen)
             }
             overlay.onCancel = { [weak self] in self?.cancelSelection() }
-            overlay.show()
+            overlay.show(on: screen)
         }
     }
 

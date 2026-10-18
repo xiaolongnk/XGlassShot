@@ -211,6 +211,7 @@ struct MouseTrackingViewWrapper: NSViewRepresentable {
 }
 
 class MouseTrackingNSView: NSView {
+    override var isFlipped: Bool { true }
     var onMoved: ((CGPoint) -> Void)?
 
     override func updateTrackingAreas() {

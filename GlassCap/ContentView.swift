@@ -1,251 +1,124 @@
-//
-//  ContentView.swift
-//  GlassCap
-//
-//  Created by rex on 2026/1/11.
-//
-
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
-    @ObservedObject private var overlayManager = OverlayManager.shared
-    @ObservedObject private var storageManager = StorageManager.shared
-    @ObservedObject private var localizationManager = LocalizationManager.shared
-
-    var body: some View {
-        ZStack {
-            // Dynamic Background
-            ZStack {
-                Theme.background(for: colorScheme).ignoresSafeArea()
-
-                // Ambient Gradients
-                Theme.ambientGradientTop(for: colorScheme).ignoresSafeArea()
-                Theme.ambientGradientBottom(for: colorScheme).ignoresSafeArea()
-            }
-
-            // Frosted glass overlay
-            if reduceTransparency {
-                Theme.background(for: colorScheme).ignoresSafeArea()
-                    .onTapGesture {
-                        NSApp.keyWindow?.makeFirstResponder(nil)
-                    }
-            } else {
-                VisualEffectBackground(colorScheme: colorScheme)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        NSApp.keyWindow?.makeFirstResponder(nil)
-                    }
-            }
-
-            VStack(spacing: 0) {
-                // Zone 1: Compact header
-                CompactHeaderView()
-
-                // Zone 2: Preview + action buttons (natural height, top-anchored)
-                CapturePreviewView(storageManager: storageManager)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 8)
-
-                Spacer(minLength: 0)
-
-                // Zone 3: Capture action buttons (Record + Capture side-by-side)
-                CaptureControlsRow()
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-
-                // Zone 4: Thin status bar
-                CompactStatusBar(storageManager: storageManager, shortcutsManager: shortcutsManager)
-                    .frame(height: 36)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-// MARK: - Zone 1: Compact Header
-
-struct CompactHeaderView: View {
+    @ObservedObject private var storage = StorageManager.shared
+    @ObservedObject private var shortcuts = ShortcutsManager.shared
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var showSettings = false
-    @ObservedObject private var storageManager = StorageManager.shared
-    @ObservedObject private var shortcutsManager = ShortcutsManager.shared
-
-    private var appTitle: String {
-        let info = Bundle.main.infoDictionary ?? [:]
-        let version = info["CFBundleShortVersionString"] as? String ?? "1.0"
-        let build = info["CFBundleVersion"] as? String ?? "unknown"
-        return "GlassCap \(version) (\(build))"
-    }
 
     var body: some View {
-        HStack {
-            HStack(spacing: 6) {
-                Image(systemName: "camera.aperture")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Text(appTitle)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .help("Source: " + (Bundle.main.infoDictionary?["GlassCapSourceRevision"] as? String ?? "unknown"))
+        VStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "viewfinder")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.blue)
+                Text("GlassCap")
+                    .font(.system(size: 15, weight: .semibold))
+                Spacer()
+                Button { showSettings = true } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Settings".localized)
+                .accessibilityLabel("Settings".localized)
             }
-            Spacer()
-            Button(action: { showSettings.toggle() }) {
-                Image(systemName: "gear")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 28, height: 28)
-                    .background(.ultraThinMaterial, in: Circle())
+
+            CapturePreviewView(storageManager: storage)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .layoutPriority(1)
+
+            CaptureControlsRow()
+
+            HStack(spacing: 8) {
+                Button { Task { await storage.selectSaveDirectory() } } label: {
+                    Label(storage.defaultSaveDirectory.lastPathComponent, systemImage: "folder")
+                        .lineLimit(1)
+                }
+                .buttonStyle(.plain)
+                .help(storage.defaultSaveDirectory.path)
+                Spacer(minLength: 8)
+                Text(shortcuts.captureQuality == .high ? "Retina · 2×" : "Standard · 1×")
+                Text("·")
+                Text("v" + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"))
+                    .help("Build " + (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") + " · " + (Bundle.main.infoDictionary?["GlassCapSourceRevision"] as? String ?? ""))
             }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showSettings, arrowEdge: .top) {
-                SettingsDock(storageManager: storageManager, shortcutsManager: shortcutsManager)
-                    .frame(width: 480)
-                    .padding(.vertical, 12)
-            }
+            .font(.system(size: 10))
+            .foregroundStyle(.secondary)
+            .frame(height: 18)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .padding(14)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .background(CompactWindowSizing())
+        .sheet(isPresented: $showSettings) {
+            SettingsDock(storageManager: storage, shortcutsManager: shortcuts)
+        }
     }
 }
-
-// MARK: - Zone 3: Capture Controls Row
 
 struct CaptureControlsRow: View {
-    @ObservedObject private var overlayManager = OverlayManager.shared
-    var body: some View {
-        HStack(spacing: 10) {
-            // Record
-            Button(action: {
-                if overlayManager.isRecording { Task { await overlayManager.stopRecording() } }
-                else { overlayManager.showSelectionOverlay() }
-            }) {
-                HStack(spacing: 8) {
-                    ZStack {
-                        Circle().fill(Color.red.opacity(0.15)).frame(width: 28, height: 28)
-                        Image(systemName: "record.circle.fill")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.red)
-                    }
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(overlayManager.isRecording ? "Stop Recording".localized : "Record".localized)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        Text("⌘⇧1")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 44)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 0.5))
-            }
-            .buttonStyle(.plain)
-            .disabled(overlayManager.isBusy && !overlayManager.isRecording)
-
-            // Capture
-            Button(action: { OverlayManager.shared.showScreenshotOverlay() }) {
-                HStack(spacing: 8) {
-                    ZStack {
-                        Circle().fill(Color.cyan.opacity(0.15)).frame(width: 28, height: 28)
-                        Image(systemName: "camera.fill")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.cyan)
-                    }
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Capture")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        Text("⌘⇧2")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 12)
-                .frame(height: 44)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(.separator, lineWidth: 0.5))
-            }
-            .buttonStyle(.plain)
-            .disabled(overlayManager.isBusy)
-        }
-    }
-}
-
-// MARK: - Zone 4: Compact Status Bar
-
-struct CompactStatusBar: View {
-    @ObservedObject var storageManager: StorageManager
-    @ObservedObject var shortcutsManager: ShortcutsManager
-    @State private var showSettingsPopover = false
-    @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var overlay = OverlayManager.shared
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Folder
-            statusChip(
-                icon: "folder.fill",
-                label: storageManager.defaultSaveDirectory.lastPathComponent,
-                color: .green
-            )
-            Divider().frame(height: 16)
-            // Prefix tag
-            statusChip(
-                icon: "tag.fill",
-                label: shortcutsManager.currentPrefix.isEmpty ? "—" : shortcutsManager.currentPrefix,
-                color: .purple
-            )
-            Divider().frame(height: 16)
-            // Quality
-            statusChip(
-                icon: "sparkles",
-                label: shortcutsManager.captureQuality.displayName,
-                color: .yellow
-            )
+        HStack(spacing: 8) {
+            HStack(spacing: 0) {
+                Button { overlay.showScreenshotOverlay() } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "viewfinder")
+                        Text("Screenshot".localized).fontWeight(.semibold)
+                        Spacer(minLength: 4)
+                        Text("⌘⇧2").font(.system(size: 10, design: .monospaced)).opacity(0.75)
+                    }
+                    .padding(.horizontal, 12)
+                    .frame(height: 40)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                Rectangle().fill(.white.opacity(0.25)).frame(width: 1, height: 18)
+                Menu {
+                    Button("Any display".localized) { overlay.showScreenshotOverlay() }
+                    Divider()
+                    ForEach(NSScreen.screens, id: \.displayIdentifier) { screen in
+                        Button(screen.localizedName) { overlay.showScreenshotOverlay(on: screen) }
+                    }
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
+                        .frame(width: 30, height: 40)
+                }
+                .menuIndicator(.hidden)
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help("Choose a display".localized)
+                .accessibilityLabel("Choose a display".localized)
+            }
+            .foregroundStyle(.white)
+            .background(.blue, in: RoundedRectangle(cornerRadius: 9))
+            .disabled(overlay.isBusy)
 
-            Spacer()
-
-            // Settings popover trigger
-            Button(action: { showSettingsPopover.toggle() }) {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
+            Button {
+                if overlay.isRecording { Task { await overlay.stopRecording() } }
+                else { overlay.showSelectionOverlay() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: overlay.isRecording ? "stop.fill" : "record.circle")
+                        .foregroundStyle(overlay.isRecording ? .red : .secondary)
+                    Text(overlay.isRecording ? "Stop Recording".localized : "Record".localized)
+                        .fontWeight(.medium)
+                }
+                .frame(width: 116, height: 40)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .popover(isPresented: $showSettingsPopover, arrowEdge: .bottom) {
-                SettingsDock(storageManager: storageManager, shortcutsManager: shortcutsManager)
-                    .frame(width: 480)
-                    .padding(.vertical, 12)
-            }
+            .background(Color.primary.opacity(0.045), in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Color.primary.opacity(0.08)))
+            .disabled(overlay.isBusy && !overlay.isRecording)
+            .help("⌘⇧1")
         }
-        .padding(.horizontal, 16)
-        .background(.bar)
-        .overlay(alignment: .top) {
-            Divider()
-        }
-    }
-
-    @ViewBuilder
-    private func statusChip(icon: String, label: String, color: Color) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 36)
+        .font(.system(size: 12))
     }
 }
-
-// MARK: - Extracted Components
-// CapturePreviewView, HeroActionButton, SettingsDock, VisualEffectBackground, DockToggle
-// have been moved to their own files.

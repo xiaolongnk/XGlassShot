@@ -10,7 +10,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
         abstract: "Capture a screenshot and save it to disk."
     )
 
-    @Option(name: .long, help: "Screen index (from `glasscap screens`). Defaults to primary screen.")
+    @Option(name: .long, help: "Screen index (from `xglassshot screens`). Defaults to primary screen.")
     var screen: Int = 0
 
     @Option(name: .long, help: "Capture region as x,y,w,h in integer points (top-left origin). Defaults to full screen.")
@@ -19,13 +19,13 @@ struct ScreenshotCommand: AsyncParsableCommand {
     @Option(name: .long, help: "Image quality: low or high. Defaults to high.")
     var quality: String = "high"
 
-    @Option(name: .long, help: "Output file path. Defaults to ~/Pictures/GlassCap/glasscap-<timestamp>.png.")
+    @Option(name: .long, help: "Output file path. Defaults to ~/Pictures/XGlassShot/xglassshot-<timestamp>.png.")
     var output: String?
 
     @Option(name: .long, help: "Destination directory for a unique automatic filename. Cannot be combined with --output.")
     var directory: String?
 
-    @Option(name: .long, help: "Automatic filename prefix; default: glasscap. Cannot be combined with --output.")
+    @Option(name: .long, help: "Automatic filename prefix; default: xglassshot. Cannot be combined with --output.")
     var prefix: String?
 
     func run() async throws {
@@ -43,7 +43,7 @@ struct ScreenshotCommand: AsyncParsableCommand {
             JSONOutput.failure("No screens found.")
         }
         guard screen >= 0 && screen < nsScreens.count else {
-            JSONOutput.failure("Screen index \(screen) is out of range. Use `glasscap screens` to list available screens.")
+            JSONOutput.failure("Screen index \(screen) is out of range. Use `xglassshot screens` to list available screens.")
         }
         let nsScreen = nsScreens[screen]
 

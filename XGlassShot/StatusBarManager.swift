@@ -22,7 +22,7 @@ class StatusBarManager: NSObject, NSMenuDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "GlassCap")
+            button.image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "XGlassShot")
         }
         setupMenu()
     }

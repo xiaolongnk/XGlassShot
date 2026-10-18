@@ -23,9 +23,9 @@ platform :mac do
     output = ENV.fetch("GLASSCAP_RELEASE_DIR", File.join(project_root, "build", "store"))
     revision = sh("git -C #{project_root.shellescape} rev-parse --short=12 HEAD", log: false).strip
     UI.user_error!("Commit source changes before archiving") unless sh("git -C #{project_root.shellescape} status --porcelain", log: false).strip.empty?
-    build_app(project: File.join(project_root, "GlassCap.xcodeproj"), scheme: "GlassCap", clean: true,
-      archive_path: File.join(output, "GlassCap.xcarchive"), derived_data_path: File.join(output, "DerivedData"),
-      output_directory: output, output_name: "GlassCap", export_method: "app-store",
+    build_app(project: File.join(project_root, "XGlassShot.xcodeproj"), scheme: "XGlassShot", clean: true,
+      archive_path: File.join(output, "XGlassShot.xcarchive"), derived_data_path: File.join(output, "DerivedData"),
+      output_directory: output, output_name: "XGlassShot", export_method: "app-store",
       xcargs: "GLASSCAP_SOURCE_REVISION=#{revision}",
       export_options: { method: "app-store-connect", signingStyle: "manual", teamID: "UU76YYR83R",
         signingCertificate: "Apple Distribution", installerSigningCertificate: "3rd Party Mac Developer Installer",
@@ -36,7 +36,7 @@ platform :mac do
   lane :beta do
     build
     output = ENV.fetch("GLASSCAP_RELEASE_DIR", File.expand_path("../build/store", __dir__))
-    upload_to_testflight(pkg: File.join(output, "GlassCap.pkg"), app_identifier: "com.xiaolongou.glasscap",
+    upload_to_testflight(pkg: File.join(output, "XGlassShot.pkg"), app_identifier: "com.xiaolongou.glasscap",
       uses_non_exempt_encryption: false, skip_waiting_for_build_processing: true,
       changelog: File.read(File.expand_path("metadata/en-US/release_notes.txt", __dir__)))
   end

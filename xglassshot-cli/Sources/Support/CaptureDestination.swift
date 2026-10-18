@@ -12,10 +12,10 @@ enum CaptureDestination {
             return URL(fileURLWithPath: (output as NSString).expandingTildeInPath)
         }
         let base = directory.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath, isDirectory: true) }
-            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(recording ? "Movies/GlassCap" : "Pictures/GlassCap", isDirectory: true)
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(recording ? "Movies/XGlassShot" : "Pictures/XGlassShot", isDirectory: true)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         // Keep the filename safety policy consistent with CaptureFileStore in the GUI.
-        let safePrefix = String((prefix ?? "glasscap").filter { !$0.isNewline && !"/:\0".contains($0) }.prefix(60))
+        let safePrefix = String((prefix ?? "xglassshot").filter { !$0.isNewline && !"/:\0".contains($0) }.prefix(60))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")

@@ -1,4 +1,4 @@
-XGlassShot, built from the open-source GlassCap project, is a lightweight screenshot and recording tool for Mac. Free to download, with no account, subscription, in-app purchase or cloud AI service.
+XGlassShot is a lightweight screenshot and recording tool for Mac. Free to download, with no account, subscription, in-app purchase or cloud AI service.
 
 CAPTURE ON THE DISPLAY YOU CHOOSE
 Select an area for a screenshot or video recording. Use Standard 1× or Retina 2× image quality. Global shortcuts: ⌘⇧2 for screenshots and ⌘⇧1 for recordings.

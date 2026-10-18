@@ -1,1 +1,1 @@
-A redesigned compact Mac workspace with Day/Night appearance, custom image backgrounds and adjustable transparency. Flexible save folders and filename prefixes, selected-display capture, local OCR and beautification. Improved saving and recording reliability. Free and open source under MIT.
+Unified XGlassShot branding across the app, open-source repository, website and JSON CLI. Existing settings and capture destinations are preserved.

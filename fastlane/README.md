@@ -21,7 +21,7 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 [bundle exec] fastlane mac build
 ```
 
-Build GlassCap.app for release
+Build XGlassShot.app for release
 
 ### mac deliver_metadata
 

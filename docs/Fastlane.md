@@ -6,7 +6,7 @@ Use the Gemfile with a supported Ruby and `bundle install`, or an existing Fastl
 
 ```sh
 swift test
-swift test --package-path glasscap-cli
+swift test --package-path xglassshot-cli
 GLASSCAP_RELEASE_DIR=/absolute/release-directory bundle exec fastlane mac build
 GLASSCAP_RELEASE_DIR=/absolute/release-directory bundle exec fastlane mac beta
 bundle exec fastlane mac deliver_metadata

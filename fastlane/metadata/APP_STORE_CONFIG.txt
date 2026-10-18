@@ -1,4 +1,4 @@
 # Canonical metadata URLs are stored separately per locale.
-SUPPORT_URL=https://xiaolongnk.github.io/screenkit/support.html
-PRIVACY_URL=https://xiaolongnk.github.io/screenkit/privacy.html
-COPYRIGHT=2026 GlassCap contributors
+SUPPORT_URL=https://xiaolongnk.github.io/xglassshot/support.html
+PRIVACY_URL=https://xiaolongnk.github.io/xglassshot/privacy.html
+COPYRIGHT=2026 XGlassShot contributors

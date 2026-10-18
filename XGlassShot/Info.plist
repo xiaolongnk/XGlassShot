@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>GlassCap</string>
+	<string>XGlassShot</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,9 +29,9 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 GlassCap contributors. MIT License.</string>
+	<string>Copyright © 2026 XGlassShot contributors. MIT License.</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>GlassCap needs screen recording permission to capture your screen.</string>
+	<string>XGlassShot needs screen recording permission to capture your screen.</string>
 	<key>NSSupportsAutomaticTermination</key>
 	<true/>
 	<key>NSSupportsSuddenTermination</key>

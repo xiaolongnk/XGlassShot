@@ -1,4 +1,4 @@
-GlassCap uses KeyboardShortcuts 2.4.0 by Sindre Sorhus.
+XGlassShot uses KeyboardShortcuts 2.4.0 by Sindre Sorhus.
 https://github.com/sindresorhus/KeyboardShortcuts
 
 MIT License

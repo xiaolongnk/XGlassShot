@@ -1,15 +1,15 @@
-# GlassCap automation
+# XGlassShot automation
 
-GlassCap is a local macOS screenshot and recording tool. Use its JSON CLI when a task needs a screen capture; screen-content OCR and screenshot styling also exist in the GUI and stay local.
+XGlassShot is a local macOS screenshot and recording tool. Use its JSON CLI when a task needs a screen capture; screen-content OCR and screenshot styling also exist in the GUI and stay local.
 
 For SwiftUI or visual changes, follow [the Apple UI review workflow](docs/apple-ui-workflow.md). Review the changed surface using the installed `swiftui-pro` and `macos-design-guidelines` skills when available, with Apple's current documentation and the actual project SDK taking precedence. Verify active and inactive native windows; an inactive screenshot alone does not establish button color or contrast.
 
 ## Discover and capture
 
 ```bash
-glasscap capabilities
-glasscap screens
-glasscap screenshot --screen 1 --region 100,120,640,400 --quality high --directory "$PWD/captures" --prefix "agent-review"
+xglassshot capabilities
+xglassshot screens
+xglassshot screenshot --screen 1 --region 100,120,640,400 --quality high --directory "$PWD/captures" --prefix "agent-review"
 ```
 
 - `capabilities` describes the versioned automation contract without prompting for capture permission.
@@ -20,4 +20,4 @@ glasscap screenshot --screen 1 --region 100,120,640,400 --quality high --directo
 - Screen capture requires Screen Recording permission for the calling terminal. The CLI never opens a save panel. `capabilities` and `--help` do not require capture permission.
 - `record start` supports the same destination flags. Pair it with `record stop`; stop validates playable media before returning success. Do not stop a recording you did not start.
 
-Build with `swift build --package-path glasscap-cli -c release`. `bash glasscap-cli/install.sh` installs into `~/.local/bin`; an optional directory argument changes that location. See [glasscap-cli/README.md](glasscap-cli/README.md) for response examples and hardware verification.
+Build with `swift build --package-path xglassshot-cli -c release`. `bash xglassshot-cli/install.sh` installs into `~/.local/bin`; an optional directory argument changes that location. See [xglassshot-cli/README.md](xglassshot-cli/README.md) for response examples and hardware verification.

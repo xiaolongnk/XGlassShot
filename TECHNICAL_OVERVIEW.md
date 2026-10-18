@@ -20,7 +20,7 @@ The GUI is a sandboxed SwiftUI macOS app. ScreenCaptureKit supplies pixels; Appl
 
 ## Automation
 
-The separate Swift package under `glasscap-cli/` exposes JSON discovery, screenshot and recording commands. It has its own caller permissions and explicit destinations. The GUI's sandbox preferences are not a hidden CLI configuration channel. See [the CLI contract](glasscap-cli/README.md).
+The separate Swift package under `xglassshot-cli/` exposes JSON discovery, screenshot and recording commands. It has its own caller permissions and explicit destinations. The GUI's sandbox preferences are not a hidden CLI configuration channel. See [the CLI contract](xglassshot-cli/README.md).
 
 ## Verification and release
 

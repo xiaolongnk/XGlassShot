@@ -1,10 +1,10 @@
 # Third-party notices
 
-GlassCap is MIT-licensed. Dependencies retain their own licenses.
+XGlassShot is MIT-licensed. Dependencies retain their own licenses.
 
 ## KeyboardShortcuts (GUI)
 
-Version 2.4.0, by Sindre Sorhus, MIT. The full notice is included in the app bundle as [ThirdPartyNotices.txt](GlassCap/ThirdPartyNotices.txt).
+Version 2.4.0, by Sindre Sorhus, MIT. The full notice is included in the app bundle as [ThirdPartyNotices.txt](XGlassShot/ThirdPartyNotices.txt).
 
 ## Swift Argument Parser (CLI)
 

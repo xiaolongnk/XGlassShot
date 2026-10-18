@@ -1,5 +1,5 @@
 import XCTest
-@testable import glasscap
+@testable import xglassshot
 
 final class CaptureDestinationTests: XCTestCase {
     func testCustomDirectoryWithUnicodeSpacesAndPrefixCreatesUniqueNames() throws {

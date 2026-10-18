@@ -65,7 +65,7 @@ struct SettingsDock: View {
                 )).labelsHidden().toggleStyle(.switch).controlSize(.small)
             }
             Divider()
-            SettingsRow("GlassCap") {
+            SettingsRow("XGlassShot") {
                 Text("1.0 (" + (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") + ")")
                     .foregroundStyle(.secondary)
                     .help(Bundle.main.infoDictionary?["GlassCapSourceRevision"] as? String ?? "")

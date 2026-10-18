@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct GlassCapApp: App {
+struct XGlassShotApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {

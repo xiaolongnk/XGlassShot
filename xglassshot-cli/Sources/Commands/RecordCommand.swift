@@ -53,7 +53,7 @@ struct RecordStart: AsyncParsableCommand {
         abstract: "Start a screen recording in the background."
     )
 
-    @Option(name: .long, help: "Screen index (from `glasscap screens`). Defaults to primary screen.")
+    @Option(name: .long, help: "Screen index (from `xglassshot screens`). Defaults to primary screen.")
     var screen: Int = 0
 
     @Option(name: .long, help: "Capture region as x,y,w,h in integer points (top-left origin). Defaults to full screen.")
@@ -62,13 +62,13 @@ struct RecordStart: AsyncParsableCommand {
     @Option(name: .long, help: "Recording quality: low or high. Defaults to high.")
     var quality: String = "high"
 
-    @Option(name: .long, help: "Output file path. Defaults to ~/Movies/GlassCap/glasscap-<timestamp>.mov.")
+    @Option(name: .long, help: "Output file path. Defaults to ~/Movies/XGlassShot/xglassshot-<timestamp>.mov.")
     var output: String?
 
     @Option(name: .long, help: "Destination directory for a unique recording filename. Cannot be combined with --output.")
     var directory: String?
 
-    @Option(name: .long, help: "Automatic filename prefix; default: glasscap. Cannot be combined with --output.")
+    @Option(name: .long, help: "Automatic filename prefix; default: xglassshot. Cannot be combined with --output.")
     var prefix: String?
 
     func run() async throws {
@@ -82,11 +82,11 @@ struct RecordStart: AsyncParsableCommand {
         PermissionCheck.requireScreenRecording()
 
         if let existing = readState(), existing.recording {
-            JSONOutput.failure("A recording is already in progress (PID \(existing.daemon_pid)). Run `glasscap record stop` first.")
+            JSONOutput.failure("A recording is already in progress (PID \(existing.daemon_pid)). Run `xglassshot record stop` first.")
         }
 
         let screens = NSScreen.screens
-        guard screen >= 0, screen < screens.count else { JSONOutput.failure("Screen index is out of range. Use `glasscap screens` to list displays.") }
+        guard screen >= 0, screen < screens.count else { JSONOutput.failure("Screen index is out of range. Use `xglassshot screens` to list displays.") }
         _ = try CaptureRegion.parse(region, size: screens[screen].frame.size)
 
         // Resolve output path
@@ -312,7 +312,7 @@ struct RecordDaemon: AsyncParsableCommand {
 // MARK: - DaemonRecordingSession
 
 final class DaemonRecordingSession: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
-    let writerQueue = DispatchQueue(label: "com.glasscap.daemon.writer")
+    let writerQueue = DispatchQueue(label: "com.xglassshot.daemon.writer")
     var stream: SCStream?
 
     private let outputURL: URL

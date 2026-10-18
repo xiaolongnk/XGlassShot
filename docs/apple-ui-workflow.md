@@ -1,6 +1,6 @@
 # Apple UI development and review
 
-GlassCap is a compact macOS utility, targeting macOS 14.6+. The preview is the main content; its controls should be quiet, native, keyboard-accessible, and readable over either background style.
+XGlassShot is a compact macOS utility, targeting macOS 14.6+. The preview is the main content; its controls should be quiet, native, keyboard-accessible, and readable over either background style.
 
 ## Sources and skills
 

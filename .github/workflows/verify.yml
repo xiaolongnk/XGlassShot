@@ -17,6 +17,6 @@ jobs:
       - name: Core tests
         run: swift test
       - name: CLI tests
-        run: swift test --package-path glasscap-cli
+        run: swift test --package-path xglassshot-cli
       - name: Unsigned GUI build
-        run: xcodebuild -project GlassCap.xcodeproj -scheme GlassCap -configuration Debug -derivedDataPath build/ci CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -project XGlassShot.xcodeproj -scheme XGlassShot -configuration Debug -derivedDataPath build/ci CODE_SIGNING_ALLOWED=NO build

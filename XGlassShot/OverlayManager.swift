@@ -45,7 +45,7 @@ final class OverlayManager: ObservableObject {
                 session.cancelSelection()
                 let alert = NSAlert()
                 alert.messageText = "Screen recording permission is required".localized
-                alert.informativeText = "Allow GlassCap in System Settings, then try capturing again.".localized
+                alert.informativeText = "Allow XGlassShot in System Settings, then try capturing again.".localized
                 alert.addButton(withTitle: "Open Settings".localized)
                 alert.addButton(withTitle: "Cancel".localized)
                 NSApp.activate(ignoringOtherApps: true)

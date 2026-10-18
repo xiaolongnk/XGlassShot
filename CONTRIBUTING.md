@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for helping improve GlassCap. Open an issue for a reproducible bug or discuss a substantial feature before implementing it. Small fixes and documentation improvements are welcome as pull requests.
+Thanks for helping improve XGlassShot. Open an issue for a reproducible bug or discuss a substantial feature before implementing it. Small fixes and documentation improvements are welcome as pull requests.
 
-Use macOS 14.6 or later and Xcode 26.2 or later. Open `GlassCap.xcodeproj`, select your own development team and a unique bundle identifier when signing locally. No API key or paid service is required to run the app. An unsigned compile can be checked with:
+Use macOS 14.6 or later and Xcode 26.2 or later. Open `XGlassShot.xcodeproj`, select your own development team and a unique bundle identifier when signing locally. No API key or paid service is required to run the app. An unsigned compile can be checked with:
 
 ```sh
-xcodebuild -project GlassCap.xcodeproj -scheme GlassCap -configuration Debug CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project XGlassShot.xcodeproj -scheme XGlassShot -configuration Debug CODE_SIGNING_ALLOWED=NO build
 swift test
-swift test --package-path glasscap-cli
+swift test --package-path xglassshot-cli
 ```
 
 For UI changes, follow [the Apple UI workflow](docs/apple-ui-workflow.md). Include real Day/Night screenshots and the states you verified. For capture changes, test cancellation, selected-display ownership and output dimensions on actual hardware. Explain any hardware or accessibility settings you could not exercise.

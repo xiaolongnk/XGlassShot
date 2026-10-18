@@ -46,7 +46,7 @@ struct ContentView: View {
         .background(GlassSurface())
         .background(CompactWindowSizing())
         .preferredColorScheme(appearance.mode.colorScheme)
-        .navigationTitle("GlassCap")
+        .navigationTitle("XGlassShot")
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 HStack(spacing: 6) {
@@ -54,7 +54,7 @@ struct ContentView: View {
                         .foregroundStyle(.white).padding(4)
                         .background(.blue.gradient, in: .rect(cornerRadius: 5))
                         .accessibilityHidden(true)
-                    Text("GlassCap").font(.system(size: 12, weight: .semibold))
+                    Text("XGlassShot").font(.system(size: 12, weight: .semibold))
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {

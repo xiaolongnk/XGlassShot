@@ -4,7 +4,7 @@ import AppKit
 struct AnnotationRect: View {
     let rect: CGRect
     let selectionRect: CGRect
-    
+
     var body: some View {
         Rectangle()
             .stroke(Color.red, lineWidth: 2)
@@ -163,7 +163,7 @@ struct DimensionBadge: View {
                     .fill(quality == .high ? Color.yellow.opacity(0.2) : Color.cyan.opacity(0.2))
             )
 
-            
+
             // Hint
             Text("enter_to_capture".localized)
                 .font(.system(size: 10, weight: .medium, design: .rounded))
@@ -218,7 +218,7 @@ class MouseTrackingNSView: NSView {
         for trackingArea in trackingAreas {
             removeTrackingArea(trackingArea)
         }
-        
+
         // Track mouse moves even when not active application if possible, or at least when key
         let options: NSTrackingArea.Options = [.mouseMoved, .activeAlways, .inVisibleRect]
         addTrackingArea(NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil))

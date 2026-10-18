@@ -33,6 +33,7 @@ final class StorageManager: ObservableObject {
     @Published var lastCaptureThumbnail: NSImage?
     @Published private(set) var isLoadingThumbnail = false
     private var lastCaptureAccess: URL?
+    private var directoryAccess: URL?
 
     // MARK: - Computed Properties
 
@@ -90,25 +91,25 @@ final class StorageManager: ObservableObject {
         let response = await panel.begin()
 
         if response == .OK, let url = panel.url {
-            // Create security-scoped bookmark for sandbox
             do {
-                let bookmarkData = try url.bookmarkData(
-                    options: .withSecurityScope,
-                    includingResourceValuesForKeys: nil,
-                    relativeTo: nil
-                )
-                UserDefaults.standard.set(bookmarkData, forKey: "saveDirectoryBookmark")
+                let bookmark = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+                _ = url.startAccessingSecurityScopedResource()
+                directoryAccess?.stopAccessingSecurityScopedResource()
+                directoryAccess = url
+                UserDefaults.standard.set(bookmark, forKey: "saveDirectoryBookmark")
+                defaultSaveDirectory = url
+                return url
             } catch {
-                print("Failed to create bookmark: \(error)")
+                // Keep the previous working destination if the new grant cannot be persisted.
+                NSAlert(error: error).runModal()
+                return nil
             }
-
-            defaultSaveDirectory = url
-            return url
         }
         return nil
     }
 
     func resolveBookmarkedDirectory() -> URL? {
+        if let directoryAccess { return directoryAccess }
         guard let bookmarkData = UserDefaults.standard.data(forKey: "saveDirectoryBookmark") else {
             return nil
         }
@@ -133,6 +134,8 @@ final class StorageManager: ObservableObject {
             }
 
             _ = url.startAccessingSecurityScopedResource()
+            directoryAccess = url
+            defaultSaveDirectory = url
             return url
         } catch {
             print("Failed to resolve bookmark: \(error)")
@@ -193,7 +196,7 @@ final class StorageManager: ObservableObject {
         
         // Try to resolve bookmark for custom directory
         if let url = resolveBookmarkedDirectory() {
-            return (url, true)
+            return (url, false)
         }
         
         // Fallback: This is likely to fail in sandbox if bookmark is missing/invalid
@@ -401,6 +404,10 @@ final class StorageManager: ObservableObject {
         lastCaptureAccess = nil
         if let bookmark = try? url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil) {
             UserDefaults.standard.set(bookmark, forKey: "lastCaptureBookmark")
+            // Keep the preview file readable even after the save directory changes.
+            var stale = false
+            if let scopedURL = try? URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &stale),
+               scopedURL.startAccessingSecurityScopedResource() { lastCaptureAccess = scopedURL }
         } else { UserDefaults.standard.removeObject(forKey: "lastCaptureBookmark") }
         lastCaptureURL = url
         lastCaptureURLString = url.path

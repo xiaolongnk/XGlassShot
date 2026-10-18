@@ -14,11 +14,16 @@ struct CompactWindowSizing: NSViewRepresentable {
             configuredWindow = window
             window.identifier = NSUserInterfaceItemIdentifier("GlassCapMainWindow")
             window.tabbingMode = .disallowed
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.titlebarAppearsTransparent = true
             window.contentMinSize = NSSize(width: 440, height: 300)
             window.contentMaxSize = NSSize(width: 800, height: 640)
             DispatchQueue.main.async {
+                // SwiftUI may replace its provisional identifier during attachment.
+                window.identifier = NSUserInterfaceItemIdentifier("GlassCapMainWindow")
                 let top = window.frame.maxY
-                window.setContentSize(NSSize(width: 500, height: 380))
+                window.setContentSize(NSSize(width: 500, height: 400))
                 var frame = window.frame
                 frame.origin.y = top - frame.height
                 if let screen = window.screen {

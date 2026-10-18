@@ -1,12 +1,16 @@
 import Foundation
 
 enum CaptureFileStore {
+    static func sanitizedPrefix(_ prefix: String) -> String {
+        String(prefix.filter { !$0.isNewline && !"/:\0".contains($0) }.prefix(60))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     static func filename(prefix: String, extension fileExtension: String, date: Date = Date()) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyyMMdd-HHmmss-SSS"
-        let safePrefix = String(prefix.filter { !$0.isNewline && !"/:\0".contains($0) }.prefix(60))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let safePrefix = sanitizedPrefix(prefix)
         let tag = safePrefix.isEmpty ? "" : safePrefix + "_"
         return "\(tag)\(formatter.string(from: date))-\(UUID().uuidString.prefix(8)).\(fileExtension)"
     }

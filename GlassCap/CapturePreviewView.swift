@@ -10,8 +10,11 @@ struct CapturePreviewView: View {
     // Action states
     @State private var isExtracting = false
     @State private var extractedText: String?
-    @State private var showBeautifulExport = false
-    @State private var beautifulExportURL: URL?
+    private struct ExportRequest: Identifiable {
+        let id = UUID()
+        let url: URL
+    }
+    @State private var beautifulExport: ExportRequest?
     @State private var showOCRPopover = false
 
     private var isImage: Bool {
@@ -22,16 +25,17 @@ struct CapturePreviewView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Color(nsColor: .underPageBackgroundColor)
+                Color.clear
                 if let image = storageManager.lastCaptureThumbnail {
                     GeometryReader { geometry in
                         Image(nsImage: image)
                             .resizable()
                             .interpolation(.high)
                             .scaledToFit()
-                            .frame(width: max(0, geometry.size.width - 40), height: max(0, geometry.size.height - 40))
+                            .frame(width: max(0, geometry.size.width - 28), height: max(0, geometry.size.height - 28))
+                            .clipShape(.rect(cornerRadius: 6))
                             .shadow(color: .black.opacity(0.16), radius: 8, y: 3)
-                            .padding(20)
+                            .padding(14)
                     }
                     .accessibilityLabel("Last capture preview".localized)
                 } else if storageManager.isLoadingThumbnail {
@@ -61,19 +65,22 @@ struct CapturePreviewView: View {
 
             if let url = storageManager.lastCaptureURL {
                 Divider()
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(isImage ? "Screenshot".localized : "Screen recording".localized)
-                            .font(.system(size: 12, weight: .medium))
-                        Text(url.lastPathComponent)
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1).truncationMode(.middle)
-                            .help(url.path)
+                VStack(spacing: 10) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(isImage ? "Screenshot".localized : "Screen recording".localized)
+                                .font(.system(size: 12, weight: .medium))
+                            Text(url.lastPathComponent)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1).truncationMode(.middle)
+                                .help(url.path)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(url.pathExtension.uppercased())
+                            .font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    HStack(spacing: 4) {
+                    HStack(spacing: 6) {
                         Button {
                             if isImage, let image = NSImage(contentsOf: url) {
                                 NSPasteboard.general.clearContents()
@@ -93,8 +100,7 @@ struct CapturePreviewView: View {
                             .help("Copy Text".localized)
                             .popover(isPresented: $showOCRPopover, arrowEdge: .bottom) { ocrPopoverContent }
                             Button {
-                                beautifulExportURL = url
-                                showBeautifulExport = true
+                                beautifulExport = ExportRequest(url: url)
                             } label: { Label("Beautify".localized, systemImage: "paintbrush.pointed") }
                             .help("Beautify".localized)
                         }
@@ -102,20 +108,26 @@ struct CapturePreviewView: View {
                         Button { storageManager.revealLastCapture() } label: {
                             Label("reveal_file".localized, systemImage: "folder")
                         }
+                        .labelStyle(.iconOnly)
                         .help("reveal_file".localized)
                     }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.borderless)
-                    .controlSize(.large)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .modifier(CaptureActionStyle())
+                    .controlSize(.regular)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(.horizontal, 16)
-                .frame(height: 58)
+                .padding(.vertical, 12)
             }
         }
-        .sheet(isPresented: $showBeautifulExport) {
-            if let url = beautifulExportURL, let image = NSImage(contentsOf: url) {
+        .sheet(item: $beautifulExport) { request in
+            if let image = NSImage(contentsOf: request.url) {
                 BeautifulExportView(sourceImage: image)
+            } else {
+                VStack(spacing: 16) {
+                    Text("Preview unavailable".localized)
+                    Button("Done".localized) { beautifulExport = nil }
+                }.padding(24)
             }
         }
         .onChange(of: overlayManager.pendingPostAction) { _, _ in consumePostAction() }
@@ -128,8 +140,7 @@ struct CapturePreviewView: View {
         switch request.action {
         case .copyText: runOCR(url: request.url)
         case .beautify:
-            beautifulExportURL = request.url
-            showBeautifulExport = true
+            beautifulExport = ExportRequest(url: request.url)
         case .none: break
         }
     }
@@ -140,11 +151,11 @@ struct CapturePreviewView: View {
     private var ocrPopoverContent: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Extracted Text")
+                Text("Extracted Text".localized)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                 Spacer()
                 if let text = extractedText, !text.isEmpty {
-                    Button("Copy") {
+                    Button("Copy".localized) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(text, forType: .string)
                         showOCRPopover = false
@@ -156,7 +167,7 @@ struct CapturePreviewView: View {
             }
             if let text = extractedText {
                 if text.isEmpty {
-                    Text("No text found in this image.")
+                    Text("No text found in this image.".localized)
                         .font(Theme.fontSecondary)
                         .foregroundColor(.secondary)
                 } else {

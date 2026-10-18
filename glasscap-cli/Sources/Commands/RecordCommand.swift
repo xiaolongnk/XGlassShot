@@ -65,15 +65,33 @@ struct RecordStart: AsyncParsableCommand {
     @Option(name: .long, help: "Output file path. Defaults to ~/Movies/GlassCap/glasscap-<timestamp>.mov.")
     var output: String?
 
+    @Option(name: .long, help: "Destination directory for a unique recording filename. Cannot be combined with --output.")
+    var directory: String?
+
+    @Option(name: .long, help: "Automatic filename prefix; default: glasscap. Cannot be combined with --output.")
+    var prefix: String?
+
     func run() async throws {
+        do { try await start() }
+        catch { JSONOutput.failure(error.localizedDescription) }
+    }
+
+    private func start() async throws {
+        guard ["low", "high"].contains(quality) else { JSONOutput.failure("Invalid --quality. Expected low or high.") }
+        if output != nil && (directory != nil || prefix != nil) { throw CaptureDestination.DestinationError.conflictingOptions }
         PermissionCheck.requireScreenRecording()
 
         if let existing = readState(), existing.recording {
             JSONOutput.failure("A recording is already in progress (PID \(existing.daemon_pid)). Run `glasscap record stop` first.")
         }
 
+        let screens = NSScreen.screens
+        guard screen >= 0, screen < screens.count else { JSONOutput.failure("Screen index is out of range. Use `glasscap screens` to list displays.") }
+        _ = try CaptureRegion.parse(region, size: screens[screen].frame.size)
+
         // Resolve output path
-        let outputURL = try resolveOutputPath(output)
+        let outputURL = try CaptureDestination.resolve(output: output, directory: directory, prefix: prefix, recording: true)
+        guard !FileManager.default.fileExists(atPath: outputURL.path) else { JSONOutput.failure("Output already exists. No recording was started.") }
 
         // Build daemon arguments
         let execPath = CommandLine.arguments[0]
@@ -114,20 +132,6 @@ struct RecordStart: AsyncParsableCommand {
         JSONOutput.success(RecordStartResponse(status: "recording", output: outputURL.path))
     }
 
-    // MARK: Helpers
-
-    private func resolveOutputPath(_ path: String?) throws -> URL {
-        if let path = path {
-            return URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
-        }
-        let dir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Movies/GlassCap")
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd-HHmmss"
-        let ts = fmt.string(from: Date())
-        return dir.appendingPathComponent("glasscap-\(ts)-\(UUID().uuidString.prefix(8)).mov")
-    }
 }
 
 // MARK: - record stop
@@ -146,7 +150,6 @@ struct RecordStop: AsyncParsableCommand {
 
         let pid = state.daemon_pid
         let outputPath = state.output_path
-        let startTime = state.start_time
 
         // Signal daemon to stop
         if kill(pid, SIGTERM) != 0 {
@@ -159,6 +162,7 @@ struct RecordStop: AsyncParsableCommand {
         let deadline = Date().addingTimeInterval(10)
         var lastSize: Int64 = -1
         var stableCount = 0
+        var mediaDuration: Double?
 
         while Date() < deadline {
             try await Task.sleep(nanoseconds: 100_000_000) // 100 ms
@@ -168,7 +172,14 @@ struct RecordStop: AsyncParsableCommand {
 
             if size > 0 && size == lastSize {
                 stableCount += 1
-                if stableCount >= 3 { break } // stable for 300 ms → done
+                if stableCount >= 3 {
+                    let asset = AVURLAsset(url: outputURL)
+                    if let duration = try? await asset.load(.duration), duration.seconds.isFinite, duration.seconds > 0,
+                       let tracks = try? await asset.loadTracks(withMediaType: .video), !tracks.isEmpty {
+                        mediaDuration = duration.seconds
+                        break
+                    }
+                }
             } else {
                 stableCount = 0
             }
@@ -177,7 +188,9 @@ struct RecordStop: AsyncParsableCommand {
 
         removeState()
 
-        let duration = Date().timeIntervalSince1970 - startTime
+        guard let duration = mediaDuration else {
+            JSONOutput.failure("Recording did not finalize into a playable video. Any output was retained at \(outputPath).")
+        }
         JSONOutput.success(RecordStopResponse(path: outputURL.path, duration_s: duration))
     }
 }
@@ -251,16 +264,19 @@ struct RecordDaemon: AsyncParsableCommand {
         // Install SIGTERM handler — stops and finalises the recording then exits
         let src = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
         signal(SIGTERM, SIG_IGN)
-        src.setEventHandler {
-            Task {
-                await session.stopAndFinish()
-                processExit(0)
+        // main.swift already runs the main run loop. Suspending this async task keeps
+        // the stream and signal source alive without calling dispatch_main off-thread.
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            src.setEventHandler {
+                src.cancel()
+                Task {
+                    await session.stopAndFinish()
+                    continuation.resume()
+                }
             }
+            src.resume()
         }
-        src.resume()
-
-        // Run forever until SIGTERM (dispatchMain() is safe from async contexts)
-        dispatchMain()
+        src.cancel()
     }
 
     // MARK: Helpers

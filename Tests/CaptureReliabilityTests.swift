@@ -92,6 +92,14 @@ final class CaptureReliabilityTests: XCTestCase {
         }
     }
 
+    func testUnicodePrefixSpacesAndLengthMatchFilenamePreview() {
+        XCTAssertEqual(CaptureFileStore.sanitizedPrefix(" 设计 review "), "设计 review")
+        XCTAssertEqual(CaptureFileStore.sanitizedPrefix("a/b:c\n\0"), "abc")
+        XCTAssertEqual(CaptureFileStore.sanitizedPrefix(String(repeating: "界", count: 100)).count, 60)
+        XCTAssertTrue(CaptureFileStore.filename(prefix: "设计 review", extension: "png").hasPrefix("设计 review_"))
+        XCTAssertTrue(CaptureFileStore.filename(prefix: "", extension: "png").first?.isNumber == true)
+    }
+
     func testSameTimeCapturesHaveUniqueSafeNames() {
         let date = Date(timeIntervalSince1970: 1_700_000_000)
         let names = (0..<100).map { _ in CaptureFileStore.filename(prefix: "../test:tag", extension: "png", date: date) }

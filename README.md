@@ -29,8 +29,8 @@
 ```
 GlassCap/
 ├── GlassCapApp.swift      # Application entry point & lifecycle
-├── ContentView.swift       # Main window and Command Bar UI
-├── SettingsDock.swift      # Floating settings and toggle management
+├── ContentView.swift       # Glass workspace and native toolbar
+├── SettingsDock.swift      # Content-sized settings sheet
 ├── ScreenRecorder.swift    # Core SCKit logic, coordinate conversion, and saving
 ├── SelectionOverlay.swift  # Cross-display SwiftUI selection windows
 ├── StorageManager.swift    # Robust file storage, bookmarks, and silent save logic
@@ -70,9 +70,17 @@ The local build script embeds the source revision, marks dirty sources, verifies
 
 External tools and AI agents can use the existing `glasscap-cli` JSON screenshot interface. The GUI does not call a model service. See [glasscap-cli/README.md](glasscap-cli/README.md).
 
-## Native capture workspace (Build 16)
+## Glass capture workspace (Build 17)
 
-The main window opens at 500×380 points, with a 440×300 minimum and an 800×640 maximum. A standard compact macOS toolbar contains screenshot, display selection, recording, and Settings controls. The preview canvas takes the flexible space; a slim information strip holds image actions. System materials, colors, fonts, focus, and hover feedback follow macOS appearance and accessibility preferences. Image previews are downsampled to at most 1200 pixels instead of enlarging 120×80 history thumbnails; the most recent file bookmark is restored before loading. Settings use an independent native window with General, Capture, and Saving tabs, also available with ⌘,. Screenshot actions include a display menu: **Any display** or one named monitor.
+The main window opens at 500×400 points. It follows the approved Concept 02: compact toolbar, a clear preview canvas, labeled local image actions, and persistent folder/prefix shortcuts in the footer. Settings open as a compact content-sized sheet with General, Capture, and Saving sections; ⌘, opens the same sheet.
+
+Appearance supports Follow System, Day, and Night. Glass transparency is adjustable from 0–80% and persists across launches. A desktop-sampling native material and tint create the glass surface; screenshot pixels and text keep full opacity. macOS Reduce Transparency takes precedence. Native Liquid Glass controls are used on macOS 26; standard native controls support macOS 14.6 and later.
+
+Saving settings show the full destination, editable prefix, and filename-pattern preview. The footer opens the directory chooser or prefix settings directly. Bookmarks are retained for the selected directory and restored on launch; a failed bookmark creation keeps the previous destination. Automatic filenames preserve Unicode/interior spaces, remove unsafe separators, and include a timestamp and random suffix to avoid collisions.
+
+Local Vision OCR supports Chinese/English mixed text and runs off the UI thread. Beautification remains local (background, padding, rounded corners); its sheet is bound directly to the captured image. Neither feature calls a model service. Previews are downsampled to 1200 pixels and restore file access before loading.
+
+Agents can use `glasscap capabilities` plus explicit `--directory` and `--prefix` options. The CLI has its own destinations and terminal permissions; it never silently changes GUI preferences. See [AGENTS.md](AGENTS.md) and [CLI documentation](glasscap-cli/README.md).
 
 Selection ownership is derived from one display ID. Switching displays removes the previous screen's active selection; dragging past an edge is bounded to the selected screen. A screen-layout change cancels an in-progress selection. Capture flash feedback uses the selected display too.
 
@@ -84,4 +92,4 @@ bash script/verify-displays.sh /absolute/path/to/evidence-directory
 
 This compiles the production `ScreenRecorder` and `SelectionOverlay` sources with test-only file storage, checks 20 selection ownership switches, and compares standard and Retina captures against an independent ScreenCaptureKit reference for each connected display. The report includes display IDs, desktop origins, output dimensions, and pixel differences. It does not create or reposition UI windows. The main app is built separately with `script/build-local.sh`.
 
-The Build 16 design pass used [Design macOS Interfaces](https://github.com/0xKoru/apple-hig-codex-skills/tree/6563e765da1e66e5fe443637baeb75eba97b7e35/skills/design-macos-interfaces) alongside the local SwiftUI Expert skill. The layout follows Apple's [macOS guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) and [toolbar conventions](https://developer.apple.com/design/human-interface-guidelines/toolbars). This pass changes the workspace and Settings; the existing selection and beautification editors retain their current controls.
+The Build 16 design pass used [Design macOS Interfaces](https://github.com/0xKoru/apple-hig-codex-skills/tree/6563e765da1e66e5fe443637baeb75eba97b7e35/skills/design-macos-interfaces) alongside the local SwiftUI Expert skill. The layout follows Apple's [macOS guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) and [toolbar conventions](https://developer.apple.com/design/human-interface-guidelines/toolbars). The implementation preserves selected-display capture and local follow-up actions while unifying the main workspace, settings sheet, and editor backgrounds.

@@ -15,5 +15,6 @@ let package = Package(
             ],
             path: "Sources"
         ),
+        .testTarget(name: "GlassCapCLITests", dependencies: ["glasscap"], path: "Tests"),
     ]
 )

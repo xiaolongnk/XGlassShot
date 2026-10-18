@@ -6,8 +6,9 @@ struct GlassCapCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "glasscap",
         abstract: "GlassCap CLI — screenshot and screen recording for AI agents.",
-        version: "1.0.0",
+        version: "1.1.0",
         subcommands: [
+            CapabilitiesCommand.self,
             ScreensCommand.self,
             ScreenshotCommand.self,
             RecordCommand.self,

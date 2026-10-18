@@ -18,6 +18,7 @@ struct GlassCapApp: App {
         _ = ShortcutsManager.shared
         _ = PermissionManager.shared
         _ = StorageManager.shared
+        _ = AppAppearance.shared
 
     }
     
@@ -34,13 +35,14 @@ struct GlassCapApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
-        .defaultSize(width: 500, height: 380)
+        .defaultSize(width: 500, height: 400)
         .commands {
             CommandGroup(replacing: .newItem) {}
             CaptureMenuCommands()
-        }
-        Settings {
-            SettingsDock(storageManager: .shared, shortcutsManager: .shared)
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…".localized) { SettingsPresentation.shared.show() }
+                    .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }

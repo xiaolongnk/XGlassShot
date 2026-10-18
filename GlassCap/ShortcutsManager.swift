@@ -65,13 +65,14 @@ final class ShortcutsManager: ObservableObject {
     @Published var captureQuality: CaptureQuality = .low {
         didSet {
             UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")
-            showQualityFeedback()
+            if !isRestoringPreferences { showQualityFeedback() }
         }
     }
 
     private var activeInputWindow: NSWindow?
     private var feedbackWindow: NSWindow?
     private var feedbackTask: Task<Void, Never>?
+    private var isRestoringPreferences = true
 
     private init() {
         if let savedMode = UserDefaults.standard.string(forKey: "captureQuality"),
@@ -85,6 +86,7 @@ final class ShortcutsManager: ObservableObject {
         }
         setupDefaultShortcuts()
         setupShortcuts()
+        isRestoringPreferences = false
     }
 
     private func setupDefaultShortcuts() {

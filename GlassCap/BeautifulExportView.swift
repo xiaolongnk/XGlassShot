@@ -19,7 +19,7 @@ struct BeautifulExportView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Beautiful Export")
+                Text("Beautiful Export".localized)
                     .font(Theme.fontPrimary)
                     .foregroundColor(Theme.textPrimary(for: colorScheme))
                 Spacer()
@@ -58,7 +58,7 @@ struct BeautifulExportView: View {
 
                     // Background presets
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Background")
+                        Text("Background".localized)
                             .font(Theme.fontCaption)
                             .foregroundColor(Theme.textSecondary(for: colorScheme))
                             .textCase(.uppercase)
@@ -75,7 +75,7 @@ struct BeautifulExportView: View {
                     // Padding slider
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Padding")
+                            Text("Padding".localized)
                                 .font(Theme.fontCaption)
                                 .foregroundColor(Theme.textSecondary(for: colorScheme))
                                 .textCase(.uppercase)
@@ -92,7 +92,7 @@ struct BeautifulExportView: View {
                     // Corner radius slider
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Corner Radius")
+                            Text("Corner Radius".localized)
                                 .font(Theme.fontCaption)
                                 .foregroundColor(Theme.textSecondary(for: colorScheme))
                                 .textCase(.uppercase)
@@ -111,50 +111,38 @@ struct BeautifulExportView: View {
 
             Divider().opacity(0.25)
 
-            // Copy button
-            Button(action: copyToClipboard) {
-                Label(
-                    copied ? "Copied!" : "Copy to Clipboard",
-                    systemImage: copied ? "checkmark.circle.fill" : "doc.on.clipboard"
-                )
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 13)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(copied ? Color.green : Color.accentColor)
-                )
+            HStack {
+                Spacer()
+                Button(action: copyToClipboard) {
+                    Label(copied ? "Copied!".localized : "Copy to Clipboard".localized,
+                          systemImage: copied ? "checkmark.circle.fill" : "doc.on.clipboard")
+                }
+                .modifier(CaptureActionStyle(prominent: true))
+                .tint(.blue)
             }
-            .buttonStyle(PlainButtonStyle())
-            .animation(Theme.springStandard, value: copied)
-            .padding(24)
-            .padding(.top, 0)
+            .padding(16)
         }
-        .frame(width: 500)
-        .background(Theme.cardFill(for: colorScheme))
+        .frame(width: 440, height: 500)
+        .background(GlassSurface())
+        .onExitCommand { dismiss() }
     }
 
     @ViewBuilder
     private func gradientSwatch(_ preset: BeautifulExportCompositor.Options.GradientPreset) -> some View {
         let colors = preset.colors.map { Color(nsColor: $0) }
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
-            .frame(width: 44, height: 44)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(
-                        selectedPreset == preset ? Color.white.opacity(0.9) : Color.clear,
-                        lineWidth: 2
-                    )
-            )
-            .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
-            .scaleEffect(selectedPreset == preset ? 1.06 : 1.0)
-            .animation(Theme.springSnappy, value: selectedPreset == preset)
-            .onTapGesture {
-                selectedPreset = preset
-                options.backgroundStyle = .gradient(preset)
-            }
+        Button {
+            selectedPreset = preset
+            options.backgroundStyle = .gradient(preset)
+        } label: {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 44, height: 44)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(selectedPreset == preset ? Color.blue : Color.clear, lineWidth: 2))
+        }
+        .buttonStyle(.plain)
+        .help(preset.label.localized)
+        .accessibilityLabel(preset.label.localized)
+        .accessibilityAddTraits(selectedPreset == preset ? .isSelected : [])
     }
 
     private func copyToClipboard() {

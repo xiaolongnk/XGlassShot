@@ -15,6 +15,7 @@ struct SettingsDock: View {
             Text("Settings".localized).font(.system(size: 14, weight: .semibold))
             Picker("Settings".localized, selection: $presentation.tab) {
                 Text("General".localized).tag(SettingsPresentation.Tab.general)
+                Text("Appearance".localized).tag(SettingsPresentation.Tab.appearance)
                 Text("Capture".localized).tag(SettingsPresentation.Tab.capture)
                 Text("Saving".localized).tag(SettingsPresentation.Tab.saving)
             }
@@ -24,12 +25,13 @@ struct SettingsDock: View {
             VStack(spacing: 0) {
                 switch presentation.tab {
                 case .general: generalSettings
+                case .appearance: appearanceSettings
                 case .capture: captureSettings
                 case .saving: savingSettings
                 }
             }
             .padding(.horizontal, 14)
-            .background(.primary.opacity(0.035), in: .rect(cornerRadius: 10))
+            .background(.regularMaterial, in: .rect(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.06)))
 
             HStack {
@@ -51,28 +53,6 @@ struct SettingsDock: View {
 
     private var generalSettings: some View {
         Group {
-            SettingsRow("Appearance".localized) {
-                Picker("Appearance".localized, selection: $appearance.mode) {
-                    ForEach(AppAppearance.Mode.allCases) { mode in Text(mode.title).tag(mode) }
-                }
-                .pickerStyle(.segmented).labelsHidden()
-            }
-            Divider()
-            SettingsRow("Transparency".localized) {
-                HStack(spacing: 8) {
-                    Slider(value: $appearance.transparency, in: 0...0.8, step: 0.05)
-                        .accessibilityLabel("Transparency".localized)
-                    Text(appearance.transparency, format: .percent.precision(.fractionLength(0)))
-                        .monospacedDigit().frame(width: 32, alignment: .trailing)
-                }
-                .disabled(reduceTransparency)
-                .help("Only the glass background changes; captures stay clear.".localized)
-            }
-            if reduceTransparency {
-                Text("Reduce Transparency is enabled in macOS.".localized)
-                    .font(.system(size: 10)).foregroundStyle(.secondary).padding(.bottom, 8)
-            }
-            Divider()
             SettingsRow("Language".localized) {
                 Picker("Language".localized, selection: $localization.currentLanguage) {
                     ForEach(AppLanguage.allCases) { language in Text(language.displayName).tag(language) }
@@ -90,6 +70,68 @@ struct SettingsDock: View {
                 Text("1.0 (" + (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") + ")")
                     .foregroundStyle(.secondary)
                     .help(Bundle.main.infoDictionary?["GlassCapSourceRevision"] as? String ?? "")
+            }
+        }
+    }
+
+    private var appearanceSettings: some View {
+        Group {
+            SettingsRow("Appearance".localized) {
+                Picker("Appearance".localized, selection: $appearance.mode) {
+                    ForEach(AppAppearance.Mode.allCases) { mode in Text(mode.title).tag(mode) }
+                }
+                .pickerStyle(.segmented).labelsHidden()
+            }
+            Divider()
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 7).fill(.primary.opacity(0.04))
+                    if let image = appearance.backgroundImage {
+                        Image(nsImage: image).resizable().scaledToFill()
+                    } else {
+                        Image(systemName: "photo").font(.system(size: 22)).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 66, height: 50).clipShape(.rect(cornerRadius: 7))
+                .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Background image".localized).fontWeight(.medium)
+                    Text(appearance.backgroundName ?? "Desktop glass".localized)
+                        .font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                }
+                Spacer(minLength: 0)
+                if appearance.isImportingBackground { ProgressView().controlSize(.small) }
+                Menu {
+                    Button("Choose…".localized) { Task { await appearance.chooseBackground() } }
+                    if appearance.backgroundImage != nil {
+                        Button("Remove image".localized) { appearance.removeBackground() }
+                    }
+                } label: { Text("Change…".localized).foregroundStyle(.primary) }
+                .fixedSize().disabled(appearance.isImportingBackground)
+                .accessibilityLabel("Change background image".localized)
+            }
+            .font(.system(size: 12)).padding(.vertical, 12)
+            if let error = appearance.backgroundError {
+                Text(error).font(.system(size: 10)).foregroundStyle(.red).padding(.bottom, 8)
+            }
+            Divider()
+            SettingsRow("Transparency".localized) {
+                HStack(spacing: 8) {
+                    Slider(value: $appearance.transparency, in: 0...0.8, step: 0.05)
+                        .accessibilityLabel("Transparency".localized)
+                    Text(appearance.transparency, format: .percent.precision(.fractionLength(0)))
+                        .monospacedDigit().frame(width: 32, alignment: .trailing)
+                }
+                .disabled(reduceTransparency)
+                .help("Only the glass background changes; captures stay clear.".localized)
+            }
+            if reduceTransparency {
+                Text("Reduce Transparency is enabled in macOS.".localized)
+                    .font(.system(size: 10)).foregroundStyle(.secondary).padding(.bottom, 8)
+            } else {
+                Text("A local copy is kept. Transparency affects only the background.".localized)
+                    .font(.system(size: 10)).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 10)
             }
         }
     }

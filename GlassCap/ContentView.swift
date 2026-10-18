@@ -40,6 +40,7 @@ struct ContentView: View {
             .buttonStyle(.borderless)
             .font(.system(size: 11)).foregroundStyle(.secondary)
             .padding(.horizontal, 16).frame(height: 34)
+            .background(.regularMaterial)
         }
         .background(GlassSurface())
         .background(CompactWindowSizing())

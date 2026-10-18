@@ -58,6 +58,8 @@ struct CapturePreviewView: View {
                             .padding(.horizontal, 10).padding(.vertical, 5)
                             .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 5))
                     }
+                    .padding(20)
+                    .background(.regularMaterial, in: .rect(cornerRadius: 16))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -118,6 +120,7 @@ struct CapturePreviewView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                .background(.regularMaterial)
             }
         }
         .sheet(item: $beautifulExport) { request in

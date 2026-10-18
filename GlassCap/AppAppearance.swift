@@ -1,11 +1,17 @@
 import SwiftUI
 import AppKit
 import Combine
+import UniformTypeIdentifiers
 
 @MainActor
 final class AppAppearance: ObservableObject {
     static let shared = AppAppearance()
     private let defaults: UserDefaults
+    private let backgroundStore: BackgroundImageStore
+    @Published private(set) var backgroundImage: NSImage?
+    @Published private(set) var backgroundName: String?
+    @Published private(set) var isImportingBackground = false
+    @Published var backgroundError: String?
     enum Mode: String, CaseIterable, Identifiable {
         case system, light, dark
         var id: String { rawValue }
@@ -31,12 +37,57 @@ final class AppAppearance: ObservableObject {
             defaults.set(bounded, forKey: "glassTransparency")
         }
     }
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, backgroundStore: BackgroundImageStore = .applicationStore) {
         self.defaults = defaults
+        self.backgroundStore = backgroundStore
+        if let image = backgroundStore.load() {
+            backgroundImage = NSImage(cgImage: image, size: .zero)
+            backgroundName = defaults.string(forKey: "backgroundImageName") ?? "Custom image".localized
+        }
         mode = Mode(rawValue: defaults.string(forKey: "appearanceMode") ?? "system") ?? .system
         let saved = defaults.object(forKey: "glassTransparency") as? Double ?? 0.35
         transparency = min(0.8, max(0, saved.isFinite ? saved : 0.35))
         apply()
+    }
+
+    func chooseBackground() async {
+        guard !isImportingBackground else { return }
+        isImportingBackground = true
+        defer { isImportingBackground = false }
+        backgroundError = nil
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose a background image".localized
+        panel.prompt = "Choose…".localized
+        guard await panel.begin() == .OK, let url = panel.url else { return }
+        do {
+            try await importBackground(from: url)
+        } catch {
+            backgroundError = "Could not read or save this image. Try another image.".localized
+        }
+    }
+
+    func importBackground(from url: URL) async throws {
+        let store = backgroundStore
+        let image = try await Task.detached(priority: .userInitiated) { try store.importImage(from: url) }.value
+        backgroundImage = NSImage(cgImage: image, size: .zero)
+        backgroundName = url.lastPathComponent
+        defaults.set(backgroundName, forKey: "backgroundImageName")
+    }
+
+    func removeBackground() {
+        guard !isImportingBackground else { return }
+        do {
+            try backgroundStore.remove()
+            backgroundImage = nil
+            backgroundName = nil
+            defaults.removeObject(forKey: "backgroundImageName")
+            backgroundError = nil
+        } catch {
+            backgroundError = "Could not remove the background. Please try again.".localized
+        }
     }
     private func apply() {
         let application = NSApplication.shared
@@ -51,7 +102,7 @@ final class AppAppearance: ObservableObject {
 @MainActor
 final class SettingsPresentation: ObservableObject {
     static let shared = SettingsPresentation()
-    enum Tab: String, CaseIterable { case general, capture, saving }
+    enum Tab: String, CaseIterable { case general, appearance, capture, saving }
     @Published var isPresented = false
     @Published var tab: Tab = .general
     func show(_ tab: Tab = .general) {

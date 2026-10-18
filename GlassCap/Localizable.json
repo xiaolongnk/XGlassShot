@@ -1,5 +1,15 @@
 {
   "en": {
+    "Custom image": "Custom image",
+    "Choose a background image": "Choose a background image",
+    "Could not read or save this image. Try another image.": "Could not read or save this image. Try another image.",
+    "Could not remove the background. Please try again.": "Could not remove the background. Please try again.",
+    "Background image": "Background image",
+    "Desktop glass": "Desktop glass",
+    "Remove image": "Remove image",
+    "Change…": "Change…",
+    "Change background image": "Change background image",
+    "A local copy is kept. Transparency affects only the background.": "A local copy is kept. Transparency affects only the background.",
     "record": "Record",
     "capture": "Capture",
     "ready_to_capture": "Ready to Capture",
@@ -94,6 +104,16 @@
     "Cloud": "Cloud"
   },
   "zh-Hans": {
+    "Custom image": "自定义图片",
+    "Choose a background image": "选择背景图片",
+    "Could not read or save this image. Try another image.": "无法读取或保存此图片，请尝试其他图片。",
+    "Could not remove the background. Please try again.": "无法移除背景，请重试。",
+    "Background image": "背景图片",
+    "Desktop glass": "桌面玻璃",
+    "Remove image": "移除图片",
+    "Change…": "更换…",
+    "Change background image": "更换背景图片",
+    "A local copy is kept. Transparency affects only the background.": "图片保留在本机。透明度仅影响背景。",
     "record": "录制",
     "capture": "截图",
     "ready_to_capture": "准备就绪",

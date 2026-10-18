@@ -7,7 +7,7 @@
 - **Area Selection**: Intuitive region selection with adjustable borders and real-time dimension feedback.
 - **Screen Recording**: High-quality video recording using Apple's latest ScreenCaptureKit API.
 - **Instant Screenshots**: Capture any region and save it instantly to your preferred folder.
-- **Native Settings**: An independent settings window with General, Capture, and Saving tabs. Choose the destination, filename prefix, quality, capture feedback, and launch-at-login behavior.
+- **Native Settings**: A compact settings sheet with General, Appearance, Capture, and Saving tabs. Choose the destination, filename prefix, background image, transparency, quality, capture feedback, and launch-at-login behavior.
 - **Global Shortcuts**: Control the app from anywhere on your system.
 - **Multi-Monitor Support**: Precise capture and selection across all connected displays.
 
@@ -72,9 +72,9 @@ External tools and AI agents can use the existing `glasscap-cli` JSON screenshot
 
 ## Glass capture workspace (Build 17)
 
-The main window opens at 500×400 points. It follows the approved Concept 02: compact toolbar, a clear preview canvas, labeled local image actions, and persistent folder/prefix shortcuts in the footer. Settings open as a compact content-sized sheet with General, Capture, and Saving sections; ⌘, opens the same sheet.
+The main window opens at 500×400 points. It follows the approved Concept 02: compact toolbar, a clear preview canvas, labeled local image actions, and persistent folder/prefix shortcuts in the footer. Settings open as a compact content-sized sheet with General, Appearance, Capture, and Saving sections; ⌘, opens the same sheet.
 
-Appearance supports Follow System, Day, and Night. Glass transparency is adjustable from 0–80% and persists across launches. A desktop-sampling native material and tint create the glass surface; screenshot pixels and text keep full opacity. macOS Reduce Transparency takes precedence. Native Liquid Glass controls are used on macOS 26; standard native controls support macOS 14.6 and later.
+Appearance supports Follow System, Day, and Night. Glass transparency is adjustable from 0–80% and persists across launches. In Settings → Appearance, choose a local background image or remove it to return to desktop glass. The app keeps a metadata-free PNG copy under its sandbox's `Application Support/GlassCap/Appearance`, bounded to 2400 pixels on the longest side. Moving or deleting the original does not affect the saved background; invalid imports preserve the previous image. Images stay local. The frosted background changes while screenshot pixels and text keep full opacity; controls have their own readable material. macOS Reduce Transparency takes precedence. Native Liquid Glass controls are used on macOS 26; standard native controls support macOS 14.6 and later.
 
 Saving settings show the full destination, editable prefix, and filename-pattern preview. The footer opens the directory chooser or prefix settings directly. Bookmarks are retained for the selected directory and restored on launch; a failed bookmark creation keeps the previous destination. Automatic filenames preserve Unicode/interior spaces, remove unsafe separators, and include a timestamp and random suffix to avoid collisions.
 

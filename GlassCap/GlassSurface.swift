@@ -47,12 +47,12 @@ private struct DesktopMaterial: NSViewRepresentable {
 struct CaptureActionStyle: ViewModifier {
     var prominent = false
     @ViewBuilder func body(content: Content) -> some View {
-        if #available(macOS 26, *) {
-            if prominent { content.buttonStyle(.glassProminent) }
-            else { content.buttonStyle(.glass) }
+        if prominent {
+            if #available(macOS 26, *) { content.buttonStyle(.glassProminent) }
+            else { content.buttonStyle(.borderedProminent) }
         } else {
-            if prominent { content.buttonStyle(.borderedProminent) }
-            else { content.buttonStyle(.bordered) }
+            // Content actions sit on an existing material tray; do not add tinted glass.
+            content.buttonStyle(.bordered).tint(nil).foregroundStyle(.primary)
         }
     }
 }

@@ -2,6 +2,8 @@
 
 GlassCap is a local macOS screenshot and recording tool. Use its JSON CLI when a task needs a screen capture; screen-content OCR and screenshot styling also exist in the GUI and stay local.
 
+For SwiftUI or visual changes, follow [the Apple UI review workflow](docs/apple-ui-workflow.md). Review the changed surface using the installed `swiftui-pro` and `macos-design-guidelines` skills when available, with Apple's current documentation and the actual project SDK taking precedence. Verify active and inactive native windows; an inactive screenshot alone does not establish button color or contrast.
+
 ## Discover and capture
 
 ```bash

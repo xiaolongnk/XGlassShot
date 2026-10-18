@@ -47,7 +47,6 @@ struct SettingsDock: View {
         .fixedSize(horizontal: false, vertical: true)
         .background(GlassSurface())
         .preferredColorScheme(appearance.mode.colorScheme)
-        .tint(.blue)
         .onExitCommand { dismiss() }
     }
 

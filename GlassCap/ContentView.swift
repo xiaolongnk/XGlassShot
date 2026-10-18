@@ -33,6 +33,7 @@ struct ContentView: View {
                     }
                 } label: {
                     Text(shortcuts.captureQuality == .high ? "Retina · 2×" : "Standard · 1×")
+                        .foregroundStyle(.secondary)
                 }
                 .menuStyle(.borderlessButton).fixedSize()
                 .help("Image quality".localized)
@@ -45,7 +46,6 @@ struct ContentView: View {
         .background(GlassSurface())
         .background(CompactWindowSizing())
         .preferredColorScheme(appearance.mode.colorScheme)
-        .tint(.blue)
         .navigationTitle("GlassCap")
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -80,8 +80,8 @@ struct CaptureControlsRow: View {
                 Label("Screenshot".localized, systemImage: "viewfinder")
             }
             .labelStyle(.titleAndIcon)
-            .modifier(CaptureActionStyle(prominent: true))
-            .tint(.blue)
+            .buttonStyle(.automatic)
+            .foregroundStyle(.primary)
             .help("Screenshot".localized + " (⌘⇧2)")
             Menu {
                 Button("Any display".localized) { overlay.showScreenshotOverlay() }

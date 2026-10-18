@@ -118,7 +118,6 @@ struct BeautifulExportView: View {
                           systemImage: copied ? "checkmark.circle.fill" : "doc.on.clipboard")
                 }
                 .modifier(CaptureActionStyle(prominent: true))
-                .tint(.blue)
             }
             .padding(16)
         }

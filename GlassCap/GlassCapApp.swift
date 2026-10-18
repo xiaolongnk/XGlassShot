@@ -24,7 +24,7 @@ struct GlassCapApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 440, minHeight: 400)
+                .frame(minWidth: 440, minHeight: 300)
                 .onAppear {
                     // Force activation when the content view appears
                     DispatchQueue.main.async {
@@ -32,11 +32,15 @@ struct GlassCapApp: App {
                     }
                 }
         }
-        .windowStyle(.hiddenTitleBar)
-        .windowToolbarStyle(.unified)
-        .defaultSize(width: 480, height: 440)
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unifiedCompact(showsTitle: false))
+        .defaultSize(width: 500, height: 380)
         .commands {
             CommandGroup(replacing: .newItem) {}
+            CaptureMenuCommands()
+        }
+        Settings {
+            SettingsDock(storageManager: .shared, shortcutsManager: .shared)
         }
     }
 }

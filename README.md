@@ -1,19 +1,13 @@
 # GlassCap
 
-**GlassCap** is a high-performance, modern screen recording and screenshot application for macOS, built with **ScreenCaptureKit** and **SwiftUI**. It offers a seamless, "glassmorphism" interface for capturing regions, recording video, and managing your capture workflow with global hotkeys.
+**GlassCap** is a high-performance, modern screen recording and screenshot application for macOS, built with **ScreenCaptureKit** and **SwiftUI**. It provides a compact native workspace for capturing regions, recording video, and managing captures with global hotkeys.
 
 ## ✨ Features
 
 - **Area Selection**: Intuitive region selection with adjustable borders and real-time dimension feedback.
 - **Screen Recording**: High-quality video recording using Apple's latest ScreenCaptureKit API.
 - **Instant Screenshots**: Capture any region and save it instantly to your preferred folder.
-- **Settings Dock**: A floating, interactive "Command Bar" for quick access to:
-    - 📁 **Save Location**: Select and remember your destination folder.
-    - 🏷️ **Filename Suffix**: Add custom tags/suffixes to your filenames dynamically.
-    - ⚡ **Quality Toggles**: Switch between Performance (Low) and Quality (High) modes.
-    - 🔊 **Feedback**: Toggle capture sound effects.
-    - 🔳 **Screenshot Border**: Optional 1px stylistic border for all screenshots.
-    - 🚀 **Auto Start**: Option to launch at login.
+- **Native Settings**: An independent settings window with General, Capture, and Saving tabs. Choose the destination, filename prefix, quality, capture feedback, and launch-at-login behavior.
 - **Global Shortcuts**: Control the app from anywhere on your system.
 - **Multi-Monitor Support**: Precise capture and selection across all connected displays.
 
@@ -48,7 +42,7 @@ GlassCap/
 
 1. **Permissions**: On first launch, GlassCap will request Screen Recording access. You must grant this in *System Settings > Privacy & Security > Screen Recording*.
 2. **Shortcuts**: Use `⌘ ⇧ 2` to take your first screenshot.
-3. **Save Location**: Click the Folder icon in the settings dock to set your preferred destination. Enable the **Question Mark Folder** icon if you want to be asked for a location every single time.
+3. **Save Location**: Click the folder in the status bar to choose the destination, or open Settings → Saving. Enable **Ask where to save** for a save panel after each capture.
 
 ## 📜 Recent Development Highlights
 
@@ -72,13 +66,13 @@ swift test
 bash script/build-local.sh /absolute/path/to/build-directory
 ```
 
-The local build script embeds the source revision, marks dirty sources, verifies the code signature, and prints the generated app path. It does not install or publish the app. The application header shows the version/build and its tooltip shows the source revision.
+The local build script embeds the source revision, marks dirty sources, verifies the code signature, and prints the generated app path. It does not install or publish the app. Settings → General shows the version/build; its tooltip shows the source revision.
 
 External tools and AI agents can use the existing `glasscap-cli` JSON screenshot interface. The GUI does not call a model service. See [glasscap-cli/README.md](glasscap-cli/README.md).
 
-## Compact capture workspace (Build 15)
+## Native capture workspace (Build 16)
 
-The main window opens at 480×440 points, with a bounded resize range and the preview taking the flexible space. Image previews are downsampled to at most 1200 pixels instead of enlarging 120×80 history thumbnails; the most recent file bookmark is restored before loading. Settings use a grouped sheet. Screenshot actions include a display menu: **Any display** or one named monitor.
+The main window opens at 500×380 points, with a 440×300 minimum and an 800×640 maximum. A standard compact macOS toolbar contains screenshot, display selection, recording, and Settings controls. The preview canvas takes the flexible space; a slim information strip holds image actions. System materials, colors, fonts, focus, and hover feedback follow macOS appearance and accessibility preferences. Image previews are downsampled to at most 1200 pixels instead of enlarging 120×80 history thumbnails; the most recent file bookmark is restored before loading. Settings use an independent native window with General, Capture, and Saving tabs, also available with ⌘,. Screenshot actions include a display menu: **Any display** or one named monitor.
 
 Selection ownership is derived from one display ID. Switching displays removes the previous screen's active selection; dragging past an edge is bounded to the selected screen. A screen-layout change cancels an in-progress selection. Capture flash feedback uses the selected display too.
 
@@ -89,3 +83,5 @@ bash script/verify-displays.sh /absolute/path/to/evidence-directory
 ```
 
 This compiles the production `ScreenRecorder` and `SelectionOverlay` sources with test-only file storage, checks 20 selection ownership switches, and compares standard and Retina captures against an independent ScreenCaptureKit reference for each connected display. The report includes display IDs, desktop origins, output dimensions, and pixel differences. It does not create or reposition UI windows. The main app is built separately with `script/build-local.sh`.
+
+The Build 16 design pass used [Design macOS Interfaces](https://github.com/0xKoru/apple-hig-codex-skills/tree/6563e765da1e66e5fe443637baeb75eba97b7e35/skills/design-macos-interfaces) alongside the local SwiftUI Expert skill. The layout follows Apple's [macOS guidance](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos) and [toolbar conventions](https://developer.apple.com/design/human-interface-guidelines/toolbars). This pass changes the workspace and Settings; the existing selection and beautification editors retain their current controls.

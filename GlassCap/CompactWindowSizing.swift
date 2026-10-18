@@ -14,11 +14,11 @@ struct CompactWindowSizing: NSViewRepresentable {
             configuredWindow = window
             window.identifier = NSUserInterfaceItemIdentifier("GlassCapMainWindow")
             window.tabbingMode = .disallowed
-            window.contentMinSize = NSSize(width: 440, height: 400)
-            window.contentMaxSize = NSSize(width: 640, height: 560)
+            window.contentMinSize = NSSize(width: 440, height: 300)
+            window.contentMaxSize = NSSize(width: 800, height: 640)
             DispatchQueue.main.async {
                 let top = window.frame.maxY
-                window.setContentSize(NSSize(width: 480, height: 440))
+                window.setContentSize(NSSize(width: 500, height: 380))
                 var frame = window.frame
                 frame.origin.y = top - frame.height
                 if let screen = window.screen {

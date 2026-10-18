@@ -20,78 +20,97 @@ struct CapturePreviewView: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(nsColor: .controlBackgroundColor))
+                Color(nsColor: .underPageBackgroundColor)
                 if let image = storageManager.lastCaptureThumbnail {
                     GeometryReader { geometry in
                         Image(nsImage: image)
                             .resizable()
                             .interpolation(.high)
                             .scaledToFit()
-                            .frame(width: max(0, geometry.size.width - 16), height: max(0, geometry.size.height - 16))
-                            .padding(8)
+                            .frame(width: max(0, geometry.size.width - 40), height: max(0, geometry.size.height - 40))
+                            .shadow(color: .black.opacity(0.16), radius: 8, y: 3)
+                            .padding(20)
                     }
                     .accessibilityLabel("Last capture preview".localized)
                 } else if storageManager.isLoadingThumbnail {
                     ProgressView().controlSize(.small)
                 } else {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         Image(systemName: storageManager.lastCaptureURL == nil ? "viewfinder" : "photo")
-                            .font(.system(size: 30, weight: .light))
-                            .foregroundStyle(.blue.opacity(0.8))
-                        Text(storageManager.lastCaptureURL == nil ? "Ready to capture".localized : "Preview unavailable".localized)
-                            .font(.system(size: 13, weight: .medium))
-                        Text("Choose an area on any display".localized)
-                            .font(.system(size: 11)).foregroundStyle(.secondary)
+                            .font(.system(size: 36, weight: .ultraLight))
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        VStack(spacing: 5) {
+                            Text(storageManager.lastCaptureURL == nil ? "Your next great capture".localized : "Preview unavailable".localized)
+                                .font(.system(size: 15, weight: .medium))
+                            Text("Choose an area on any display".localized)
+                                .font(.system(size: 12)).foregroundStyle(.secondary)
+                        }
+                        Text("⌘ ⇧ 2")
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(.quaternary.opacity(0.5), in: .rect(cornerRadius: 5))
                     }
                 }
             }
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.primary.opacity(0.08)))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
             if let url = storageManager.lastCaptureURL {
-                HStack(spacing: 8) {
-                    Text(url.lastPathComponent)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1).truncationMode(.middle)
-                    Spacer(minLength: 0)
-                    Text(url.pathExtension.uppercased())
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.tertiary)
-                }
-                HStack(spacing: 14) {
-                    Button {
-                        if isImage, let image = NSImage(contentsOf: url) {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.writeObjects([image])
-                        } else { NSWorkspace.shared.open(url) }
-                    } label: {
-                        Label(isImage ? "Copy image".localized : "Open recording".localized, systemImage: isImage ? "doc.on.doc" : "play.rectangle")
+                Divider()
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(isImage ? "Screenshot".localized : "Screen recording".localized)
+                            .font(.system(size: 12, weight: .medium))
+                        Text(url.lastPathComponent)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1).truncationMode(.middle)
+                            .help(url.path)
                     }
-                    if isImage {
-                        Button { runOCR() } label: {
-                            Label(isExtracting ? "Extracting…".localized : "Copy Text".localized, systemImage: "text.viewfinder")
-                        }
-                        .disabled(isExtracting)
-                        .popover(isPresented: $showOCRPopover, arrowEdge: .bottom) { ocrPopoverContent }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    HStack(spacing: 4) {
                         Button {
-                            beautifulExportURL = url
-                            showBeautifulExport = true
-                        } label: { Label("Beautify".localized, systemImage: "paintbrush") }
-                    }
-                    Spacer(minLength: 0)
-                    Button { storageManager.revealLastCapture() } label: { Image(systemName: "folder") }
+                            if isImage, let image = NSImage(contentsOf: url) {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.writeObjects([image])
+                            } else { NSWorkspace.shared.open(url) }
+                        } label: {
+                            Label(isImage ? "Copy image".localized : "Open recording".localized,
+                                  systemImage: isImage ? "doc.on.doc" : "play.fill")
+                        }
+                        .help(isImage ? "Copy image".localized : "Open recording".localized)
+
+                        if isImage {
+                            Button { runOCR() } label: {
+                                Label(isExtracting ? "Extracting…".localized : "Copy Text".localized, systemImage: "text.viewfinder")
+                            }
+                            .disabled(isExtracting)
+                            .help("Copy Text".localized)
+                            .popover(isPresented: $showOCRPopover, arrowEdge: .bottom) { ocrPopoverContent }
+                            Button {
+                                beautifulExportURL = url
+                                showBeautifulExport = true
+                            } label: { Label("Beautify".localized, systemImage: "paintbrush.pointed") }
+                            .help("Beautify".localized)
+                        }
+
+                        Button { storageManager.revealLastCapture() } label: {
+                            Label("reveal_file".localized, systemImage: "folder")
+                        }
                         .help("reveal_file".localized)
-                        .accessibilityLabel("reveal_file".localized)
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .controlSize(.large)
+                    .foregroundStyle(.secondary)
                 }
-                .font(.system(size: 11))
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .frame(height: 24)
+                .padding(.horizontal, 16)
+                .frame(height: 58)
             }
         }
         .sheet(isPresented: $showBeautifulExport) {

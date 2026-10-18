@@ -64,7 +64,9 @@
     "Copy Text": "Copy Text",
     "Beautify": "Beautify",
     "Extracting…": "Extracting…",
-    "Drag to select · Return to capture · Esc to cancel": "Drag to select · Return to capture · Esc to cancel"
+    "Drag to select · Return to capture · Esc to cancel": "Drag to select · Return to capture · Esc to cancel",
+    "Your next great capture": "Your next great capture",
+    "Screen recording": "Screen recording"
   },
   "zh-Hans": {
     "record": "录制",
@@ -131,7 +133,9 @@
     "Copy Text": "复制文字",
     "Beautify": "美化",
     "Extracting…": "正在识别…",
-    "Drag to select · Return to capture · Esc to cancel": "拖动选择区域 · 回车截图 · Esc 取消"
+    "Drag to select · Return to capture · Esc to cancel": "拖动选择区域 · 回车截图 · Esc 取消",
+    "Your next great capture": "记录眼前的精彩",
+    "Screen recording": "屏幕录像"
   },
   "ja": {
     "record": "録画",

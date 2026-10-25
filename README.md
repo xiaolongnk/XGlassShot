@@ -42,7 +42,7 @@ Your display. Your folder. Your filenames. Everything stays local.
 </tr>
 </table>
 
-The workspace stays compact while the image gets the space. Screenshot pixels remain clear as the glass background changes. Prefer the keyboard? Use **⌘⇧2** to capture, **⌘⇧1** to record, and **⌘,** for settings.
+The workspace stays compact while the image gets the space. Screenshot pixels remain clear as the glass background changes. Prefer the keyboard? The defaults are **⌘⇧2** to capture, **⌘⇧1** to record, and **⌘,** for settings. Change or disable global shortcuts in **Settings → Shortcuts**: click a shortcut and press your new combination, or choose Restore defaults.
 
 ## Get XGlassShot
 

@@ -33,6 +33,8 @@ Verify the actual right inset at the minimum, default and larger window sizes; r
 
 ## Verify before delivery
 
+Global shortcuts are editable in **Settings → Shortcuts** using the existing native recorder. Preserve explicit disabled values and custom bindings across launch; menus, toolbar help and the quality footer must reflect the same saved combination. Reject duplicate app actions before saving, warn about system/menu conflicts and retain Esc cancellation, Delete clearing and Restore defaults. Keep the settings sheet size stable.
+
 History controls sit beside the image at vertical center and reserve room instead of covering image pixels. Copy/OCR/beautify/reveal must operate on the displayed record. History persistence retains file access grants and metadata only; it must not delete original images or replace a valid clipboard when loading fails.
 
 Saving configuration belongs in **Settings → Saving**, using the same fixed-size sheet and glass surface as every other settings tab. Prefix shortcuts and footer/menu entry points call `SettingsPresentation.show(.saving)`; do not recreate a separate floating destination window. Every request focuses the prefix, including repeated requests while the sheet is open. The directory picker is owned by the settings sheet and returns focus to the prefix on completion.

@@ -73,6 +73,7 @@ struct ContentView: View {
 
 struct CaptureControlsRow: View {
     @ObservedObject private var overlay = OverlayManager.shared
+    @ObservedObject private var shortcuts = ShortcutsManager.shared
     @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
@@ -83,7 +84,7 @@ struct CaptureControlsRow: View {
             .labelStyle(.titleAndIcon)
             .buttonStyle(.automatic)
             .foregroundStyle(.primary)
-            .help("Screenshot".localized + " (⌘⇧2)")
+            .help(AppShortcut.captureScreenshot.hint)
             Menu {
                 Button("Any display".localized) { overlay.showScreenshotOverlay() }
                 Divider()
@@ -108,7 +109,7 @@ struct CaptureControlsRow: View {
         }
         .labelStyle(.titleAndIcon)
         .tint(overlay.isRecording ? .red : nil)
-        .help((overlay.isRecording ? "Stop Recording".localized : "Record".localized) + " (⌘⇧1)")
+        .help(overlay.isRecording ? "Stop Recording".localized : AppShortcut.captureZone.hint)
         .disabled(overlay.isBusy && !overlay.isRecording)
     }
 }
@@ -119,12 +120,12 @@ struct CaptureMenuCommands: Commands {
     var body: some Commands {
         CommandMenu("Capture".localized) {
             Button("Screenshot".localized) { overlay.showScreenshotOverlay() }
-                .keyboardShortcut("2", modifiers: [.command, .shift]).disabled(overlay.isBusy)
+                .globalKeyboardShortcut(AppShortcut.captureScreenshot.name).disabled(overlay.isBusy)
             Button(overlay.isRecording ? "Stop Recording".localized : "Record".localized) {
                 if overlay.isRecording { Task { await overlay.stopRecording() } }
                 else { overlay.showSelectionOverlay() }
             }
-            .keyboardShortcut("1", modifiers: [.command, .shift])
+            .globalKeyboardShortcut(AppShortcut.captureZone.name)
             .disabled(overlay.isBusy && !overlay.isRecording)
             Divider()
             Button("Toggle quality".localized) { ShortcutsManager.shared.toggleQuality() }

@@ -32,7 +32,7 @@ struct SettingsDock: View {
                     case .appearance: appearanceSettings
                     case .capture: captureSettings
                     case .saving: savingSettings
-                    case .shortcuts: KeyboardShortcutsView()
+                    case .shortcuts: KeyboardShortcutsView(shortcutsManager: shortcutsManager)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)

@@ -46,13 +46,22 @@ enum CaptureQuality: String, CaseIterable {
 // MARK: - App Shortcuts
 
 enum AppShortcut: String, CaseIterable {
-    case captureZone = "captureZone"
     case captureScreenshot = "captureScreenshot"
+    case captureZone = "captureZone"
     case toggleQuality = "toggleQuality"
     case changePrefix = "changePrefix"
 
     var name: KeyboardShortcuts.Name {
-        KeyboardShortcuts.Name(rawValue)
+        KeyboardShortcuts.Name(rawValue, initial: defaultShortcut)
+    }
+
+    var defaultShortcut: KeyboardShortcuts.Shortcut {
+        switch self {
+        case .captureScreenshot: return .init(.two, modifiers: [.command, .shift])
+        case .captureZone: return .init(.one, modifiers: [.command, .shift])
+        case .toggleQuality: return .init(.q, modifiers: [.control, .shift])
+        case .changePrefix: return .init(.l, modifiers: [.command, .shift])
+        }
     }
 
     var title: String {
@@ -68,13 +77,21 @@ enum AppShortcut: String, CaseIterable {
         KeyboardShortcuts.getShortcut(for: name)?.description ?? "—"
     }
 
-    var hint: String { title + " · " + shortcutText }
+    var hint: String {
+        KeyboardShortcuts.getShortcut(for: name) == nil ? title : title + " · " + shortcutText
+    }
+
+    var usesDefaultShortcut: Bool {
+        KeyboardShortcuts.getShortcut(for: name) == defaultShortcut
+    }
 }
 
 @available(macOS 12.3, *)
 @MainActor
 final class ShortcutsManager: ObservableObject {
     static let shared = ShortcutsManager()
+
+    @Published private(set) var shortcutBindings: [AppShortcut: KeyboardShortcuts.Shortcut] = [:]
 
     @Published var currentPrefix: String = "bug" {
         didSet {
@@ -103,27 +120,40 @@ final class ShortcutsManager: ObservableObject {
             currentPrefix = savedPrefix
         }
         setupDefaultShortcuts()
+        refreshShortcutBindings()
         setupShortcuts()
         isRestoringPreferences = false
     }
 
     private func setupDefaultShortcuts() {
-        // Set default shortcuts if not already configured
-        if KeyboardShortcuts.getShortcut(for: AppShortcut.captureZone.name) == nil {
-            KeyboardShortcuts.setShortcut(.init(.one, modifiers: [.command, .shift]), for: AppShortcut.captureZone.name)
+        // Name supplies initial defaults while preserving the library's explicit disabled value.
+        for action in AppShortcut.allCases { _ = action.name }
+        let migrationKey = "qualityShortcutSafetyMigrationV1"
+        if !UserDefaults.standard.bool(forKey: migrationKey) {
+            if KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name) == .init(.q, modifiers: [.command, .shift]) {
+                KeyboardShortcuts.setShortcut(AppShortcut.toggleQuality.defaultShortcut, for: AppShortcut.toggleQuality.name)
+            }
+            UserDefaults.standard.set(true, forKey: migrationKey)
         }
-        if KeyboardShortcuts.getShortcut(for: AppShortcut.captureScreenshot.name) == nil {
-            KeyboardShortcuts.setShortcut(.init(.two, modifiers: [.command, .shift]), for: AppShortcut.captureScreenshot.name)
-        }
-        let qualityShortcut = KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name)
-        // Migrate the former default, which is reserved by macOS for Log Out.
-        // Preserve any other saved binding.
-        if qualityShortcut == nil || qualityShortcut == .init(.q, modifiers: [.command, .shift]) {
-            KeyboardShortcuts.setShortcut(.init(.q, modifiers: [.control, .shift]), for: AppShortcut.toggleQuality.name)
-        }
-        if KeyboardShortcuts.getShortcut(for: AppShortcut.changePrefix.name) == nil {
-            KeyboardShortcuts.setShortcut(.init(.l, modifiers: [.command, .shift]), for: AppShortcut.changePrefix.name)
-        }
+    }
+
+    private func refreshShortcutBindings() {
+        shortcutBindings = Dictionary(uniqueKeysWithValues: AppShortcut.allCases.compactMap { action in
+            KeyboardShortcuts.getShortcut(for: action.name).map { (action, $0) }
+        })
+    }
+
+    func isShortcutInUse(_ shortcut: KeyboardShortcuts.Shortcut, for action: AppShortcut) -> Bool {
+        shortcutBindings.contains { $0.key != action && $0.value == shortcut }
+    }
+
+    func shortcutDidChange() {
+        refreshShortcutBindings()
+    }
+
+    func restoreDefaultShortcuts() {
+        KeyboardShortcuts.reset(AppShortcut.allCases.map(\.name))
+        refreshShortcutBindings()
     }
 
     private func setupShortcuts() {
@@ -262,9 +292,11 @@ struct QualityFeedbackView: View {
                 Text(AppShortcut.toggleQuality.hint)
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
-                Text("Q = Quality · 1× ↔ 2×".localized)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if AppShortcut.toggleQuality.usesDefaultShortcut {
+                    Text("Q = Quality · 1× ↔ 2×".localized)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)

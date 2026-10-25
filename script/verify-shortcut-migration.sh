@@ -17,7 +17,9 @@ method = source[/    private func setupDefaultShortcuts\(\) \{.*?(?=\n    privat
 abort "Cannot locate shortcut initialization" unless names && method
 fixture = "import Foundation\nimport AppKit\nimport KeyboardShortcuts\n"
 fixture += "extension String { var localized: String { self } }\n"
-fixture += names + "\n@MainActor struct DefaultsHarness {\n"
+fixture += names + "\n@MainActor final class DefaultsHarness {\n"
+fixture += "var shortcutBindings: [AppShortcut: KeyboardShortcuts.Shortcut] = [:]\n"
+fixture += "init() { setupDefaultShortcuts(); refreshShortcutBindings() }\n"
 fixture += method.sub("private func", "func") + "\n}\n"
 File.write(File.join(evidence, "ShortcutMigrationHarness.swift"), fixture)
 File.write(File.join(evidence, "migration.app/Contents/Info.plist"), <<~PLIST)

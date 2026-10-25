@@ -120,7 +120,11 @@
     "Previous image": "Previous image",
     "Next image": "Next image",
     "Capture history": "Capture history",
-    "Capture preview": "Capture preview"
+    "Capture preview": "Capture preview",
+    "Click to change · Esc cancels · Delete clears": "Click to change · Esc cancels · Delete clears",
+    "Restore defaults": "Restore defaults",
+    "Shortcut already in use": "Shortcut already in use",
+    "Choose a different combination for each action.": "Choose a different combination for each action."
   },
   "zh-Hans": {
     "Custom image": "自定义图片",
@@ -243,7 +247,11 @@
     "Previous image": "上一张图片",
     "Next image": "下一张图片",
     "Capture history": "截图历史",
-    "Capture preview": "截图预览"
+    "Capture preview": "截图预览",
+    "Click to change · Esc cancels · Delete clears": "点击修改 · Esc 取消 · Delete 清除",
+    "Restore defaults": "恢复默认",
+    "Shortcut already in use": "快捷键已被使用",
+    "Choose a different combination for each action.": "请为每个操作选择不同的组合键。"
   },
   "ja": {
     "record": "録画",
@@ -366,7 +374,11 @@
     "Previous image": "前の画像",
     "Next image": "次の画像",
     "Capture history": "キャプチャ履歴",
-    "Capture preview": "キャプチャのプレビュー"
+    "Capture preview": "キャプチャのプレビュー",
+    "Click to change · Esc cancels · Delete clears": "クリックして変更 · Escで取消 · Deleteで解除",
+    "Restore defaults": "デフォルトに戻す",
+    "Shortcut already in use": "ショートカットは使用中です",
+    "Choose a different combination for each action.": "各操作に異なるキーの組み合わせを選んでください。"
   },
   "es": {
     "record": "Grabar",
@@ -489,7 +501,11 @@
     "Previous image": "Imagen anterior",
     "Next image": "Imagen siguiente",
     "Capture history": "Historial de capturas",
-    "Capture preview": "Vista previa de captura"
+    "Capture preview": "Vista previa de captura",
+    "Click to change · Esc cancels · Delete clears": "Clic para cambiar · Esc cancela · Supr borra",
+    "Restore defaults": "Restaurar valores",
+    "Shortcut already in use": "Atajo ya en uso",
+    "Choose a different combination for each action.": "Elige una combinación distinta para cada acción."
   },
   "fr": {
     "record": "Enregistrer",
@@ -612,7 +628,11 @@
     "Previous image": "Image précédente",
     "Next image": "Image suivante",
     "Capture history": "Historique des captures",
-    "Capture preview": "Aperçu de capture"
+    "Capture preview": "Aperçu de capture",
+    "Click to change · Esc cancels · Delete clears": "Cliquer pour modifier · Échap annule · Suppr efface",
+    "Restore defaults": "Rétablir les réglages",
+    "Shortcut already in use": "Raccourci déjà utilisé",
+    "Choose a different combination for each action.": "Choisissez une combinaison différente pour chaque action."
   },
   "de": {
     "record": "Aufnehmen",
@@ -735,7 +755,11 @@
     "Previous image": "Vorheriges Bild",
     "Next image": "Nächstes Bild",
     "Capture history": "Aufnahmeverlauf",
-    "Capture preview": "Aufnahmevorschau"
+    "Capture preview": "Aufnahmevorschau",
+    "Click to change · Esc cancels · Delete clears": "Zum Ändern klicken · Esc bricht ab · Entf löscht",
+    "Restore defaults": "Standard wiederherstellen",
+    "Shortcut already in use": "Kurzbefehl bereits belegt",
+    "Choose a different combination for each action.": "Wähle für jede Aktion eine andere Tastenkombination."
   },
   "ko": {
     "record": "녹화",
@@ -858,7 +882,11 @@
     "Previous image": "이전 이미지",
     "Next image": "다음 이미지",
     "Capture history": "캡처 기록",
-    "Capture preview": "캡처 미리보기"
+    "Capture preview": "캡처 미리보기",
+    "Click to change · Esc cancels · Delete clears": "클릭하여 변경 · Esc 취소 · Delete 지우기",
+    "Restore defaults": "기본값 복원",
+    "Shortcut already in use": "이미 사용 중인 단축키",
+    "Choose a different combination for each action.": "각 동작에 다른 키 조합을 선택하세요."
   },
   "zh-Hant": {
     "record": "錄製",
@@ -984,7 +1012,11 @@
     "Previous image": "上一張圖片",
     "Next image": "下一張圖片",
     "Capture history": "擷取記錄",
-    "Capture preview": "擷取預覽"
+    "Capture preview": "擷取預覽",
+    "Click to change · Esc cancels · Delete clears": "點擊修改 · Esc 取消 · Delete 清除",
+    "Restore defaults": "回復預設",
+    "Shortcut already in use": "快捷鍵已被使用",
+    "Choose a different combination for each action.": "請為每個操作選擇不同的組合鍵。"
   },
   "it": {
     "record": "Registra",
@@ -1110,7 +1142,11 @@
     "Previous image": "Immagine precedente",
     "Next image": "Immagine successiva",
     "Capture history": "Cronologia catture",
-    "Capture preview": "Anteprima cattura"
+    "Capture preview": "Anteprima cattura",
+    "Click to change · Esc cancels · Delete clears": "Clic per cambiare · Esc annulla · Canc elimina",
+    "Restore defaults": "Ripristina predefiniti",
+    "Shortcut already in use": "Abbreviazione già in uso",
+    "Choose a different combination for each action.": "Scegli una combinazione diversa per ogni azione."
   },
   "nl": {
     "record": "Opnemen",
@@ -1236,6 +1272,10 @@
     "Previous image": "Vorige afbeelding",
     "Next image": "Volgende afbeelding",
     "Capture history": "Opnamegeschiedenis",
-    "Capture preview": "Opnamevoorbeeld"
+    "Capture preview": "Opnamevoorbeeld",
+    "Click to change · Esc cancels · Delete clears": "Klik om te wijzigen · Esc annuleert · Delete wist",
+    "Restore defaults": "Standaard herstellen",
+    "Shortcut already in use": "Sneltoets al in gebruik",
+    "Choose a different combination for each action.": "Kies een andere toetsencombinatie voor elke actie."
   }
 }

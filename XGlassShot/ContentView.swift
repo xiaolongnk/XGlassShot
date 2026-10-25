@@ -52,9 +52,6 @@ struct ContentView: View {
         .preferredColorScheme(appearance.mode.colorScheme)
         .navigationTitle("XGlassShot")
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Text("XGlassShot").font(.system(size: 12, weight: .semibold))
-            }
             ToolbarItemGroup(placement: .primaryAction) {
                 CaptureControlsRow()
                 Button { settings.show() } label: {
@@ -103,6 +100,7 @@ struct CaptureControlsRow: View {
             Label(overlay.isRecording ? "Stop Recording".localized : "Record".localized,
                   systemImage: overlay.isRecording ? "stop.circle.fill" : "record.circle")
         }
+        .labelStyle(.titleAndIcon)
         .tint(overlay.isRecording ? .red : nil)
         .help((overlay.isRecording ? "Stop Recording".localized : "Record".localized) + " (⌘⇧1)")
         .disabled(overlay.isBusy && !overlay.isRecording)

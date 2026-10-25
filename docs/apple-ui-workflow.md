@@ -6,14 +6,15 @@ XGlassShot is a compact macOS utility, targeting macOS 14.6+. The preview is the
 
 Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines) and [Materials guidance](https://developer.apple.com/design/human-interface-guidelines/materials) are the authority. Community skills are review aids, not Apple certification. Match advice to macOS and verify API declarations in the installed SDK before adopting it. Do not apply iOS-only sizing/navigation rules or change deployment/Swift targets because a skill suggests a newer baseline. The toolchain checked on 2026-10-18 is Xcode 26.6 / Swift 6.3.3; the project retains its existing language/build settings.
 
-Two complementary skills are installed in this owner's Codex skills directory. Both are MIT-licensed documentation packages; they add no app runtime dependencies:
+Complementary skills are installed in this owner's Codex skills directory. Their guidance is MIT-licensed; they add no app runtime dependencies:
 
 | Skill | Pinned source | Use |
 |---|---|---|
 | `swiftui-pro`, Paul Hudson | [twostraws/SwiftUI-Agent-Skill](https://github.com/twostraws/SwiftUI-Agent-Skill/tree/ce32af1693b9e78a7d22ff48001c97a304d32063/swiftui-pro) | Partial review of changed SwiftUI: API availability, view composition, semantic styles, accessibility, and performance when relevant. |
 | `macos-design-guidelines` | [ehmo/platform-design-skills](https://github.com/ehmo/platform-design-skills/tree/dc2be825d8b439caea78e9eaa8fb3ac23b0ff3e9/skills/macos) | Mac toolbars, menus, sheets, system colors, window behavior, pointer and keyboard interaction. Apply only rules appropriate to this single-purpose utility. |
+| `swiftui-expert-skill`, AvdLee | [AvdLee/SwiftUI-Agent-Skill](https://github.com/AvdLee/SwiftUI-Agent-Skill/tree/204dba7c67256a8b707ee3fbc5759a824191974f/skills/swiftui-expert-skill) | Focused native layout, localization, toolbar and focus review. The installed Mac window example has a recorded local correction for closure arity and `DisplayProxy.visibleRect`, verified against Xcode 26.6. |
 
-Read `SKILL.md` from `$CODEX_HOME/skills/<skill>` (normally `~/.codex/skills/<skill>`), then load only references relevant to the change. The existing SwiftUI Expert skill remains useful for image handling, appearance, and diagnostic work. Avoid duplicating its full checklist in each review. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work.
+Read `SKILL.md` from `$CODEX_HOME/skills/<skill>` (normally `~/.codex/skills/<skill>`), then load only references relevant to the change. Use the Mac checklist plus a focused SwiftUI review; avoid duplicating every checklist in each review. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work. Compile proposed API examples against the actual SDK before adopting them.
 
 Discovery snapshot on 2026-10-18: Skills CLI reported approximately 33.7K installs for SwiftUI Pro and 4.1K for macOS Design Guidelines; GitHub reported 6,206 and 615 repository stars. Popularity was only a discovery signal; the actual skill text and relevant references were reviewed before use.
 

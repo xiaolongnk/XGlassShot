@@ -31,7 +31,7 @@ struct KeyboardShortcutsView: View {
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .accessibilityElement(children: .contain)
             }
-            Text("⌘ = Command · ⇧ = Shift · Hold both, then press the key.".localized)
+            Text("⌘ Command · ⇧ Shift · ⌃ Control".localized)
                 .font(.system(size: 10)).foregroundStyle(.secondary)
         }
         .padding(.vertical, 12)
@@ -40,6 +40,7 @@ struct KeyboardShortcutsView: View {
     private func shortcutRow(_ title: String, keys: String) -> some View {
         HStack(spacing: 6) {
             Text(title)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 8)
             Text(keys)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))

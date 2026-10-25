@@ -116,8 +116,11 @@ final class ShortcutsManager: ObservableObject {
         if KeyboardShortcuts.getShortcut(for: AppShortcut.captureScreenshot.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.two, modifiers: [.command, .shift]), for: AppShortcut.captureScreenshot.name)
         }
-        if KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name) == nil {
-            KeyboardShortcuts.setShortcut(.init(.q, modifiers: [.command, .shift]), for: AppShortcut.toggleQuality.name)
+        let qualityShortcut = KeyboardShortcuts.getShortcut(for: AppShortcut.toggleQuality.name)
+        // Migrate the former default, which is reserved by macOS for Log Out.
+        // Preserve any other saved binding.
+        if qualityShortcut == nil || qualityShortcut == .init(.q, modifiers: [.command, .shift]) {
+            KeyboardShortcuts.setShortcut(.init(.q, modifiers: [.control, .shift]), for: AppShortcut.toggleQuality.name)
         }
         if KeyboardShortcuts.getShortcut(for: AppShortcut.changePrefix.name) == nil {
             KeyboardShortcuts.setShortcut(.init(.l, modifiers: [.command, .shift]), for: AppShortcut.changePrefix.name)
@@ -135,7 +138,7 @@ final class ShortcutsManager: ObservableObject {
             self?.handleCaptureScreenshot()
         }
 
-        // Toggle Quality: Cmd+Shift+Q
+        // Toggle Quality: Control+Shift+Q
         KeyboardShortcuts.onKeyUp(for: AppShortcut.toggleQuality.name) { [weak self] in
             self?.toggleQuality()
         }

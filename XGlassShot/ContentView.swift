@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import KeyboardShortcuts
 
 struct ContentView: View {
     @ObservedObject private var storage = StorageManager.shared
@@ -126,8 +127,10 @@ struct CaptureMenuCommands: Commands {
             .keyboardShortcut("1", modifiers: [.command, .shift])
             .disabled(overlay.isBusy && !overlay.isRecording)
             Divider()
-            Button(AppShortcut.toggleQuality.hint) { ShortcutsManager.shared.toggleQuality() }
-            Button(AppShortcut.changePrefix.hint) { ShortcutsManager.shared.showSaveDestinationEditor() }
+            Button("Toggle quality".localized) { ShortcutsManager.shared.toggleQuality() }
+                .globalKeyboardShortcut(AppShortcut.toggleQuality.name)
+            Button("Filename prefix".localized) { ShortcutsManager.shared.showSaveDestinationEditor() }
+                .globalKeyboardShortcut(AppShortcut.changePrefix.name)
         }
         CommandGroup(replacing: .help) {
             Button("Keyboard shortcuts".localized) { SettingsPresentation.shared.show(.shortcuts) }

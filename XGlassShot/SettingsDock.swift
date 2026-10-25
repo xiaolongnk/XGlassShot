@@ -204,7 +204,9 @@ private struct SettingsRow<Content: View>: View {
     }
     var body: some View {
         HStack(spacing: 12) {
-            Text(title).frame(width: 108, alignment: .leading)
+            Text(title)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 108, alignment: .leading)
             content().frame(maxWidth: .infinity, alignment: .trailing)
         }
         .font(.system(size: 12))

@@ -88,7 +88,6 @@ final class ShortcutsManager: ObservableObject {
         }
     }
 
-    private var activeInputWindow: NSWindow?
     private var feedbackWindow: NSWindow?
     private var feedbackTask: Task<Void, Never>?
     private var isRestoringPreferences = true
@@ -150,16 +149,12 @@ final class ShortcutsManager: ObservableObject {
     }
 
     private func handleCaptureZone() {
-        if activeInputWindow != nil {
-            closeActiveWindow()
-        }
+        SettingsPresentation.shared.isPresented = false
         OverlayManager.shared.showSelectionOverlay()
     }
 
     private func handleCaptureScreenshot() {
-        if activeInputWindow != nil {
-            closeActiveWindow()
-        }
+        SettingsPresentation.shared.isPresented = false
         OverlayManager.shared.showScreenshotOverlay()
     }
 
@@ -243,61 +238,7 @@ final class ShortcutsManager: ObservableObject {
     }
     
     func showSaveDestinationEditor() {
-        if let window = activeInputWindow, window.isVisible {
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
-            return
-        }
-        showSaveDestinationWindow()
-    }
-    
-    private func showSaveDestinationWindow() {
-        closeActiveWindow()
-        
-        let window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-        
-        window.level = .floating
-        window.title = "Saving".localized
-        window.identifier = NSUserInterfaceItemIdentifier("SaveDestinationPanel")
-        window.isReleasedWhenClosed = false
-        window.backgroundColor = .clear
-        window.isOpaque = false
-        window.ignoresMouseEvents = false
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        
-        let hostingView = NSHostingView(
-            rootView: SaveDestinationView(prefix: Binding(
-                get: { self.currentPrefix },
-                set: { self.currentPrefix = $0 }
-            ), chooseDirectory: { [weak window] in
-                guard let window else { return }
-                _ = await StorageManager.shared.selectSaveDirectory(presenting: window)
-            }, onDismiss: {
-                self.closeActiveWindow()
-            })
-        )
-        window.contentView = hostingView
-        window.setContentSize(hostingView.fittingSize)
-        
-        if let mainWindow = NSApp.windows.first(where: { $0.identifier?.rawValue == "GlassCapMainWindow" && $0.isVisible }) {
-            window.setFrameOrigin(NSPoint(x: mainWindow.frame.midX - window.frame.width / 2,
-                                          y: mainWindow.frame.midY - window.frame.height / 2))
-        } else {
-            window.center()
-        }
-        activeInputWindow = window
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
-    }
-    
-    func closeActiveWindow() {
-        activeInputWindow?.close()
-        activeInputWindow = nil
+        SettingsPresentation.shared.show(.saving)
     }
 }
 

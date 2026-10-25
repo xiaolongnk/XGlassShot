@@ -105,10 +105,13 @@ final class SettingsPresentation: ObservableObject {
     enum Tab: String, CaseIterable { case general, appearance, capture, saving, shortcuts }
     @Published var isPresented = false
     @Published var tab: Tab = .general
+    @Published private(set) var savingFocusRequest = 0
     func show(_ tab: Tab = .general) {
         self.tab = tab
+        if tab == .saving { savingFocusRequest += 1 }
         NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "GlassCapMainWindow" && $0.isVisible }) {
+        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "GlassCapMainWindow" }) {
+            if window.isMiniaturized { window.deminiaturize(nil) }
             window.makeKeyAndOrderFront(nil)
         } else { NSWorkspace.shared.open(Bundle.main.bundleURL) }
         isPresented = true

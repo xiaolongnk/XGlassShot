@@ -33,6 +33,8 @@ Verify the actual right inset at the minimum, default and larger window sizes; r
 
 ## Verify before delivery
 
+Saving configuration belongs in **Settings → Saving**, using the same fixed-size sheet and glass surface as every other settings tab. Prefix shortcuts and footer/menu entry points call `SettingsPresentation.show(.saving)`; do not recreate a separate floating destination window. Every request focuses the prefix, including repeated requests while the sheet is open. The directory picker is owned by the settings sheet and returns focus to the prefix on completion.
+
 - Build and verify the signed app; run relevant core tests. Do not add implementation-mirroring tests for a reversible style change.
 - Inspect native UI in **Day and Night**, with both **active and inactive windows**. Include hover/pressed feedback, Tab/Shift-Tab focus, Space/Return activation where applicable, and Esc dismissal. Record which states actually ran; do not infer active appearance from an inactive screenshot.
 - Check the narrow supported window size and a larger window. Ensure actions, labels, and display selection remain available. Check a longer localization when labels/layout change.

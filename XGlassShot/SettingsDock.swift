@@ -9,6 +9,8 @@ struct SettingsDock: View {
     @ObservedObject private var localization = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @FocusState private var isPrefixFocused: Bool
+    @State private var isChoosingDirectory = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -52,6 +54,10 @@ struct SettingsDock: View {
         .frame(width: 460, height: 380)
         .background(GlassSurface())
         .preferredColorScheme(appearance.mode.colorScheme)
+        .onChange(of: presentation.savingFocusRequest) { _, _ in
+            isPrefixFocused = false
+            focusPrefix()
+        }
         .onExitCommand { dismiss() }
     }
 
@@ -171,7 +177,16 @@ struct SettingsDock: View {
                 HStack {
                     Text("Folder".localized).fontWeight(.medium)
                     Spacer()
-                    Button("Choose…".localized) { Task { await storageManager.selectSaveDirectory() } }
+                    Button("Choose…".localized) {
+                        let window = NSApp.keyWindow
+                        Task {
+                            isChoosingDirectory = true
+                            _ = await storageManager.selectSaveDirectory(presenting: window)
+                            isChoosingDirectory = false
+                            focusPrefix()
+                        }
+                    }
+                    .disabled(isChoosingDirectory)
                 }
                 Text(storageManager.defaultSaveDirectory.path)
                     .font(.system(size: 10)).foregroundStyle(.secondary)
@@ -181,6 +196,9 @@ struct SettingsDock: View {
             SettingsRow("Filename prefix".localized) {
                 TextField("Filename prefix".localized, text: $shortcutsManager.currentPrefix)
                     .textFieldStyle(.roundedBorder).labelsHidden()
+                    .focused($isPrefixFocused)
+                    .onAppear { focusPrefix() }
+                    .onSubmit { dismiss() }
             }
             Text((CaptureFileStore.sanitizedPrefix(shortcutsManager.currentPrefix).isEmpty ? "" : CaptureFileStore.sanitizedPrefix(shortcutsManager.currentPrefix) + "_") + "YYYYMMDD-HHmmss-SSS-id.png")
                 .font(.system(size: 10, design: .monospaced)).foregroundStyle(.secondary)
@@ -192,6 +210,13 @@ struct SettingsDock: View {
             }
         }
         .font(.system(size: 12))
+    }
+
+    private func focusPrefix() {
+        DispatchQueue.main.async {
+            guard presentation.isPresented, presentation.tab == .saving else { return }
+            isPrefixFocused = true
+        }
     }
 }
 

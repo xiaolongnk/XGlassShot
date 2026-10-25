@@ -1,1 +1,1 @@
-Browse recent screenshots with Previous and Next controls, and copy the selected original image in one click. Screenshot history is preserved across launches. Enjoy a simpler quality picker, clearer keyboard shortcuts, compact settings, and editable save folder and filename prefix in Settings.
+Customize screenshot, recording, quality and filename-prefix shortcuts in Settings. New combinations apply immediately and persist across restarts. Includes conflict warnings, clear-to-disable and Restore defaults, alongside recent screenshot history and one-click original-image copy.

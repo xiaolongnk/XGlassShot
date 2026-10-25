@@ -1,7 +1,7 @@
 XGlassShot is a lightweight screenshot and recording tool for Mac. Free to download, with no account, subscription, in-app purchase or cloud AI service.
 
 CAPTURE ON THE DISPLAY YOU CHOOSE
-Select an area for a screenshot or video recording. Use Standard 1× or Retina 2× image quality. Global shortcuts: ⌘⇧2 for screenshots and ⌘⇧1 for recordings.
+Select an area for a screenshot or video recording. Use Standard 1× or Retina 2× image quality. Default shortcuts: ⌘⇧2 for screenshots and ⌘⇧1 for recordings. Change or disable screenshot, recording, quality and filename-prefix shortcuts in Settings > Shortcuts.
 
 YOUR FOLDER. YOUR FILENAMES.
 Choose a save folder and customize the filename prefix, including Unicode and spaces. Automatic captures receive unique names and never overwrite an existing file. An optional save panel gives you control for each capture.

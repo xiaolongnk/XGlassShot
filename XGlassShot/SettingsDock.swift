@@ -11,7 +11,7 @@ struct SettingsDock: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Text("Settings".localized).font(.system(size: 14, weight: .semibold))
             Picker("Settings".localized, selection: $presentation.tab) {
                 Text("General".localized).tag(SettingsPresentation.Tab.general)
@@ -23,16 +23,20 @@ struct SettingsDock: View {
             .pickerStyle(.segmented)
             .labelsHidden()
 
-            VStack(spacing: 0) {
-                switch presentation.tab {
-                case .general: generalSettings
-                case .appearance: appearanceSettings
-                case .capture: captureSettings
-                case .saving: savingSettings
-                case .shortcuts: KeyboardShortcutsView()
+            ScrollView {
+                VStack(spacing: 0) {
+                    switch presentation.tab {
+                    case .general: generalSettings
+                    case .appearance: appearanceSettings
+                    case .capture: captureSettings
+                    case .saving: savingSettings
+                    case .shortcuts: KeyboardShortcutsView()
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .padding(.horizontal, 12)
             }
-            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.regularMaterial, in: .rect(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.06)))
 
@@ -44,9 +48,8 @@ struct SettingsDock: View {
                     .modifier(CaptureActionStyle(prominent: true))
             }
         }
-        .padding(20)
-        .frame(width: 480)
-        .fixedSize(horizontal: false, vertical: true)
+        .padding(16)
+        .frame(width: 460, height: 380)
         .background(GlassSurface())
         .preferredColorScheme(appearance.mode.colorScheme)
         .onExitCommand { dismiss() }

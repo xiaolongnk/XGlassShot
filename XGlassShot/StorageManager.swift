@@ -79,7 +79,7 @@ final class StorageManager: ObservableObject {
         FileManager.default.isWritableFile(atPath: url.path)
     }
 
-    func selectSaveDirectory() async -> URL? {
+    func selectSaveDirectory(presenting window: NSWindow? = nil) async -> URL? {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
@@ -87,8 +87,14 @@ final class StorageManager: ObservableObject {
         panel.canCreateDirectories = true
         panel.message = "choose_save_location".localized
         panel.prompt = "select".localized
+        panel.directoryURL = defaultSaveDirectory
 
-        let response = await panel.begin()
+        let response: NSApplication.ModalResponse
+        if let window {
+            response = await panel.beginSheetModal(for: window)
+        } else {
+            response = await panel.begin()
+        }
 
         if response == .OK, let url = panel.url {
             do {

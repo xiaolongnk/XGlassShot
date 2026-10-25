@@ -142,7 +142,7 @@ final class ShortcutsManager: ObservableObject {
 
         // Change Prefix: Cmd+Shift+L
         KeyboardShortcuts.onKeyUp(for: AppShortcut.changePrefix.name) { [weak self] in
-            self?.handleChangePrefix()
+            self?.showSaveDestinationEditor()
         }
     }
 
@@ -190,6 +190,8 @@ final class ShortcutsManager: ObservableObject {
 
         // Update content
         hostingView.rootView = QualityFeedbackView(mode: captureQuality)
+        window.setContentSize(hostingView.fittingSize)
+        window.center()
         
         // Ensure window is visible
         window.alphaValue = 1.0
@@ -217,7 +219,7 @@ final class ShortcutsManager: ObservableObject {
     private func createFeedbackWindow() {
         let screenFrame = NSScreen.main?.frame ?? .zero
         let window = NSWindow(
-            contentRect: NSRect(x: screenFrame.midX - 180, y: screenFrame.midY - 45, width: 360, height: 90),
+            contentRect: NSRect(x: screenFrame.midX - 220, y: screenFrame.midY, width: 440, height: 1),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -230,110 +232,69 @@ final class ShortcutsManager: ObservableObject {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
         let hostingView = NSHostingView(rootView: QualityFeedbackView(mode: captureQuality))
-        hostingView.frame = window.contentView?.bounds ?? .zero
         window.contentView = hostingView
+        window.setContentSize(hostingView.fittingSize)
         window.center()
         
         feedbackWindow = window
     }
     
-    private func handleChangePrefix() {
-        guard activeInputWindow == nil else { return }
-        showPrefixInputWindow()
+    func showSaveDestinationEditor() {
+        if let window = activeInputWindow, window.isVisible {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+        showSaveDestinationWindow()
     }
     
-    private func showPrefixInputWindow() {
+    private func showSaveDestinationWindow() {
         closeActiveWindow()
         
-        let screenFrame = NSScreen.main?.frame ?? .zero
-        let window = NSWindow(
-            contentRect: NSRect(x: screenFrame.midX - 200, y: screenFrame.midY - 30, width: 400, height: 60),
-            styleMask: [.borderless],
+        let window = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         
         window.level = .floating
+        window.title = "Saving".localized
+        window.identifier = NSUserInterfaceItemIdentifier("SaveDestinationPanel")
+        window.isReleasedWhenClosed = false
         window.backgroundColor = .clear
         window.isOpaque = false
         window.ignoresMouseEvents = false
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         let hostingView = NSHostingView(
-            rootView: PrefixInputView(prefix: Binding(
+            rootView: SaveDestinationView(prefix: Binding(
                 get: { self.currentPrefix },
                 set: { self.currentPrefix = $0 }
-            )) {
+            ), chooseDirectory: { [weak window] in
+                guard let window else { return }
+                _ = await StorageManager.shared.selectSaveDirectory(presenting: window)
+            }, onDismiss: {
                 self.closeActiveWindow()
-            }
-            .background(Color.clear)
+            })
         )
-        hostingView.frame = window.contentView?.bounds ?? .zero
         window.contentView = hostingView
+        window.setContentSize(hostingView.fittingSize)
         
-        window.makeKeyAndOrderFront(nil)
-        window.center()
-        NSApp.activate(ignoringOtherApps: true)
-        
-        activeInputWindow = window
-        
-        // Focus text field after a brief delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            window.makeFirstResponder(hostingView)
+        if let mainWindow = NSApp.windows.first(where: { $0.identifier?.rawValue == "GlassCapMainWindow" && $0.isVisible }) {
+            window.setFrameOrigin(NSPoint(x: mainWindow.frame.midX - window.frame.width / 2,
+                                          y: mainWindow.frame.midY - window.frame.height / 2))
+        } else {
+            window.center()
         }
+        activeInputWindow = window
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
     }
     
     func closeActiveWindow() {
         activeInputWindow?.close()
         activeInputWindow = nil
-    }
-}
-
-struct PrefixInputView: View {
-    @Binding var prefix: String
-    let onDismiss: () -> Void
-    
-    @ObservedObject private var localizationManager = LocalizationManager.shared
-    @State private var inputText: String = ""
-    @FocusState private var isFocused: Bool
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Text("prefix_label".localized)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
-                .foregroundColor(.white.opacity(0.8))
-            
-            TextField("", text: $inputText)
-                .font(.system(size: 16, weight: .medium, design: .monospaced))
-                .foregroundColor(.white)
-                .textFieldStyle(.plain)
-                .focused($isFocused)
-                .onSubmit {
-                    confirmPrefix()
-                }
-                .onKeyPress(.escape) {
-                    onDismiss()
-                    return .handled
-                }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(GlassView(material: .hudWindow, blendingMode: .withinWindow))
-        .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
-        .onAppear {
-            inputText = prefix
-            isFocused = true
-        }
-    }
-    
-    private func confirmPrefix() {
-        prefix = inputText
-        onDismiss()
     }
 }
 
@@ -361,6 +322,8 @@ struct QualityFeedbackView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
@@ -371,5 +334,7 @@ struct QualityFeedbackView: View {
                 .stroke(mode == .high ? Color.yellow.opacity(0.3) : Color.cyan.opacity(0.3), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+        .padding(8)
+        .frame(width: 440)
     }
 }

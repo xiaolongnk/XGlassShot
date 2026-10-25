@@ -88,7 +88,7 @@ For an already configured signing environment, `bash script/build-local.sh /abso
 - **⌘⇧2:** choose an area for a screenshot. Drag, then Return to capture or Esc to cancel.
 - **⌘⇧1:** choose an area for recording; stop from the app or menu bar.
 - **⌘⇧Q:** toggle capture quality.
-- **⌘⇧L:** edit the filename prefix.
+- **⌘⇧L:** open the compact Saving panel to change the folder and edit the filename prefix. Changes save automatically; Return or Done closes the panel. The footer prefix button opens the same panel.
 - **⌘/:** show all keyboard shortcuts, also available from the keyboard button in the footer or Settings → Shortcuts. Quality switches between Standard 1× and Retina 2×; remember **Q = Quality**. The quality dropdown offers both choices directly, and a brief confirmation shows the selected quality and shortcut after each change.
 - **⌘,:** open settings. **Saving** controls the folder, filename prefix and optional save panel; **Appearance** controls the theme, image and transparency.
 - Use the arrow beside Screenshot to select a specific display. No unavailable-display fallback silently captures another screen.

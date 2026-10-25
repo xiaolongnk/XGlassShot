@@ -20,7 +20,7 @@ struct ContentView: View {
                         .lineLimit(1).truncationMode(.middle)
                 }
                 .help(storage.defaultSaveDirectory.path)
-                Button { settings.show(.saving) } label: {
+                Button { shortcuts.showSaveDestinationEditor() } label: {
                     Label(CaptureFileStore.sanitizedPrefix(shortcuts.currentPrefix).isEmpty ? "Prefix".localized : CaptureFileStore.sanitizedPrefix(shortcuts.currentPrefix), systemImage: "tag")
                         .lineLimit(1).truncationMode(.middle)
                 }
@@ -130,7 +130,7 @@ struct CaptureMenuCommands: Commands {
             .disabled(overlay.isBusy && !overlay.isRecording)
             Divider()
             Button(AppShortcut.toggleQuality.hint) { ShortcutsManager.shared.toggleQuality() }
-            Button(AppShortcut.changePrefix.hint) { SettingsPresentation.shared.show(.saving) }
+            Button(AppShortcut.changePrefix.hint) { ShortcutsManager.shared.showSaveDestinationEditor() }
         }
         CommandGroup(replacing: .help) {
             Button("Keyboard shortcuts".localized) { SettingsPresentation.shared.show(.shortcuts) }

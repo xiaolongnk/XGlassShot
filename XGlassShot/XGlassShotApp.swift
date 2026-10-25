@@ -25,7 +25,8 @@ struct XGlassShotApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 440, minHeight: 300)
+                .frame(minWidth: CompactWindowSizing.minimumSize.width,
+                       minHeight: CompactWindowSizing.minimumSize.height)
                 .onAppear {
                     // Force activation when the content view appears
                     DispatchQueue.main.async {
@@ -35,7 +36,8 @@ struct XGlassShotApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))
-        .defaultSize(width: 500, height: 400)
+        .defaultSize(width: CompactWindowSizing.defaultSize.width,
+                     height: CompactWindowSizing.defaultSize.height)
         .commands {
             CommandGroup(replacing: .newItem) {}
             CaptureMenuCommands()

@@ -1,8 +1,11 @@
 import SwiftUI
 import AppKit
 
-/// Explicitly migrates the oversized frame restored by earlier versions.
+/// Keeps the main window large enough to contain its native dialogs.
 struct CompactWindowSizing: NSViewRepresentable {
+    static let minimumSize = NSSize(width: 520, height: 460)
+    static let defaultSize = NSSize(width: 600, height: 500)
+
     func makeNSView(context: Context) -> SizingView { SizingView() }
     func updateNSView(_ nsView: SizingView, context: Context) {}
 
@@ -17,13 +20,13 @@ struct CompactWindowSizing: NSViewRepresentable {
             window.isOpaque = false
             window.backgroundColor = .clear
             window.titlebarAppearsTransparent = true
-            window.contentMinSize = NSSize(width: 440, height: 300)
+            window.contentMinSize = CompactWindowSizing.minimumSize
             window.contentMaxSize = NSSize(width: 800, height: 640)
             DispatchQueue.main.async {
                 // SwiftUI may replace its provisional identifier during attachment.
                 window.identifier = NSUserInterfaceItemIdentifier("GlassCapMainWindow")
                 let top = window.frame.maxY
-                window.setContentSize(NSSize(width: 500, height: 400))
+                window.setContentSize(CompactWindowSizing.defaultSize)
                 var frame = window.frame
                 frame.origin.y = top - frame.height
                 if let screen = window.screen {

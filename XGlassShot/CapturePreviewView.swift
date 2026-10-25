@@ -6,6 +6,7 @@ struct CapturePreviewView: View {
     @ObservedObject var storageManager: StorageManager
     @ObservedObject private var overlayManager = OverlayManager.shared
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var historyManager = ClipboardRegisterManager.shared
 
     // Action states
     @State private var isExtracting = false
@@ -17,8 +18,18 @@ struct CapturePreviewView: View {
     @State private var beautifulExport: ExportRequest?
     @State private var showOCRPopover = false
 
+    private var displayedURL: URL? { historyManager.previewURL ?? storageManager.lastCaptureURL }
+    private var previewThumbnail: NSImage? {
+        historyManager.previewURL == nil ? storageManager.lastCaptureThumbnail : historyManager.previewThumbnail
+    }
+    private var isLoadingPreview: Bool {
+        historyManager.previewURL == nil ? storageManager.isLoadingThumbnail : historyManager.isLoadingPreview
+    }
+    @State private var copiedImageURL: URL?
+    @State private var copyFeedbackTask: Task<Void, Never>?
+
     private var isImage: Bool {
-        guard let url = storageManager.lastCaptureURL else { return false }
+        guard let url = displayedURL else { return false }
         return ["png", "jpg", "jpeg"].contains(url.pathExtension.lowercased())
     }
 
@@ -26,28 +37,29 @@ struct CapturePreviewView: View {
         VStack(spacing: 0) {
             ZStack {
                 Color.clear
-                if let image = storageManager.lastCaptureThumbnail {
+                if let image = previewThumbnail {
                     GeometryReader { geometry in
                         Image(nsImage: image)
                             .resizable()
                             .interpolation(.high)
                             .scaledToFit()
-                            .frame(width: max(0, geometry.size.width - 28), height: max(0, geometry.size.height - 28))
+                            .frame(width: max(0, geometry.size.width - (historyManager.history.entries.isEmpty ? 28 : 100)), height: max(0, geometry.size.height - 28))
                             .clipShape(.rect(cornerRadius: 6))
                             .shadow(color: .black.opacity(0.16), radius: 8, y: 3)
-                            .padding(14)
+                            .padding(.horizontal, historyManager.history.entries.isEmpty ? 14 : 50)
+                            .padding(.vertical, 14)
                     }
-                    .accessibilityLabel("Last capture preview".localized)
-                } else if storageManager.isLoadingThumbnail {
+                    .accessibilityLabel("Capture preview".localized)
+                } else if isLoadingPreview {
                     ProgressView().controlSize(.small)
                 } else {
                     VStack(spacing: 12) {
-                        Image(systemName: storageManager.lastCaptureURL == nil ? "viewfinder" : "photo")
+                        Image(systemName: displayedURL == nil ? "viewfinder" : "photo")
                             .font(.system(size: 36, weight: .ultraLight))
                             .foregroundStyle(.secondary)
                             .accessibilityHidden(true)
                         VStack(spacing: 5) {
-                            Text(storageManager.lastCaptureURL == nil ? "Your next great capture".localized : "Preview unavailable".localized)
+                            Text(displayedURL == nil ? "Your next great capture".localized : "Preview unavailable".localized)
                                 .font(.system(size: 15, weight: .medium))
                             Text("Choose an area on any display".localized)
                                 .font(.system(size: 12)).foregroundStyle(.secondary)
@@ -62,10 +74,20 @@ struct CapturePreviewView: View {
                     .background(.regularMaterial, in: .rect(cornerRadius: 16))
                 }
             }
+            .overlay {
+                if !historyManager.history.entries.isEmpty {
+                    HStack {
+                        historyButton(.older, title: "Previous image".localized, symbol: "chevron.left")
+                        Spacer()
+                        historyButton(.newer, title: "Next image".localized, symbol: "chevron.right")
+                    }
+                    .padding(.horizontal, 12)
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            if let url = storageManager.lastCaptureURL {
+            if let url = displayedURL {
                 Divider()
                 VStack(spacing: 10) {
                     HStack(spacing: 12) {
@@ -79,20 +101,26 @@ struct CapturePreviewView: View {
                                 .help(url.path)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        if let position = historyManager.history.position(of: displayedURL) {
+                            Text("\(position + 1) / \(historyManager.history.entries.count)")
+                                .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                .accessibilityLabel("Capture history".localized)
+                                .accessibilityValue("\(position + 1) / \(historyManager.history.entries.count)")
+                        }
                         Text(url.pathExtension.uppercased())
                             .font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
                     }
                     HStack(spacing: 6) {
                         Button {
-                            if isImage, let image = NSImage(contentsOf: url) {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.writeObjects([image])
+                            if isImage {
+                                copyImage(at: url)
                             } else { NSWorkspace.shared.open(url) }
                         } label: {
-                            Label(isImage ? "Copy image".localized : "Open recording".localized,
+                            Label(isImage ? (copiedImageURL == url ? "Copied!".localized : "Copy image".localized) : "Open recording".localized,
                                   systemImage: isImage ? "doc.on.doc" : "play.fill")
                         }
                         .help(isImage ? "Copy image".localized : "Open recording".localized)
+                        .disabled(isImage && previewThumbnail == nil)
 
                         if isImage {
                             Button { runOCR() } label: {
@@ -107,7 +135,7 @@ struct CapturePreviewView: View {
                             .help("Beautify".localized)
                         }
 
-                        Button { storageManager.revealLastCapture() } label: {
+                        Button { NSWorkspace.shared.activateFileViewerSelecting([url]) } label: {
                             Label("reveal_file".localized, systemImage: "folder")
                         }
                         .labelStyle(.iconOnly)
@@ -134,7 +162,37 @@ struct CapturePreviewView: View {
             }
         }
         .onChange(of: overlayManager.pendingPostAction) { _, _ in consumePostAction() }
+        .onChange(of: displayedURL) { _, _ in
+            copyFeedbackTask?.cancel()
+            copiedImageURL = nil
+            showOCRPopover = false
+            extractedText = nil
+        }
         .onAppear { consumePostAction() }
+        .onDisappear { copyFeedbackTask?.cancel() }
+    }
+
+    private func historyButton(_ direction: CaptureHistory.Direction, title: String, symbol: String) -> some View {
+        Button { historyManager.browse(direction, from: displayedURL) } label: {
+            Label(title, systemImage: symbol).labelStyle(.iconOnly)
+                .frame(width: 28, height: 30)
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.circle)
+        .controlSize(.large)
+        .disabled(!historyManager.canBrowse(direction, from: displayedURL))
+        .help(title)
+    }
+
+    private func copyImage(at url: URL) {
+        guard historyManager.copyImage(at: url) else { return }
+        copyFeedbackTask?.cancel()
+        copiedImageURL = url
+        copyFeedbackTask = Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            copiedImageURL = nil
+        }
     }
 
     private func consumePostAction() {
@@ -191,14 +249,14 @@ struct CapturePreviewView: View {
     // MARK: - Actions
 
     private func runOCR(url sourceURL: URL? = nil) {
-        guard let url = sourceURL ?? storageManager.lastCaptureURL else { return }
+        guard let url = sourceURL ?? displayedURL else { return }
         isExtracting = true
         extractedText = nil
         showOCRPopover = false
         Task {
             do {
                 let text = try await OCRManager.shared.extractText(from: url)
-                guard storageManager.lastCaptureURL == url else { isExtracting = false; return }
+                guard displayedURL == url else { isExtracting = false; return }
                 extractedText = text
                 if !text.isEmpty {
                     NSPasteboard.general.clearContents()
@@ -207,6 +265,7 @@ struct CapturePreviewView: View {
                     ClipboardRegisterManager.shared.setOCRText(text, forURL: url)
                 }
             } catch {
+                guard displayedURL == url else { isExtracting = false; return }
                 extractedText = error.localizedDescription
             }
             isExtracting = false

@@ -71,6 +71,8 @@ final class StorageManager: ObservableObject {
             lastCaptureURL = url
             loadThumbnail(for: url)
         }
+        ClipboardRegisterManager.shared.prepare(latestURL: lastCaptureURL, bookmark: UserDefaults.standard.data(forKey: "lastCaptureBookmark"))
+        ClipboardRegisterManager.shared.refresh(in: defaultSaveDirectory)
     }
 
     // MARK: - Directory Management
@@ -104,6 +106,7 @@ final class StorageManager: ObservableObject {
                 directoryAccess = url
                 UserDefaults.standard.set(bookmark, forKey: "saveDirectoryBookmark")
                 defaultSaveDirectory = url
+                ClipboardRegisterManager.shared.refresh(in: url)
                 return url
             } catch {
                 // Keep the previous working destination if the new grant cannot be persisted.
@@ -422,19 +425,9 @@ final class StorageManager: ObservableObject {
     }
 
     private func pushToClipboardRegister(url: URL) {
-        // Only register image captures (not video recordings)
-        guard url.pathExtension.lowercased() == "png" || url.pathExtension.lowercased() == "jpg" else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            let thumbnail: NSImage
-            if let img = NSImage(contentsOf: url) {
-                thumbnail = img.resized(to: NSSize(width: 120, height: 80))
-            } else {
-                thumbnail = NSImage()
-            }
-            DispatchQueue.main.async {
-                ClipboardRegisterManager.shared.addEntry(imageURL: url, thumbnail: thumbnail)
-            }
-        }
+        let history = ClipboardRegisterManager.shared
+        history.showLatest(url: url)
+        history.addEntry(imageURL: url)
     }
 
     private func loadThumbnail(for url: URL) {
@@ -459,8 +452,4 @@ final class StorageManager: ObservableObject {
         }
     }
 
-    func revealLastCapture() {
-        guard let url = lastCaptureURL else { return }
-        NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
 }

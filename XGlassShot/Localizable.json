@@ -116,7 +116,11 @@
     "High": "High",
     "Low file size, 1x scale": "Low file size, 1x scale",
     "Best resolution, 2x scale": "Best resolution, 2x scale",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Previous image",
+    "Next image": "Next image",
+    "Capture history": "Capture history",
+    "Capture preview": "Capture preview"
   },
   "zh-Hans": {
     "Custom image": "自定义图片",
@@ -235,7 +239,11 @@
     "High": "高",
     "Low file size, 1x scale": "文件较小，1 倍大小",
     "Best resolution, 2x scale": "最佳分辨率，2 倍大小",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "上一张图片",
+    "Next image": "下一张图片",
+    "Capture history": "截图历史",
+    "Capture preview": "截图预览"
   },
   "ja": {
     "record": "録画",
@@ -354,7 +362,11 @@
     "High": "高画質",
     "Low file size, 1x scale": "小さいファイル、1倍",
     "Best resolution, 2x scale": "最高解像度、2倍",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "前の画像",
+    "Next image": "次の画像",
+    "Capture history": "キャプチャ履歴",
+    "Capture preview": "キャプチャのプレビュー"
   },
   "es": {
     "record": "Grabar",
@@ -473,7 +485,11 @@
     "High": "Alta",
     "Low file size, 1x scale": "Archivo pequeño, escala 1×",
     "Best resolution, 2x scale": "Máxima resolución, escala 2×",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Imagen anterior",
+    "Next image": "Imagen siguiente",
+    "Capture history": "Historial de capturas",
+    "Capture preview": "Vista previa de captura"
   },
   "fr": {
     "record": "Enregistrer",
@@ -592,7 +608,11 @@
     "High": "Haute",
     "Low file size, 1x scale": "Fichier léger, échelle 1×",
     "Best resolution, 2x scale": "Résolution maximale, échelle 2×",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Image précédente",
+    "Next image": "Image suivante",
+    "Capture history": "Historique des captures",
+    "Capture preview": "Aperçu de capture"
   },
   "de": {
     "record": "Aufnehmen",
@@ -711,7 +731,11 @@
     "High": "Hoch",
     "Low file size, 1x scale": "Kleine Datei, 1×-Skalierung",
     "Best resolution, 2x scale": "Beste Auflösung, 2×-Skalierung",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Vorheriges Bild",
+    "Next image": "Nächstes Bild",
+    "Capture history": "Aufnahmeverlauf",
+    "Capture preview": "Aufnahmevorschau"
   },
   "ko": {
     "record": "녹화",
@@ -830,7 +854,11 @@
     "High": "높음",
     "Low file size, 1x scale": "작은 파일, 1배 크기",
     "Best resolution, 2x scale": "최고 해상도, 2배 크기",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "이전 이미지",
+    "Next image": "다음 이미지",
+    "Capture history": "캡처 기록",
+    "Capture preview": "캡처 미리보기"
   },
   "zh-Hant": {
     "record": "錄製",
@@ -952,7 +980,11 @@
     "High": "高",
     "Low file size, 1x scale": "檔案較小，1 倍大小",
     "Best resolution, 2x scale": "最佳解析度，2 倍大小",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "上一張圖片",
+    "Next image": "下一張圖片",
+    "Capture history": "擷取記錄",
+    "Capture preview": "擷取預覽"
   },
   "it": {
     "record": "Registra",
@@ -1074,7 +1106,11 @@
     "High": "Alta",
     "Low file size, 1x scale": "File ridotto, scala 1×",
     "Best resolution, 2x scale": "Massima risoluzione, scala 2×",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Immagine precedente",
+    "Next image": "Immagine successiva",
+    "Capture history": "Cronologia catture",
+    "Capture preview": "Anteprima cattura"
   },
   "nl": {
     "record": "Opnemen",
@@ -1196,6 +1232,10 @@
     "High": "Hoog",
     "Low file size, 1x scale": "Klein bestand, schaal 1×",
     "Best resolution, 2x scale": "Beste resolutie, schaal 2×",
-    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control"
+    "⌘ Command · ⇧ Shift · ⌃ Control": "⌘ Command · ⇧ Shift · ⌃ Control",
+    "Previous image": "Vorige afbeelding",
+    "Next image": "Volgende afbeelding",
+    "Capture history": "Opnamegeschiedenis",
+    "Capture preview": "Opnamevoorbeeld"
   }
 }

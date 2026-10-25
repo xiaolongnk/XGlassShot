@@ -53,13 +53,7 @@ struct ContentView: View {
         .navigationTitle("XGlassShot")
         .toolbar {
             ToolbarItem(placement: .navigation) {
-                HStack(spacing: 6) {
-                    Image(systemName: "viewfinder").font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white).padding(4)
-                        .background(.blue.gradient, in: .rect(cornerRadius: 5))
-                        .accessibilityHidden(true)
-                    Text("XGlassShot").font(.system(size: 12, weight: .semibold))
-                }
+                Text("XGlassShot").font(.system(size: 12, weight: .semibold))
             }
             ToolbarItemGroup(placement: .primaryAction) {
                 CaptureControlsRow()

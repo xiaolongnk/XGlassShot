@@ -52,7 +52,12 @@ struct ContentView: View {
         .preferredColorScheme(appearance.mode.colorScheme)
         .navigationTitle("XGlassShot")
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
+            if #available(macOS 26, *) {
+                ToolbarSpacer(.flexible)
+            } else {
+                ToolbarItem { Spacer() }
+            }
+            ToolbarItemGroup(placement: .automatic) {
                 CaptureControlsRow()
                 Button { settings.show() } label: {
                     Label("Settings".localized, systemImage: "gearshape")

@@ -24,6 +24,12 @@ Discovery snapshot on 2026-10-18: Skills CLI reported approximately 33.7K instal
 3. Define control hierarchy: content actions use neutral native styling; reserve prominent accent fill for a genuine confirmation/default action. Never force one tint across a content container that contains unrelated controls.
 4. Keep image pixels independent of background opacity. Use semantic primary/secondary foregrounds. Preserve system focus indicators, labels, disabled states, and recording-state semantics.
 
+## Main toolbar alignment
+
+The capture, display, recording and Settings controls form one compact group at the **trailing edge** of the main window. The area between the traffic lights and the controls is flexible space. Do not add a noninteractive app-name badge or rely on a semantic placement alone to establish alignment. Use the native toolbar spacer on supported systems and retain the older macOS fallback.
+
+Verify the actual right inset at the minimum, default and larger window sizes; resizing must expand the empty space rather than leave the actions near the middle. This is XGlassShot's product layout contract, not a rule that every Mac app must place all actions on the right.
+
 ## Verify before delivery
 
 - Build and verify the signed app; run relevant core tests. Do not add implementation-mirroring tests for a reversible style change.

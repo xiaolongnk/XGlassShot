@@ -1,1 +1,1 @@
-Unified XGlassShot branding across the app, open-source repository, website and JSON CLI. Existing settings and capture destinations are preserved.
+Browse recent screenshots with Previous and Next controls, and copy the selected original image in one click. Screenshot history is preserved across launches. Enjoy a simpler quality picker, clearer keyboard shortcuts, compact settings, and editable save folder and filename prefix in Settings.

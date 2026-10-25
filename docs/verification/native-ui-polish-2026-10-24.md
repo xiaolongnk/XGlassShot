@@ -6,6 +6,8 @@ The Capture menu now uses the existing KeyboardShortcuts library's native shortc
 
 The eight incomplete language dictionaries now contain all 117 English localization keys, including current settings, capture actions, accessibility descriptions and error messages. Japanese, Spanish, French, German, Korean, Traditional Chinese, Italian and Dutch retain their existing translations and gain the missing current strings. Long row labels can wrap vertically within the fixed settings window. No deployment-target, appearance-system or capture-engine migration was needed.
 
+Prefix initial focus is deferred one main-queue turn because the embedded hosting view appears while its NSPanel is still being sized, before the panel becomes key. Synchronous `onAppear` focus and `.defaultFocus` alone did not reliably select the input when opened from a menu. Native regression checks reproduced that failure, then confirmed automatic selection from the menu, footer and keyboard shortcut, direct editing, Return dismissal and focus restoration after cancelling the owned folder picker.
+
 ## Verification
 
 - `swift test`: **24 tests passed**. Two new coverage tests reproduced the missing translations before the fix, then passed after it. They also catch Swift UI localization literals absent from the English dictionary.
@@ -14,6 +16,7 @@ The eight incomplete language dictionaries now contain all 117 English localizat
 - German: all five settings tabs visually inspected, each 920 by 760 pixels at 2x. Long row labels wrap, all tab titles remain visible, and the shortcut page fits its fixed container.
 - French: General and Shortcuts inspected, including active selected-tab/default-button appearance. Chinese Shortcuts inspected in Day and Night; previous inactive screenshots also retained.
 - Main window checked at 520- and 600-point widths. The trailing action group, quality control, folder and prefix remain available. Default width restored.
+- CUA-directed front-app Control-Shift-Q changed Standard 1x to Retina 2x and back exactly once per press. Command-Shift-L opened the prefix editor with its current value selected. The Capture menu displays clean action names using the library's native shortcut presentation.
 
 Native screenshots, AX state, compiler/test logs and final package/install smoke evidence are stored under `build/ui-polish-20261024/`. The final signed package revision and installed executable hashes are recorded in that directory's `install.json`. Temporary language and appearance changes were restored to English and Follow system; directory `/Users/rex/Pictures`, prefix `mixcrew-macos`, Standard 1x, custom background and 50% transparency were preserved.
 

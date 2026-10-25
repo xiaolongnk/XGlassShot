@@ -52,7 +52,11 @@ struct SaveDestinationView: View {
         .frame(width: 420)
         .background(GlassSurface())
         .preferredColorScheme(appearance.mode.colorScheme)
-        .onAppear { isPrefixFocused = true }
+        .onAppear {
+            // The hosting view appears while its NSPanel is still being sized.
+            // Apply focus after the panel becomes key and menu tracking finishes.
+            DispatchQueue.main.async { isPrefixFocused = true }
+        }
         .onExitCommand(perform: onDismiss)
     }
 }

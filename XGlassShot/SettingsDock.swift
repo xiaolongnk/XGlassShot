@@ -18,6 +18,7 @@ struct SettingsDock: View {
                 Text("Appearance".localized).tag(SettingsPresentation.Tab.appearance)
                 Text("Capture".localized).tag(SettingsPresentation.Tab.capture)
                 Text("Saving".localized).tag(SettingsPresentation.Tab.saving)
+                Text("Shortcuts".localized).tag(SettingsPresentation.Tab.shortcuts)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -28,6 +29,7 @@ struct SettingsDock: View {
                 case .appearance: appearanceSettings
                 case .capture: captureSettings
                 case .saving: savingSettings
+                case .shortcuts: KeyboardShortcutsView()
                 }
             }
             .padding(.horizontal, 14)
@@ -43,7 +45,7 @@ struct SettingsDock: View {
             }
         }
         .padding(20)
-        .frame(width: 420)
+        .frame(width: 480)
         .fixedSize(horizontal: false, vertical: true)
         .background(GlassSurface())
         .preferredColorScheme(appearance.mode.colorScheme)
@@ -139,10 +141,14 @@ struct SettingsDock: View {
         Group {
             SettingsRow("Image quality".localized) {
                 Picker("Image quality".localized, selection: $shortcutsManager.captureQuality) {
-                    Text("Standard · 1×").tag(CaptureQuality.low)
-                    Text("Retina · 2×").tag(CaptureQuality.high)
+                    ForEach(CaptureQuality.allCases, id: \.self) { quality in
+                        Text(quality.title).tag(quality)
+                    }
                 }.labelsHidden()
             }
+            Text(AppShortcut.toggleQuality.hint)
+                .font(.caption).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 10)
             Divider()
             SettingsRow("Capture sound".localized) {
                 Toggle("Capture sound".localized, isOn: $storageManager.playCaptureSound)

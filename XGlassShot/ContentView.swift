@@ -26,17 +26,21 @@ struct ContentView: View {
                 }
                 .help("Filename prefix".localized)
                 Spacer(minLength: 4)
-                Menu {
-                    Picker("Image quality".localized, selection: $shortcuts.captureQuality) {
-                        Text("Standard · 1×").tag(CaptureQuality.low)
-                        Text("Retina · 2×").tag(CaptureQuality.high)
-                    }
-                } label: {
-                    Text(shortcuts.captureQuality == .high ? "Retina · 2×" : "Standard · 1×")
-                        .foregroundStyle(.secondary)
+                Button { settings.show(.shortcuts) } label: {
+                    Label("Keyboard shortcuts".localized, systemImage: "keyboard")
                 }
-                .menuStyle(.borderlessButton).fixedSize()
-                .help("Image quality".localized)
+                .labelStyle(.iconOnly)
+                .help("Keyboard shortcuts".localized + " (⌘/)")
+                Text(AppShortcut.toggleQuality.shortcutText)
+                    .font(.caption.monospaced())
+                    .help(AppShortcut.toggleQuality.hint)
+                Picker("Image quality".localized, selection: $shortcuts.captureQuality) {
+                    ForEach(CaptureQuality.allCases, id: \.self) { quality in
+                        Text(quality.title).tag(quality)
+                    }
+                }
+                .pickerStyle(.menu).labelsHidden().fixedSize()
+                .help(AppShortcut.toggleQuality.hint)
             }
             .buttonStyle(.borderless)
             .font(.system(size: 11)).foregroundStyle(.secondary)
@@ -124,6 +128,13 @@ struct CaptureMenuCommands: Commands {
             }
             .keyboardShortcut("1", modifiers: [.command, .shift])
             .disabled(overlay.isBusy && !overlay.isRecording)
+            Divider()
+            Button(AppShortcut.toggleQuality.hint) { ShortcutsManager.shared.toggleQuality() }
+            Button(AppShortcut.changePrefix.hint) { SettingsPresentation.shared.show(.saving) }
+        }
+        CommandGroup(replacing: .help) {
+            Button("Keyboard shortcuts".localized) { SettingsPresentation.shared.show(.shortcuts) }
+                .keyboardShortcut("/", modifiers: .command)
         }
     }
 }

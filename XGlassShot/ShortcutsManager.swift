@@ -10,6 +10,10 @@ enum CaptureQuality: String, CaseIterable {
     case low = "efficiency"      // 1x scale, lower bitrate - optimized for size
     case high = "highQuality"    // 2x scale (Retina), higher bitrate - full quality
 
+    var title: String {
+        self == .high ? "Retina · 2×".localized : "Standard · 1×".localized
+    }
+
     var displayName: String {
         switch self {
         case .low: return "Low".localized
@@ -50,6 +54,21 @@ enum AppShortcut: String, CaseIterable {
     var name: KeyboardShortcuts.Name {
         KeyboardShortcuts.Name(rawValue)
     }
+
+    var title: String {
+        switch self {
+        case .captureZone: return "Record".localized
+        case .captureScreenshot: return "Screenshot".localized
+        case .toggleQuality: return "Toggle quality".localized
+        case .changePrefix: return "Filename prefix".localized
+        }
+    }
+
+    var shortcutText: String {
+        KeyboardShortcuts.getShortcut(for: name)?.description ?? "—"
+    }
+
+    var hint: String { title + " · " + shortcutText }
 }
 
 @available(macOS 12.3, *)
@@ -65,7 +84,7 @@ final class ShortcutsManager: ObservableObject {
     @Published var captureQuality: CaptureQuality = .low {
         didSet {
             UserDefaults.standard.set(captureQuality.rawValue, forKey: "captureQuality")
-            if !isRestoringPreferences { showQualityFeedback() }
+            if !isRestoringPreferences && captureQuality != oldValue { showQualityFeedback() }
         }
     }
 
@@ -178,7 +197,7 @@ final class ShortcutsManager: ObservableObject {
 
         // Schedule auto-hide
         feedbackTask = Task {
-            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             
             guard !Task.isCancelled else { return }
             
@@ -198,7 +217,7 @@ final class ShortcutsManager: ObservableObject {
     private func createFeedbackWindow() {
         let screenFrame = NSScreen.main?.frame ?? .zero
         let window = NSWindow(
-            contentRect: NSRect(x: screenFrame.midX - 100, y: screenFrame.midY - 30, width: 200, height: 60),
+            contentRect: NSRect(x: screenFrame.midX - 180, y: screenFrame.midY - 45, width: 360, height: 90),
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -331,13 +350,16 @@ struct QualityFeedbackView: View {
                 .foregroundColor(mode == .high ? .yellow : .cyan)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(mode.description)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                Text(mode.title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
 
-                Text("toggle_shortcut".localized)
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.5))
+                Text(AppShortcut.toggleQuality.hint)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                Text("Q = Quality · 1× ↔ 2×".localized)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 20)

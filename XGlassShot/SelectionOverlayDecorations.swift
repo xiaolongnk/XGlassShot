@@ -138,10 +138,11 @@ struct DimensionBadge: View {
     let width: Int
     let height: Int
     @ObservedObject private var localizationManager = LocalizationManager.shared
+    @ObservedObject private var shortcuts = ShortcutsManager.shared
 
     @available(macOS 12.3, *)
     var body: some View {
-        let quality = ShortcutsManager.shared.captureQuality
+        let quality = shortcuts.captureQuality
 
         HStack(spacing: 8) {
             Text("\(width) × \(height)")
@@ -152,7 +153,7 @@ struct DimensionBadge: View {
             HStack(spacing: 3) {
                 Image(systemName: quality == .high ? "sparkles" : "hare")
                     .font(.system(size: 9, weight: .semibold))
-                Text(quality.displayName)
+                Text(quality.title)
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
             }
             .foregroundColor(quality == .high ? .yellow : .cyan)

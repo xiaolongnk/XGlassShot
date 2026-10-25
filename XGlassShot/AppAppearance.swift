@@ -102,7 +102,7 @@ final class AppAppearance: ObservableObject {
 @MainActor
 final class SettingsPresentation: ObservableObject {
     static let shared = SettingsPresentation()
-    enum Tab: String, CaseIterable { case general, appearance, capture, saving }
+    enum Tab: String, CaseIterable { case general, appearance, capture, saving, shortcuts }
     @Published var isPresented = false
     @Published var tab: Tab = .general
     func show(_ tab: Tab = .general) {

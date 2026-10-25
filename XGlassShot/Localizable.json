@@ -101,7 +101,18 @@
     "Forest": "Forest",
     "Aurora": "Aurora",
     "Obsidian": "Obsidian",
-    "Cloud": "Cloud"
+    "Cloud": "Cloud",
+    "Shortcuts": "Shortcuts",
+    "Keyboard shortcuts": "Keyboard shortcuts",
+    "Toggle quality": "Toggle quality",
+    "Standard · 1×": "Standard · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Available even when XGlassShot is in the background.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality · 1× ↔ 2×",
+    "In XGlassShot": "In XGlassShot",
+    "While selecting an area": "While selecting an area",
+    "Confirm selection": "Confirm selection",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Hold both, then press the key."
   },
   "zh-Hans": {
     "Custom image": "自定义图片",
@@ -205,7 +216,18 @@
     "Forest": "森林",
     "Aurora": "极光",
     "Obsidian": "曜石",
-    "Cloud": "云朵"
+    "Cloud": "云朵",
+    "Shortcuts": "快捷键",
+    "Keyboard shortcuts": "键盘快捷键",
+    "Toggle quality": "切换质量",
+    "Standard · 1×": "标准 · 1×",
+    "Retina · 2×": "高清 · 2×",
+    "Available even when XGlassShot is in the background.": "XGlassShot 在后台时也可使用。",
+    "Q = Quality · 1× ↔ 2×": "Q 代表 Quality（质量）· 1× ↔ 2×",
+    "In XGlassShot": "在 XGlassShot 中",
+    "While selecting an area": "选择区域时",
+    "Confirm selection": "确认选区",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · 按住这两个键，再按对应字母或数字。"
   },
   "ja": {
     "record": "録画",
@@ -231,7 +253,18 @@
     "choose_location": "録画を保存する場所を選択",
     "save_cancelled": "保存がキャンセルされました",
     "directory_not_writable": "選択したディレクトリに書き込めません",
-    "invalid_data": "無効なデータ"
+    "invalid_data": "無効なデータ",
+    "Shortcuts": "ショートカット",
+    "Keyboard shortcuts": "キーボードショートカット",
+    "Toggle quality": "画質を切り替え",
+    "Standard · 1×": "標準 · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "XGlassShot がバックグラウンドでも使用できます。",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality（画質）· 1× ↔ 2×",
+    "In XGlassShot": "XGlassShot 内",
+    "While selecting an area": "範囲選択中",
+    "Confirm selection": "選択範囲を確定",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · 両方を押しながら対応するキーを押します。"
   },
   "es": {
     "record": "Grabar",
@@ -257,7 +290,18 @@
     "choose_location": "Elige una ubicación para guardar tu grabación",
     "save_cancelled": "Guardado cancelado",
     "directory_not_writable": "No se puede escribir en el directorio seleccionado",
-    "invalid_data": "Datos inválidos"
+    "invalid_data": "Datos inválidos",
+    "Shortcuts": "Atajos",
+    "Keyboard shortcuts": "Atajos de teclado",
+    "Toggle quality": "Cambiar calidad",
+    "Standard · 1×": "Estándar · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Disponibles con XGlassShot en segundo plano.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality (calidad) · 1× ↔ 2×",
+    "In XGlassShot": "En XGlassShot",
+    "While selecting an area": "Al seleccionar un área",
+    "Confirm selection": "Confirmar selección",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Mantén ambas y pulsa la tecla."
   },
   "fr": {
     "record": "Enregistrer",
@@ -283,7 +327,18 @@
     "choose_location": "Choisissez un emplacement pour enregistrer votre vidéo",
     "save_cancelled": "Enregistrement annulé",
     "directory_not_writable": "Impossible d'écrire dans le répertoire sélectionné",
-    "invalid_data": "Données invalides"
+    "invalid_data": "Données invalides",
+    "Shortcuts": "Raccourcis",
+    "Keyboard shortcuts": "Raccourcis clavier",
+    "Toggle quality": "Changer la qualité",
+    "Standard · 1×": "Standard · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Disponibles même si XGlassShot est en arrière-plan.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality (qualité) · 1× ↔ 2×",
+    "In XGlassShot": "Dans XGlassShot",
+    "While selecting an area": "Pendant la sélection",
+    "Confirm selection": "Confirmer la sélection",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Maintenez les deux, puis appuyez sur la touche."
   },
   "de": {
     "record": "Aufnehmen",
@@ -309,7 +364,18 @@
     "choose_location": "Wählen Sie einen Speicherort für Ihre Aufnahme",
     "save_cancelled": "Speichern abgebrochen",
     "directory_not_writable": "Kann nicht in das ausgewählte Verzeichnis schreiben",
-    "invalid_data": "Ungültige Daten"
+    "invalid_data": "Ungültige Daten",
+    "Shortcuts": "Kurzbefehle",
+    "Keyboard shortcuts": "Tastaturkurzbefehle",
+    "Toggle quality": "Qualität wechseln",
+    "Standard · 1×": "Standard · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Auch verfügbar, wenn XGlassShot im Hintergrund ist.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality (Qualität) · 1× ↔ 2×",
+    "In XGlassShot": "In XGlassShot",
+    "While selecting an area": "Bei der Bereichsauswahl",
+    "Confirm selection": "Auswahl bestätigen",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Beide halten, dann die Taste drücken."
   },
   "ko": {
     "record": "녹화",
@@ -335,7 +401,18 @@
     "choose_location": "녹화를 저장할 위치 선택",
     "save_cancelled": "저장이 취소되었습니다",
     "directory_not_writable": "선택한 디렉토리에 쓸 수 없습니다",
-    "invalid_data": "잘못된 데이터"
+    "invalid_data": "잘못된 데이터",
+    "Shortcuts": "단축키",
+    "Keyboard shortcuts": "키보드 단축키",
+    "Toggle quality": "화질 전환",
+    "Standard · 1×": "표준 · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "XGlassShot이 백그라운드에 있어도 사용할 수 있습니다.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality(화질) · 1× ↔ 2×",
+    "In XGlassShot": "XGlassShot에서",
+    "While selecting an area": "영역 선택 중",
+    "Confirm selection": "선택 확인",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · 두 키를 누른 채 해당 키를 누르세요."
   },
   "zh-Hant": {
     "record": "錄製",
@@ -364,7 +441,18 @@
     "invalid_data": "無效資料",
     "low": "低",
     "efficiency": "效率",
-    "high_quality_label": "高品質"
+    "high_quality_label": "高品質",
+    "Shortcuts": "快捷鍵",
+    "Keyboard shortcuts": "鍵盤快捷鍵",
+    "Toggle quality": "切換品質",
+    "Standard · 1×": "標準 · 1×",
+    "Retina · 2×": "高畫質 · 2×",
+    "Available even when XGlassShot is in the background.": "XGlassShot 在背景執行時也可使用。",
+    "Q = Quality · 1× ↔ 2×": "Q 代表 Quality（品質）· 1× ↔ 2×",
+    "In XGlassShot": "在 XGlassShot 中",
+    "While selecting an area": "選擇區域時",
+    "Confirm selection": "確認選取範圍",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · 按住這兩個鍵，再按對應字母或數字。"
   },
   "it": {
     "record": "Registra",
@@ -393,7 +481,18 @@
     "invalid_data": "Dati non validi",
     "low": "Bassa",
     "efficiency": "Efficienza",
-    "high_quality_label": "Alta Qualità"
+    "high_quality_label": "Alta Qualità",
+    "Shortcuts": "Abbreviazioni",
+    "Keyboard shortcuts": "Abbreviazioni da tastiera",
+    "Toggle quality": "Cambia qualità",
+    "Standard · 1×": "Standard · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Disponibili anche con XGlassShot in background.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality (qualità) · 1× ↔ 2×",
+    "In XGlassShot": "In XGlassShot",
+    "While selecting an area": "Durante la selezione",
+    "Confirm selection": "Conferma selezione",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Tieni premuti entrambi, poi premi il tasto."
   },
   "nl": {
     "record": "Opnemen",
@@ -422,6 +521,17 @@
     "invalid_data": "Ongeldige gegevens",
     "low": "Laag",
     "efficiency": "Efficiëntie",
-    "high_quality_label": "Hoge Kwaliteit"
+    "high_quality_label": "Hoge Kwaliteit",
+    "Shortcuts": "Sneltoetsen",
+    "Keyboard shortcuts": "Toetscombinaties",
+    "Toggle quality": "Kwaliteit wisselen",
+    "Standard · 1×": "Standaard · 1×",
+    "Retina · 2×": "Retina · 2×",
+    "Available even when XGlassShot is in the background.": "Ook beschikbaar als XGlassShot op de achtergrond staat.",
+    "Q = Quality · 1× ↔ 2×": "Q = Quality (kwaliteit) · 1× ↔ 2×",
+    "In XGlassShot": "In XGlassShot",
+    "While selecting an area": "Tijdens gebiedselectie",
+    "Confirm selection": "Selectie bevestigen",
+    "⌘ = Command · ⇧ = Shift · Hold both, then press the key.": "⌘ = Command · ⇧ = Shift · Houd beide ingedrukt en druk op de toets."
   }
 }

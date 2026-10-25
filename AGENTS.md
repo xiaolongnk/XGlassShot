@@ -2,7 +2,7 @@
 
 XGlassShot is a local macOS screenshot and recording tool. Use its JSON CLI when a task needs a screen capture; screen-content OCR and screenshot styling also exist in the GUI and stay local.
 
-For SwiftUI or visual changes, follow [the Apple UI review workflow](docs/apple-ui-workflow.md). Review the changed surface using the installed `macos-design-guidelines` and `swiftui-expert-skill` skills, with `swiftui-pro` available for focused technical checks. Apple's current documentation and the actual project SDK take precedence. Verify active and inactive native windows; an inactive screenshot alone does not establish button color or contrast.
+For SwiftUI or visual changes, start with SuperX's shared `.claude/skills-library/apple-desktop-ui/SKILL.md` (path relative to the SuperX root), then [this app's Apple UI notes](docs/apple-ui-workflow.md). Keep common owner UI requirements in that shared skill. The installed community skills remain optional technical review aids. Match API advice to Apple's current documentation and the actual project SDK. Verify active and inactive native windows; an inactive screenshot alone does not establish button color or contrast.
 
 ## Discover and capture
 

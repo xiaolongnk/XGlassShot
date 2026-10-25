@@ -2,6 +2,8 @@
 
 XGlassShot is a compact macOS utility, targeting macOS 14.6+. The preview is the main content; its controls should be quiet, native, keyboard-accessible, and readable over either background style.
 
+The canonical shared workflow is now SuperX's `.claude/skills-library/apple-desktop-ui/SKILL.md` (relative to the SuperX root). Read it first for owner design requirements, including settings presentation. Maintain common policy there; this document retains XGlassShot-specific contracts and historical provenance.
+
 ## Sources and skills
 
 Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines) and [Materials guidance](https://developer.apple.com/design/human-interface-guidelines/materials) are the authority. Community skills are review aids, not Apple certification. Match advice to macOS and verify API declarations in the installed SDK before adopting it. Do not apply iOS-only sizing/navigation rules or change deployment/Swift targets because a skill suggests a newer baseline. The toolchain checked on 2026-10-18 is Xcode 26.6 / Swift 6.3.3; the project retains its existing language/build settings.
@@ -14,7 +16,7 @@ Complementary skills are installed in this owner's Codex skills directory. Their
 | `macos-design-guidelines` | [ehmo/platform-design-skills](https://github.com/ehmo/platform-design-skills/tree/dc2be825d8b439caea78e9eaa8fb3ac23b0ff3e9/skills/macos) | Mac toolbars, menus, sheets, system colors, window behavior, pointer and keyboard interaction. Apply only rules appropriate to this single-purpose utility. |
 | `swiftui-expert-skill`, AvdLee | [AvdLee/SwiftUI-Agent-Skill](https://github.com/AvdLee/SwiftUI-Agent-Skill/tree/204dba7c67256a8b707ee3fbc5759a824191974f/skills/swiftui-expert-skill) | Focused native layout, localization, toolbar and focus review. The installed Mac window example has a recorded local correction for closure arity and `DisplayProxy.visibleRect`, verified against Xcode 26.6. |
 
-Read `SKILL.md` from `$CODEX_HOME/skills/<skill>` (normally `~/.codex/skills/<skill>`), then load only references relevant to the change. Use the Mac checklist plus a focused SwiftUI review; avoid duplicating every checklist in each review. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work. Compile proposed API examples against the actual SDK before adopting them.
+Start with the shared SuperX skill and its local references. The global installations above are optional review aids; if using one, read its `SKILL.md` and only relevant references. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work. Compile proposed API examples against the actual SDK before adopting them.
 
 Discovery snapshot on 2026-10-18: Skills CLI reported approximately 33.7K installs for SwiftUI Pro and 4.1K for macOS Design Guidelines; GitHub reported 6,206 and 615 repository stars. Popularity was only a discovery signal; the actual skill text and relevant references were reviewed before use.
 

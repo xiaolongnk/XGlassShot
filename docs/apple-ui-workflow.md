@@ -2,7 +2,7 @@
 
 XGlassShot is a compact macOS utility, targeting macOS 14.6+. The preview is the main content; its controls should be quiet, native, keyboard-accessible, and readable over either background style.
 
-The canonical shared workflow is now SuperX's `.claude/skills-library/apple-desktop-ui/SKILL.md` (relative to the SuperX root). Read it first for owner design requirements, including settings presentation. Maintain common policy there; this document retains XGlassShot-specific contracts and historical provenance.
+This document owns XGlassShot's design and interaction requirements and travels with the repository. If available, use the global `apple-desktop-ui` skill for reusable Mac UI guidance. Building or reviewing this app does not require another repository or a fixed checkout path.
 
 ## Sources and skills
 
@@ -16,7 +16,7 @@ Complementary skills are installed in this owner's Codex skills directory. Their
 | `macos-design-guidelines` | [ehmo/platform-design-skills](https://github.com/ehmo/platform-design-skills/tree/dc2be825d8b439caea78e9eaa8fb3ac23b0ff3e9/skills/macos) | Mac toolbars, menus, sheets, system colors, window behavior, pointer and keyboard interaction. Apply only rules appropriate to this single-purpose utility. |
 | `swiftui-expert-skill`, AvdLee | [AvdLee/SwiftUI-Agent-Skill](https://github.com/AvdLee/SwiftUI-Agent-Skill/tree/204dba7c67256a8b707ee3fbc5759a824191974f/skills/swiftui-expert-skill) | Focused native layout, localization, toolbar and focus review. The installed Mac window example has a recorded local correction for closure arity and `DisplayProxy.visibleRect`, verified against Xcode 26.6. |
 
-Start with the shared SuperX skill and its local references. The global installations above are optional review aids; if using one, read its `SKILL.md` and only relevant references. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work. Compile proposed API examples against the actual SDK before adopting them.
+Start with this document. The global installations above are optional review aids; if using one, read its `SKILL.md` and only relevant references. Do not install the entire Apple skill ecosystem or silently update pinned guidance during feature work. Compile proposed API examples against the actual SDK before adopting them.
 
 Discovery snapshot on 2026-10-18: Skills CLI reported approximately 33.7K installs for SwiftUI Pro and 4.1K for macOS Design Guidelines; GitHub reported 6,206 and 615 repository stars. Popularity was only a discovery signal; the actual skill text and relevant references were reviewed before use.
 
@@ -34,6 +34,8 @@ The capture, display, recording and Settings controls form one compact group at 
 Verify the actual right inset at the minimum, default and larger window sizes; resizing must expand the empty space rather than leave the actions near the middle. This is XGlassShot's product layout contract, not a rule that every Mac app must place all actions on the right.
 
 ## Verify before delivery
+
+Settings use a compact custom glass sheet attached to the main window, with one stable size across tabs. Route the toolbar, app-menu Settings item and Command-Comma through the same presentation authority; repeated requests reuse the panel and retain its selected tab. Preserve semantic foregrounds, the existing Reduce Transparency fallback, neutral close controls, visible keyboard focus, Escape dismissal and autosave feedback. Restore the main window when needed and prevent duplicate or competing sheets. System file pickers and permission prompts remain native.
 
 Global shortcuts are editable in **Settings → Shortcuts** using the existing native recorder. Preserve explicit disabled values and custom bindings across launch; menus, toolbar help and the quality footer must reflect the same saved combination. Reject duplicate app actions before saving, warn about system/menu conflicts and retain Esc cancellation, Delete clearing and Restore defaults. Keep the settings sheet size stable.
 
